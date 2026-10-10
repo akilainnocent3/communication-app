@@ -6,6 +6,7 @@ Verification, App Passwords or any technical steps.
 
 You need:
 
+
 - a Google account that will own the project. A normal `@gmail.com` address works, for example the
   company's main Gmail address. Use an account the company controls, not a staff member's private one,
   so the project stays with the company when people leave. Add a second owner as a backup
