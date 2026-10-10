@@ -1,0 +1,4647 @@
+openapi: 3.0.3
+info:
+  title: Communication Manager API
+  version: 1.0.0
+  description: Company admin platform for managing communication channels (Gmail first).
+paths:
+  /api/v1/audit/events/:
+    get:
+      operationId: audit_events_list
+      parameters:
+      - in: query
+        name: action
+        schema:
+          type: string
+      - in: query
+        name: actor
+        schema:
+          type: integer
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: mailbox
+        schema:
+          type: integer
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      tags:
+      - audit
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPage'
+          description: ''
+  /api/v1/audit/events/export/:
+    get:
+      operationId: audit_events_export
+      parameters:
+      - in: query
+        name: action
+        schema:
+          type: string
+      - in: query
+        name: actor
+        schema:
+          type: integer
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: mailbox
+        schema:
+          type: integer
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      tags:
+      - audit
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+          description: ''
+  /api/v1/auth/csrf/:
+    get:
+      operationId: auth_csrf
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Csrf'
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: auth_login
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: auth_logout
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/me/:
+    get:
+      operationId: auth_me
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/auth/preferences/:
+    patch:
+      operationId: auth_preferences
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferencesRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferencesRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferencesRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/auth/totp/disable/:
+    post:
+      operationId: auth_totp_disable
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TotpCodeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TotpCodeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TotpCodeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/auth/totp/enable/:
+    post:
+      operationId: auth_totp_enable
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TotpCodeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TotpCodeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TotpCodeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/auth/totp/setup/:
+    post:
+      operationId: auth_totp_setup
+      description: 'Start TOTP enrolment: returns a fresh secret and QR; it is enabled
+        only after /totp/enable/ verifies a code.'
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotpSetup'
+          description: ''
+  /api/v1/mail/actions/:
+    post:
+      operationId: mail_actions
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActionRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ActionRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+          description: ''
+  /api/v1/mail/actions/undo/:
+    post:
+      operationId: mail_actions_undo
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UndoRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UndoRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UndoRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+          description: ''
+  /api/v1/mail/assignees/:
+    get:
+      operationId: mail_assignees_list
+      parameters:
+      - in: query
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assignee'
+          description: ''
+  /api/v1/mail/connect/{token}/:
+    get:
+      operationId: mail_connect_info
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - mail
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicInvite'
+          description: ''
+  /api/v1/mail/contacts/suggest/:
+    get:
+      operationId: mail_contacts_suggest
+      parameters:
+      - in: query
+        name: mailbox
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContactSuggestion'
+          description: ''
+  /api/v1/mail/drafts/:
+    get:
+      operationId: mail_drafts_list
+      parameters:
+      - in: query
+        name: mailbox
+        schema:
+          type: string
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Draft'
+          description: ''
+    post:
+      operationId: mail_drafts_create
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DraftWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DraftWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Draft'
+          description: ''
+  /api/v1/mail/drafts/{id}/:
+    get:
+      operationId: mail_drafts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Draft'
+          description: ''
+    patch:
+      operationId: mail_drafts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDraftWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDraftWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDraftWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Draft'
+          description: ''
+    delete:
+      operationId: mail_drafts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/mail/labels/:
+    get:
+      operationId: mail_labels_list
+      parameters:
+      - in: query
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+          description: ''
+    post:
+      operationId: mail_labels_create
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LabelWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LabelWriteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
+          description: ''
+  /api/v1/mail/labels/{id}/:
+    patch:
+      operationId: mail_labels_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLabelWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLabelWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLabelWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
+          description: ''
+    delete:
+      operationId: mail_labels_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/mail/mailboxes/:
+    get:
+      operationId: mail_mailboxes_list
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mailbox'
+          description: ''
+    post:
+      operationId: mail_mailboxes_create
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailboxCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailboxCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailboxCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailboxCreated'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/:
+    get:
+      operationId: mail_mailboxes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mailbox'
+          description: ''
+    patch:
+      operationId: mail_mailboxes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMailboxUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMailboxUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMailboxUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mailbox'
+          description: ''
+    delete:
+      operationId: mail_mailboxes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/mail/mailboxes/{id}/access/:
+    get:
+      operationId: mail_access_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccessEntry'
+          description: ''
+    put:
+      operationId: mail_access_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AccessEntryRequest'
+          multipart/form-data:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AccessEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AccessEntryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccessEntry'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/connect/:
+    post:
+      operationId: mail_mailboxes_connect
+      description: '''Connect now'': the Google consent URL for this mailbox (or an
+        instant Workspace connection).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Url'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/detect/:
+    post:
+      operationId: mail_mailboxes_redetect
+      description: Run detection again for an existing mailbox (e.g. after the company
+        moved its mail hosting).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detection'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/disconnect/:
+    post:
+      operationId: mail_mailboxes_disconnect
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mailbox'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/imap/:
+    post:
+      operationId: mail_mailboxes_save_imap
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImapSettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImapSettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ImapSettingsRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImapTestResult'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/invites/:
+    get:
+      operationId: mail_invites_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invite'
+          description: ''
+    post:
+      operationId: mail_invites_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteCreated'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/invites/{invite_id}/revoke/:
+    post:
+      operationId: mail_invites_revoke
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: invite_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invite'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/status/:
+    get:
+      operationId: mail_mailboxes_status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailboxStatus'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/sync/:
+    post:
+      operationId: mail_mailboxes_sync
+      parameters:
+      - in: query
+        name: full
+        schema:
+          type: boolean
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailboxStatus'
+          description: ''
+  /api/v1/mail/mailboxes/{id}/test-imap/:
+    post:
+      operationId: mail_mailboxes_test_imap
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImapSettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImapSettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ImapSettingsRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImapTestResult'
+          description: ''
+  /api/v1/mail/mailboxes/detect/:
+    post:
+      operationId: mail_mailboxes_detect
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DetectRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DetectRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DetectRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detection'
+          description: ''
+  /api/v1/mail/messages/{id}/attachments/{attachment_id}/:
+    get:
+      operationId: mail_attachments_retrieve
+      parameters:
+      - in: path
+        name: attachment_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: download
+        schema:
+          type: boolean
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: preview
+        schema:
+          type: boolean
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/mail/messages/{id}/raw/:
+    get:
+      operationId: mail_messages_raw
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: ''
+  /api/v1/mail/messages/{id}/unsubscribe/:
+    post:
+      operationId: mail_messages_unsubscribe
+      description: One-click unsubscribe (RFC 8058) when offered, else returns the
+        link/mailto for the user to open.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/mail/oauth/callback/:
+    get:
+      operationId: mail_oauth_callback
+      description: Google redirects the browser here. We answer with a redirect to
+        a friendly page.
+      parameters:
+      - in: query
+        name: code
+        schema:
+          type: string
+      - in: query
+        name: error
+        schema:
+          type: string
+      - in: query
+        name: state
+        schema:
+          type: string
+      tags:
+      - mail
+      security:
+      - {}
+      responses:
+        '302':
+          description: No response body
+  /api/v1/mail/oauth/start/:
+    post:
+      operationId: mail_oauth_start
+      description: Start Google consent from a connect link (`token`) or, for a signed-in
+        admin, a mailbox id.
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OAuthStartRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OAuthStartRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OAuthStartRequest'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Url'
+          description: ''
+  /api/v1/mail/scheduled/:
+    get:
+      operationId: mail_scheduled_list
+      parameters:
+      - in: query
+        name: mailbox
+        schema:
+          type: string
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Queued'
+          description: ''
+  /api/v1/mail/scheduled/{id}/:
+    patch:
+      operationId: mail_scheduled_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRescheduleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRescheduleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRescheduleRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Queued'
+          description: ''
+    delete:
+      operationId: mail_scheduled_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/mail/send/:
+    post:
+      operationId: mail_send
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComposeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ComposeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ComposeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Queued'
+          description: ''
+  /api/v1/mail/send/{id}/cancel/:
+    post:
+      operationId: mail_send_cancel
+      description: Undo send (or cancel a scheduled send). Returns what was cancelled
+        so the UI can reopen it.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/mail/settings/{mailbox}/filters/:
+    get:
+      operationId: mail_settings_filters_list
+      parameters:
+      - in: path
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Filter'
+          description: ''
+    post:
+      operationId: mail_settings_filters_create
+      parameters:
+      - in: path
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FilterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FilterRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Filter'
+          description: ''
+  /api/v1/mail/settings/{mailbox}/filters/{filter_id}/:
+    delete:
+      operationId: mail_settings_filters_destroy
+      parameters:
+      - in: path
+        name: filter_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/mail/settings/{mailbox}/send-as/:
+    get:
+      operationId: mail_settings_send_as
+      parameters:
+      - in: path
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SendAs'
+          description: ''
+  /api/v1/mail/settings/{mailbox}/signature/:
+    get:
+      operationId: mail_settings_signature_list
+      parameters:
+      - in: path
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SendAs'
+          description: ''
+    put:
+      operationId: mail_settings_signature_update
+      parameters:
+      - in: path
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignatureWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignatureWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SignatureWriteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendAs'
+          description: ''
+  /api/v1/mail/settings/{mailbox}/vacation/:
+    get:
+      operationId: mail_settings_vacation_get
+      parameters:
+      - in: path
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vacation'
+          description: ''
+    put:
+      operationId: mail_settings_vacation_set
+      parameters:
+      - in: path
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VacationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VacationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VacationRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vacation'
+          description: ''
+  /api/v1/mail/stats/:
+    get:
+      operationId: mail_stats
+      parameters:
+      - in: query
+        name: mailbox
+        schema:
+          type: string
+      - in: query
+        name: range
+        schema:
+          type: integer
+          enum:
+          - 30
+          - 7
+          - 90
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/mail/templates/:
+    get:
+      operationId: mail_templates_list
+      parameters:
+      - in: query
+        name: mailbox
+        schema:
+          type: integer
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Template'
+          description: ''
+    post:
+      operationId: mail_templates_create
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+          description: ''
+  /api/v1/mail/templates/{id}/:
+    patch:
+      operationId: mail_templates_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+          description: ''
+    delete:
+      operationId: mail_templates_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/mail/threads/:
+    get:
+      operationId: mail_threads_list
+      parameters:
+      - in: query
+        name: after
+        schema:
+          type: string
+      - in: query
+        name: assigned_to
+        schema:
+          type: string
+      - in: query
+        name: before
+        schema:
+          type: string
+      - in: query
+        name: category
+        schema:
+          type: string
+          enum:
+          - forums
+          - primary
+          - promotions
+          - social
+          - updates
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: from
+        schema:
+          type: string
+      - in: query
+        name: has_attachment
+        schema:
+          type: boolean
+      - in: query
+        name: label
+        schema:
+          type: string
+        description: Label id, or ALL / SNOOZED / ASSIGNED
+      - in: query
+        name: mailbox
+        schema:
+          type: string
+        description: Mailbox id or 'all' (unified inbox)
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Search with Gmail operators
+      - in: query
+        name: starred
+        schema:
+          type: boolean
+      - in: query
+        name: unread
+        schema:
+          type: boolean
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadPage'
+          description: ''
+  /api/v1/mail/threads/{id}/:
+    get:
+      operationId: mail_threads_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: images
+        schema:
+          type: boolean
+      - in: query
+        name: peek
+        schema:
+          type: boolean
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadDetail'
+          description: ''
+  /api/v1/mail/threads/{id}/notes/:
+    get:
+      operationId: mail_notes_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+          description: ''
+    post:
+      operationId: mail_notes_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NoteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+  /api/v1/mail/threads/{id}/notes/{note_id}/:
+    delete:
+      operationId: mail_notes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: note_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/mail/threads/server-search/:
+    get:
+      operationId: mail_threads_server_search
+      description: '''Search full message bodies in Gmail'': asks the provider, indexes
+        what it finds, returns summaries.'
+      parameters:
+      - in: query
+        name: mailbox
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: page_token
+        schema:
+          type: string
+      - in: query
+        name: q
+        schema:
+          type: string
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadPage'
+          description: ''
+  /api/v1/mail/trusted-senders/:
+    post:
+      operationId: mail_trusted_senders_create
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactSuggestionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContactSuggestionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ContactSuggestionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          description: No response body
+  /api/v1/mail/uploads/:
+    post:
+      operationId: mail_uploads_create
+      tags:
+      - mail
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Uploaded'
+          description: ''
+  /api/v1/mail/uploads/{id}/:
+    delete:
+      operationId: mail_uploads_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - mail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/platforms/:
+    get:
+      operationId: platforms_list
+      tags:
+      - platforms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Platform'
+          description: ''
+  /api/v1/settings/integrations/:
+    get:
+      operationId: settings_integrations_get
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailSettings'
+          description: ''
+    put:
+      operationId: settings_integrations_update
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailSettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailSettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailSettingsRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailSettings'
+          description: ''
+  /api/v1/settings/integrations/workspace/:
+    get:
+      operationId: settings_workspace_list
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkspaceDomain'
+          description: ''
+    post:
+      operationId: settings_workspace_create
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceDomainWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkspaceDomainWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkspaceDomainWriteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceDomain'
+          description: ''
+  /api/v1/settings/integrations/workspace/{id}/:
+    delete:
+      operationId: settings_workspace_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/settings/integrations/workspace/{id}/test/:
+    post:
+      operationId: settings_workspace_test
+      description: Try to impersonate a mailbox in the domain and read its profile.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceTestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkspaceTestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkspaceTestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceDomain'
+          description: ''
+  /api/v1/settings/offices/:
+    get:
+      operationId: settings_offices_list
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Office'
+          description: ''
+    post:
+      operationId: settings_offices_create
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfficeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OfficeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OfficeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Office'
+          description: ''
+  /api/v1/settings/offices/{id}/:
+    patch:
+      operationId: settings_offices_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOfficeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOfficeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOfficeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Office'
+          description: ''
+    delete:
+      operationId: settings_offices_delete
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/settings/permissions/:
+    get:
+      operationId: settings_permissions_list
+      description: Permissions an admin can grant to custom roles (only this product's,
+        not Django internals).
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PermissionItem'
+          description: ''
+  /api/v1/settings/platforms/:
+    get:
+      operationId: platforms_admin_list
+      description: 'Settings → Platforms (super admin): every registered platform,
+        including disabled ones.'
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Platform'
+          description: ''
+    put:
+      operationId: platforms_admin_update
+      description: 'Settings → Platforms (super admin): every registered platform,
+        including disabled ones.'
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlatformUpdateItemRequest'
+          multipart/form-data:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlatformUpdateItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlatformUpdateItemRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Platform'
+          description: ''
+  /api/v1/settings/roles/:
+    get:
+      operationId: settings_roles_list
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+          description: ''
+    post:
+      operationId: settings_roles_create
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RoleWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RoleWriteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/v1/settings/roles/{id}/:
+    patch:
+      operationId: settings_roles_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    delete:
+      operationId: settings_roles_delete
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/settings/users/:
+    get:
+      operationId: settings_users_list
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: ''
+    post:
+      operationId: settings_users_create
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserWriteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/settings/users/{id}/:
+    patch:
+      operationId: settings_users_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+components:
+  schemas:
+    AccessEntry:
+      type: object
+      properties:
+        user:
+          type: integer
+        email:
+          type: string
+          readOnly: true
+        display_name:
+          type: string
+          readOnly: true
+        can_read:
+          type: boolean
+          default: true
+        can_send:
+          type: boolean
+          default: false
+        can_delete:
+          type: boolean
+          default: false
+        can_manage:
+          type: boolean
+          default: false
+      required:
+      - display_name
+      - email
+      - user
+    AccessEntryRequest:
+      type: object
+      properties:
+        user:
+          type: integer
+        can_read:
+          type: boolean
+          default: true
+        can_send:
+          type: boolean
+          default: false
+        can_delete:
+          type: boolean
+          default: false
+        can_manage:
+          type: boolean
+          default: false
+      required:
+      - user
+    ActionEnum:
+      enum:
+      - read
+      - unread
+      - star
+      - unstar
+      - important
+      - not_important
+      - archive
+      - move_to_inbox
+      - trash
+      - untrash
+      - spam
+      - not_spam
+      - delete_forever
+      - add_labels
+      - remove_labels
+      - move_to_label
+      - snooze
+      - unsnooze
+      - mute
+      - unmute
+      - assign
+      - unassign
+      type: string
+      description: |-
+        * `read` - read
+        * `unread` - unread
+        * `star` - star
+        * `unstar` - unstar
+        * `important` - important
+        * `not_important` - not_important
+        * `archive` - archive
+        * `move_to_inbox` - move_to_inbox
+        * `trash` - trash
+        * `untrash` - untrash
+        * `spam` - spam
+        * `not_spam` - not_spam
+        * `delete_forever` - delete_forever
+        * `add_labels` - add_labels
+        * `remove_labels` - remove_labels
+        * `move_to_label` - move_to_label
+        * `snooze` - snooze
+        * `unsnooze` - unsnooze
+        * `mute` - mute
+        * `unmute` - unmute
+        * `assign` - assign
+        * `unassign` - unassign
+    ActionRequestRequest:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        thread_ids:
+          type: array
+          items:
+            type: integer
+          maxItems: 5000
+        select_all:
+          allOf:
+          - $ref: '#/components/schemas/SelectionQueryRequest'
+          nullable: true
+        label_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        until:
+          type: string
+          format: date-time
+          nullable: true
+        assignee:
+          type: integer
+          nullable: true
+      required:
+      - action
+    ActionResult:
+      type: object
+      properties:
+        threads:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreadSummary'
+        deleted_ids:
+          type: array
+          items:
+            type: integer
+        undo_token:
+          type: string
+          nullable: true
+      required:
+      - deleted_ids
+      - threads
+      - undo_token
+    Address:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+          default: ''
+      required:
+      - email
+    AddressRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          default: ''
+      required:
+      - email
+    Assignee:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        display_name:
+          type: string
+      required:
+      - display_name
+      - email
+      - id
+    Assignment:
+      type: object
+      properties:
+        assignee:
+          type: object
+          additionalProperties: {}
+        status:
+          type: string
+      required:
+      - assignee
+      - status
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        mime_type:
+          type: string
+        size:
+          type: integer
+        inline:
+          type: boolean
+        url:
+          type: string
+      required:
+      - filename
+      - id
+      - inline
+      - mime_type
+      - size
+      - url
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        actor:
+          type: integer
+          nullable: true
+        actor_email:
+          type: string
+          maxLength: 254
+        action:
+          type: string
+          maxLength: 64
+        mailbox_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        mailbox_email:
+          type: string
+          maxLength: 254
+        target_type:
+          type: string
+          maxLength: 64
+        target_id:
+          type: string
+          maxLength: 128
+        ip:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+          maxLength: 400
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - created_at
+      - id
+    AuditPage:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - next_cursor
+      - results
+    Capabilities:
+      type: object
+      properties:
+        labels:
+          type: boolean
+        categories:
+          type: boolean
+        filters:
+          type: boolean
+        vacation:
+          type: boolean
+        signatures:
+          type: boolean
+        send_as:
+          type: boolean
+        important:
+          type: boolean
+        server_search:
+          type: boolean
+        revoke:
+          type: boolean
+      required:
+      - categories
+      - filters
+      - important
+      - labels
+      - revoke
+      - send_as
+      - server_search
+      - signatures
+      - vacation
+    ComposeRequest:
+      type: object
+      properties:
+        mailbox:
+          type: integer
+        send_as:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        to:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        cc:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        bcc:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        subject:
+          type: string
+          default: ''
+          maxLength: 900
+        html:
+          type: string
+          default: ''
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/ModeEnum'
+          default: new
+        in_reply_to_message:
+          type: integer
+          nullable: true
+        attachment_ids:
+          type: array
+          items:
+            type: integer
+        forward_attachment_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        draft_id:
+          type: integer
+          nullable: true
+        send_at:
+          type: string
+          format: date-time
+          nullable: true
+        undo_seconds:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/UndoSendSecondsEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - mailbox
+    ConnectionSecurityEnum:
+      enum:
+      - ssl
+      - starttls
+      type: string
+      description: |-
+        * `ssl` - ssl
+        * `starttls` - starttls
+    ContactSuggestion:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+      required:
+      - email
+      - name
+    ContactSuggestionRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          minLength: 1
+        name:
+          type: string
+      required:
+      - email
+      - name
+    Csrf:
+      type: object
+      properties:
+        csrf_token:
+          type: string
+      required:
+      - csrf_token
+    DensityEnum:
+      enum:
+      - comfortable
+      - compact
+      type: string
+      description: |-
+        * `comfortable` - comfortable
+        * `compact` - compact
+    DetectRequestRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    Detection:
+      type: object
+      properties:
+        provider:
+          $ref: '#/components/schemas/DetectionProviderEnum'
+        reason:
+          type: string
+        domain:
+          type: string
+        mx:
+          type: array
+          items:
+            type: string
+        supported:
+          type: boolean
+        imap_defaults:
+          allOf:
+          - $ref: '#/components/schemas/ImapDefaults'
+          nullable: true
+      required:
+      - domain
+      - imap_defaults
+      - mx
+      - provider
+      - reason
+      - supported
+    DetectionProviderEnum:
+      enum:
+      - gmail_oauth
+      - workspace_delegation
+      - imap_smtp
+      - unsupported
+      - fake
+      type: string
+      description: |-
+        * `gmail_oauth` - gmail_oauth
+        * `workspace_delegation` - workspace_delegation
+        * `imap_smtp` - imap_smtp
+        * `unsupported` - unsupported
+        * `fake` - fake
+    Draft:
+      type: object
+      properties:
+        id:
+          type: integer
+        mailbox:
+          type: integer
+        thread:
+          type: integer
+          nullable: true
+        to:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        cc:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        bcc:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        subject:
+          type: string
+        body_html:
+          type: string
+        snippet:
+          type: string
+        mode:
+          type: string
+        in_reply_to_message:
+          type: integer
+          nullable: true
+        attachment_ids:
+          type: array
+          items:
+            type: integer
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - attachment_ids
+      - bcc
+      - body_html
+      - cc
+      - id
+      - in_reply_to_message
+      - mailbox
+      - mode
+      - snippet
+      - subject
+      - thread
+      - to
+      - updated_at
+    DraftWriteRequest:
+      type: object
+      properties:
+        mailbox:
+          type: integer
+        send_as:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        to:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        cc:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        bcc:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        subject:
+          type: string
+          default: ''
+          maxLength: 900
+        html:
+          type: string
+          default: ''
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/ModeEnum'
+          default: new
+        in_reply_to_message:
+          type: integer
+          nullable: true
+        attachment_ids:
+          type: array
+          items:
+            type: integer
+        forward_attachment_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        draft_id:
+          type: integer
+          nullable: true
+        send_at:
+          type: string
+          format: date-time
+          nullable: true
+        undo_seconds:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/UndoSendSecondsEnum'
+          - $ref: '#/components/schemas/NullEnum'
+    Filter:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        criteria:
+          $ref: '#/components/schemas/FilterCriteria'
+        action:
+          $ref: '#/components/schemas/FilterAction'
+      required:
+      - action
+      - criteria
+      - id
+    FilterAction:
+      type: object
+      properties:
+        addLabelIds:
+          type: array
+          items:
+            type: string
+        removeLabelIds:
+          type: array
+          items:
+            type: string
+        forward:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+    FilterActionRequest:
+      type: object
+      properties:
+        addLabelIds:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        removeLabelIds:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        forward:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+    FilterCriteria:
+      type: object
+      properties:
+        to:
+          type: string
+        subject:
+          type: string
+        query:
+          type: string
+        hasAttachment:
+          type: boolean
+        from:
+          type: string
+    FilterCriteriaRequest:
+      type: object
+      properties:
+        to:
+          type: string
+        subject:
+          type: string
+        query:
+          type: string
+        hasAttachment:
+          type: boolean
+        from:
+          type: string
+    FilterRequest:
+      type: object
+      properties:
+        criteria:
+          $ref: '#/components/schemas/FilterCriteriaRequest'
+        action:
+          $ref: '#/components/schemas/FilterActionRequest'
+      required:
+      - action
+      - criteria
+    ImapDefaults:
+      type: object
+      properties:
+        imap_host:
+          type: string
+        imap_port:
+          type: integer
+        imap_security:
+          type: string
+        smtp_host:
+          type: string
+        smtp_port:
+          type: integer
+        smtp_security:
+          type: string
+      required:
+      - imap_host
+      - imap_port
+      - imap_security
+      - smtp_host
+      - smtp_port
+      - smtp_security
+    ImapSettingsRequest:
+      type: object
+      properties:
+        imap_host:
+          type: string
+          minLength: 1
+          maxLength: 253
+        imap_port:
+          type: integer
+          maximum: 65535
+          minimum: 1
+        imap_security:
+          $ref: '#/components/schemas/ConnectionSecurityEnum'
+        smtp_host:
+          type: string
+          minLength: 1
+          maxLength: 253
+        smtp_port:
+          type: integer
+          maximum: 65535
+          minimum: 1
+        smtp_security:
+          $ref: '#/components/schemas/ConnectionSecurityEnum'
+        username:
+          type: string
+          default: ''
+          maxLength: 254
+        password:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+      - imap_host
+      - imap_port
+      - imap_security
+      - password
+      - smtp_host
+      - smtp_port
+      - smtp_security
+    ImapTestResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        imap:
+          type: object
+          additionalProperties: {}
+        smtp:
+          type: object
+          additionalProperties: {}
+      required:
+      - imap
+      - ok
+      - smtp
+    Invite:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        state:
+          type: string
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: string
+          format: date-time
+          nullable: true
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          nullable: true
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - expires_at
+      - id
+      - state
+    InviteCreated:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        state:
+          type: string
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: string
+          format: date-time
+          nullable: true
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          nullable: true
+          readOnly: true
+        url:
+          type: string
+        whatsapp_url:
+          type: string
+        qr_svg:
+          type: string
+      required:
+      - created_at
+      - created_by
+      - expires_at
+      - id
+      - qr_svg
+      - state
+      - url
+      - whatsapp_url
+    KindEnum:
+      enum:
+      - undo
+      - scheduled
+      type: string
+      description: |-
+        * `undo` - Undo window
+        * `scheduled` - Scheduled
+    Label:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        label_id:
+          type: string
+          readOnly: true
+        mailbox:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        colour:
+          type: string
+          maxLength: 9
+        text_colour:
+          type: string
+          maxLength: 9
+        threads_total:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        threads_unread:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - id
+      - label_id
+      - mailbox
+      - name
+    LabelChip:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        colour:
+          type: string
+        text_colour:
+          type: string
+      required:
+      - colour
+      - id
+      - name
+      - text_colour
+    LabelWriteRequest:
+      type: object
+      properties:
+        mailbox:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 225
+        colour:
+          type: string
+          default: ''
+          maxLength: 7
+        text_colour:
+          type: string
+          default: ''
+          maxLength: 7
+      required:
+      - name
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+        otp:
+          type: string
+          maxLength: 10
+      required:
+      - email
+      - password
+    MailSettings:
+      type: object
+      properties:
+        connect_notice:
+          type: string
+          maxLength: 2000
+        google_configured:
+          type: boolean
+          readOnly: true
+        redirect_uri:
+          type: string
+          readOnly: true
+        scopes:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        fake_provider_enabled:
+          type: boolean
+          readOnly: true
+      required:
+      - connect_notice
+      - fake_provider_enabled
+      - google_configured
+      - redirect_uri
+      - scopes
+    MailSettingsRequest:
+      type: object
+      properties:
+        connect_notice:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+      - connect_notice
+    Mailbox:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        display_name:
+          type: string
+          maxLength: 120
+        name:
+          type: string
+          readOnly: true
+        colour:
+          type: string
+          maxLength: 9
+        office:
+          allOf:
+          - $ref: '#/components/schemas/OfficeRef'
+          readOnly: true
+        provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        provider_label:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/MailboxStatusEnum'
+        status_label:
+          type: string
+          readOnly: true
+        sync_progress: {}
+        last_synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        sync_error:
+          type: string
+        connected_at:
+          type: string
+          format: date-time
+          nullable: true
+        connected_by:
+          type: string
+          nullable: true
+          readOnly: true
+        granted_scopes: {}
+        capabilities:
+          allOf:
+          - $ref: '#/components/schemas/Capabilities'
+          readOnly: true
+        permissions:
+          allOf:
+          - $ref: '#/components/schemas/MailboxPermissions'
+          readOnly: true
+        unread:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - capabilities
+      - connected_by
+      - created_at
+      - email
+      - id
+      - name
+      - office
+      - permissions
+      - provider
+      - provider_label
+      - status_label
+      - unread
+    MailboxCreateProviderEnum:
+      enum:
+      - auto
+      - fake
+      type: string
+      description: |-
+        * `auto` - auto
+        * `fake` - fake
+    MailboxCreateRequest:
+      type: object
+      properties:
+        office:
+          type: integer
+        email:
+          type: string
+          format: email
+          minLength: 1
+        display_name:
+          type: string
+          default: ''
+          maxLength: 120
+        colour:
+          type: string
+          default: ''
+          maxLength: 7
+        provider:
+          allOf:
+          - $ref: '#/components/schemas/MailboxCreateProviderEnum'
+          default: auto
+      required:
+      - email
+      - office
+    MailboxCreated:
+      type: object
+      properties:
+        mailbox:
+          $ref: '#/components/schemas/Mailbox'
+        detection:
+          $ref: '#/components/schemas/Detection'
+      required:
+      - detection
+      - mailbox
+    MailboxPermissions:
+      type: object
+      properties:
+        read:
+          type: boolean
+        send:
+          type: boolean
+        delete:
+          type: boolean
+        manage:
+          type: boolean
+      required:
+      - delete
+      - manage
+      - read
+      - send
+    MailboxRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        colour:
+          type: string
+        office:
+          type: string
+      required:
+      - colour
+      - email
+      - id
+      - name
+      - office
+    MailboxStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+        sync_progress:
+          type: object
+          additionalProperties: {}
+        last_synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        sync_error:
+          type: string
+        latest_invite:
+          allOf:
+          - $ref: '#/components/schemas/Invite'
+          nullable: true
+      required:
+      - id
+      - last_synced_at
+      - latest_invite
+      - status
+      - sync_error
+      - sync_progress
+    MailboxStatusEnum:
+      enum:
+      - pending
+      - connected
+      - needs_reconnect
+      - syncing
+      - error
+      - disabled
+      type: string
+      description: |-
+        * `pending` - Waiting for connection
+        * `connected` - Connected
+        * `needs_reconnect` - Needs reconnect
+        * `syncing` - Syncing
+        * `error` - Error
+        * `disabled` - Disabled
+    Me:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/MeUser'
+        role:
+          allOf:
+          - $ref: '#/components/schemas/MeRole'
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+        platforms:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        platform_data:
+          type: object
+          additionalProperties: {}
+        company_name:
+          type: string
+      required:
+      - company_name
+      - permissions
+      - platform_data
+      - platforms
+      - role
+      - user
+    MeRole:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+      required:
+      - name
+      - slug
+    MeUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        display_name:
+          type: string
+        timezone:
+          type: string
+        preferences:
+          type: object
+          additionalProperties: {}
+        totp_enabled:
+          type: boolean
+      required:
+      - display_name
+      - email
+      - full_name
+      - id
+      - preferences
+      - timezone
+      - totp_enabled
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        from_addr:
+          allOf:
+          - $ref: '#/components/schemas/Address'
+          nullable: true
+        to:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        cc:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        bcc:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        reply_to:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        subject:
+          type: string
+        date:
+          type: string
+          format: date-time
+        snippet:
+          type: string
+        label_ids:
+          type: array
+          items:
+            type: string
+            maxLength: 255
+        is_outgoing:
+          type: boolean
+        is_unread:
+          type: boolean
+          readOnly: true
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+          readOnly: true
+        body_html:
+          type: string
+          readOnly: true
+        remote_images:
+          type: integer
+          readOnly: true
+        images_shown:
+          type: boolean
+          readOnly: true
+        link_warnings:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        can_unsubscribe:
+          type: boolean
+          readOnly: true
+        rfc_message_id:
+          type: string
+          maxLength: 998
+      required:
+      - attachments
+      - bcc
+      - body_html
+      - can_unsubscribe
+      - cc
+      - date
+      - from_addr
+      - id
+      - images_shown
+      - is_unread
+      - link_warnings
+      - remote_images
+      - reply_to
+      - to
+    ModeEnum:
+      enum:
+      - new
+      - reply
+      - reply_all
+      - forward
+      type: string
+      description: |-
+        * `new` - new
+        * `reply` - reply
+        * `reply_all` - reply_all
+        * `forward` - forward
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        body:
+          type: string
+        author:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - body
+      - created_at
+      - id
+    NoteRequest:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+      required:
+      - body
+    NullEnum:
+      enum:
+      - null
+    OAuthStartRequest:
+      type: object
+      properties:
+        token:
+          type: string
+        mailbox:
+          type: integer
+    Office:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        code:
+          type: string
+          maxLength: 40
+          pattern: ^[-a-zA-Z0-9_]+$
+        colour:
+          type: string
+          maxLength: 9
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - created_at
+      - id
+      - name
+    OfficeRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        colour:
+          type: string
+      required:
+      - colour
+      - id
+      - name
+    OfficeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        code:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: ^[-a-zA-Z0-9_]+$
+        colour:
+          type: string
+          minLength: 1
+          maxLength: 9
+      required:
+      - code
+      - name
+    Participant:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        unread:
+          type: boolean
+        is_me:
+          type: boolean
+      required:
+      - email
+      - name
+    PatchedDraftWriteRequest:
+      type: object
+      properties:
+        mailbox:
+          type: integer
+        send_as:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        to:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        cc:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        bcc:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressRequest'
+        subject:
+          type: string
+          default: ''
+          maxLength: 900
+        html:
+          type: string
+          default: ''
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/ModeEnum'
+          default: new
+        in_reply_to_message:
+          type: integer
+          nullable: true
+        attachment_ids:
+          type: array
+          items:
+            type: integer
+        forward_attachment_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        draft_id:
+          type: integer
+          nullable: true
+        send_at:
+          type: string
+          format: date-time
+          nullable: true
+        undo_seconds:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/UndoSendSecondsEnum'
+          - $ref: '#/components/schemas/NullEnum'
+    PatchedLabelWriteRequest:
+      type: object
+      properties:
+        mailbox:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 225
+        colour:
+          type: string
+          default: ''
+          maxLength: 7
+        text_colour:
+          type: string
+          default: ''
+          maxLength: 7
+    PatchedMailboxUpdateRequest:
+      type: object
+      properties:
+        office:
+          type: integer
+        display_name:
+          type: string
+          maxLength: 120
+        colour:
+          type: string
+          minLength: 1
+          maxLength: 7
+    PatchedOfficeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        code:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: ^[-a-zA-Z0-9_]+$
+        colour:
+          type: string
+          minLength: 1
+          maxLength: 9
+    PatchedPreferencesRequest:
+      type: object
+      properties:
+        shortcuts:
+          type: boolean
+        density:
+          $ref: '#/components/schemas/DensityEnum'
+        reading_pane:
+          $ref: '#/components/schemas/ReadingPaneEnum'
+        swipe_right:
+          $ref: '#/components/schemas/SwipeActionEnum'
+        swipe_left:
+          $ref: '#/components/schemas/SwipeActionEnum'
+        undo_send_seconds:
+          $ref: '#/components/schemas/UndoSendSecondsEnum'
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+    PatchedRescheduleRequest:
+      type: object
+      properties:
+        send_at:
+          type: string
+          format: date-time
+    PatchedRoleWriteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        description:
+          type: string
+          default: ''
+          maxLength: 255
+        permissions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+    PatchedTemplateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        subject:
+          type: string
+          maxLength: 255
+        body_html:
+          type: string
+          minLength: 1
+        mailbox:
+          type: integer
+          nullable: true
+    PatchedUserWriteRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        full_name:
+          type: string
+          default: ''
+          maxLength: 150
+        role:
+          type: string
+          minLength: 1
+          nullable: true
+        office:
+          type: integer
+          nullable: true
+        is_active:
+          type: boolean
+          default: true
+        password:
+          type: string
+          writeOnly: true
+    PermissionItem:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+      required:
+      - code
+      - name
+    Platform:
+      type: object
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        permission:
+          type: string
+        is_enabled:
+          type: boolean
+        order:
+          type: integer
+      required:
+      - is_enabled
+      - key
+      - name
+      - order
+      - permission
+    PlatformUpdateItemRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+        is_enabled:
+          type: boolean
+        order:
+          type: integer
+          maximum: 1000
+          minimum: 0
+      required:
+      - is_enabled
+      - key
+      - order
+    ProviderEnum:
+      enum:
+      - gmail_oauth
+      - workspace_delegation
+      - imap_smtp
+      - fake
+      type: string
+      description: |-
+        * `gmail_oauth` - Google
+        * `workspace_delegation` - Google Workspace
+        * `imap_smtp` - IMAP / SMTP
+        * `fake` - Demo
+    PublicInvite:
+      type: object
+      properties:
+        state:
+          type: string
+        company_name:
+          type: string
+        mailbox_email:
+          type: string
+        mailbox_name:
+          type: string
+        notice:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        google_configured:
+          type: boolean
+      required:
+      - company_name
+      - expires_at
+      - google_configured
+      - mailbox_email
+      - mailbox_name
+      - notice
+      - state
+    Queued:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mailbox:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        send_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/QueuedStatusEnum'
+        error:
+          type: string
+        subject:
+          type: string
+          readOnly: true
+        to:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+          readOnly: true
+        payload:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - kind
+      - mailbox
+      - payload
+      - send_at
+      - subject
+      - to
+    QueuedStatusEnum:
+      enum:
+      - pending
+      - sending
+      - sent
+      - cancelled
+      - failed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `sending` - Sending
+        * `sent` - Sent
+        * `cancelled` - Cancelled
+        * `failed` - Failed
+    ReadingPaneEnum:
+      enum:
+      - right
+      - none
+      type: string
+      description: |-
+        * `right` - right
+        * `none` - none
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 80
+        description:
+          type: string
+          maxLength: 255
+        rank:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          description: Lower is more powerful.
+        is_system:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        user_count:
+          type: integer
+          readOnly: true
+      required:
+      - id
+      - name
+      - permissions
+      - slug
+      - user_count
+    RoleWriteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        description:
+          type: string
+          default: ''
+          maxLength: 255
+        permissions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+      - name
+    SelectionQueryRequest:
+      type: object
+      properties:
+        mailbox:
+          type: string
+          minLength: 1
+        label:
+          type: string
+        category:
+          type: string
+        q:
+          type: string
+        unread:
+          type: boolean
+          nullable: true
+        starred:
+          type: boolean
+          nullable: true
+        has_attachment:
+          type: boolean
+          nullable: true
+      required:
+      - mailbox
+    SendAs:
+      type: object
+      properties:
+        email:
+          type: string
+        display_name:
+          type: string
+        is_default:
+          type: boolean
+        is_primary:
+          type: boolean
+        signature:
+          type: string
+      required:
+      - display_name
+      - email
+      - is_default
+      - is_primary
+      - signature
+    SignatureWriteRequest:
+      type: object
+      properties:
+        send_as:
+          type: string
+          format: email
+          minLength: 1
+        signature:
+          type: string
+          maxLength: 10000
+      required:
+      - send_as
+      - signature
+    SwipeActionEnum:
+      enum:
+      - archive
+      - trash
+      - read
+      - none
+      type: string
+      description: |-
+        * `archive` - archive
+        * `trash` - trash
+        * `read` - read
+        * `none` - none
+    Template:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        subject:
+          type: string
+          maxLength: 255
+        body_html:
+          type: string
+        mailbox:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - body_html
+      - created_at
+      - id
+      - name
+      - updated_at
+    TemplateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        subject:
+          type: string
+          maxLength: 255
+        body_html:
+          type: string
+          minLength: 1
+        mailbox:
+          type: integer
+          nullable: true
+      required:
+      - body_html
+      - name
+    ThreadDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mailbox:
+          allOf:
+          - $ref: '#/components/schemas/MailboxRef'
+          readOnly: true
+        subject:
+          type: string
+        snippet:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        last_message_at:
+          type: string
+          format: date-time
+        message_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        has_attachments:
+          type: boolean
+        label_ids:
+          type: array
+          items:
+            type: string
+            maxLength: 255
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabelChip'
+          readOnly: true
+        is_unread:
+          type: boolean
+        is_starred:
+          type: boolean
+        is_important:
+          type: boolean
+        is_muted:
+          type: boolean
+        snoozed_until:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        assignment:
+          allOf:
+          - $ref: '#/components/schemas/Assignment'
+          nullable: true
+          readOnly: true
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          readOnly: true
+        permissions:
+          allOf:
+          - $ref: '#/components/schemas/MailboxPermissions'
+          readOnly: true
+        notes_count:
+          type: integer
+          readOnly: true
+        capabilities:
+          allOf:
+          - $ref: '#/components/schemas/Capabilities'
+          readOnly: true
+      required:
+      - assignment
+      - capabilities
+      - id
+      - labels
+      - last_message_at
+      - mailbox
+      - messages
+      - notes_count
+      - participants
+      - permissions
+      - snoozed_until
+    ThreadPage:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreadSummary'
+        next_cursor:
+          type: string
+          nullable: true
+        total:
+          type: integer
+          nullable: true
+      required:
+      - next_cursor
+      - results
+      - total
+    ThreadSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        mailbox:
+          allOf:
+          - $ref: '#/components/schemas/MailboxRef'
+          readOnly: true
+        subject:
+          type: string
+        snippet:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        last_message_at:
+          type: string
+          format: date-time
+        message_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        has_attachments:
+          type: boolean
+        label_ids:
+          type: array
+          items:
+            type: string
+            maxLength: 255
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabelChip'
+          readOnly: true
+        is_unread:
+          type: boolean
+        is_starred:
+          type: boolean
+        is_important:
+          type: boolean
+        is_muted:
+          type: boolean
+        snoozed_until:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        assignment:
+          allOf:
+          - $ref: '#/components/schemas/Assignment'
+          nullable: true
+          readOnly: true
+      required:
+      - assignment
+      - id
+      - labels
+      - last_message_at
+      - mailbox
+      - participants
+      - snoozed_until
+    TotpCodeRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 10
+      required:
+      - code
+    TotpSetup:
+      type: object
+      properties:
+        secret:
+          type: string
+        otpauth_uri:
+          type: string
+        qr_svg:
+          type: string
+      required:
+      - otpauth_uri
+      - qr_svg
+      - secret
+    TypeEnum:
+      enum:
+      - system
+      - user
+      type: string
+      description: |-
+        * `system` - System
+        * `user` - User
+    UndoRequestRequest:
+      type: object
+      properties:
+        undo_token:
+          type: string
+          minLength: 1
+      required:
+      - undo_token
+    UndoSendSecondsEnum:
+      enum:
+      - 0
+      - 5
+      - 10
+      - 20
+      - 30
+      type: integer
+      description: |-
+        * `0` - 0
+        * `5` - 5
+        * `10` - 10
+        * `20` - 20
+        * `30` - 30
+    UploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+        mailbox:
+          type: integer
+      required:
+      - file
+      - mailbox
+    Uploaded:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        content_type:
+          type: string
+        size:
+          type: integer
+      required:
+      - content_type
+      - filename
+      - id
+      - size
+    Url:
+      type: object
+      properties:
+        url:
+          type: string
+      required:
+      - url
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        full_name:
+          type: string
+          maxLength: 150
+        display_name:
+          type: string
+          readOnly: true
+        role:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+        office:
+          allOf:
+          - $ref: '#/components/schemas/Office'
+          readOnly: true
+        is_active:
+          type: boolean
+        totp_enabled:
+          type: boolean
+        date_joined:
+          type: string
+          format: date-time
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - display_name
+      - email
+      - id
+      - office
+      - role
+    UserWriteRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        full_name:
+          type: string
+          default: ''
+          maxLength: 150
+        role:
+          type: string
+          minLength: 1
+          nullable: true
+        office:
+          type: integer
+          nullable: true
+        is_active:
+          type: boolean
+          default: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+    Vacation:
+      type: object
+      properties:
+        enable_auto_reply:
+          type: boolean
+        response_subject:
+          type: string
+          nullable: true
+          default: ''
+        response_body_html:
+          type: string
+          nullable: true
+          default: ''
+        restrict_to_contacts:
+          type: boolean
+          nullable: true
+          default: false
+        restrict_to_domain:
+          type: boolean
+          nullable: true
+          default: false
+        start_time:
+          type: string
+          format: date-time
+          nullable: true
+        end_time:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - enable_auto_reply
+    VacationRequest:
+      type: object
+      properties:
+        enable_auto_reply:
+          type: boolean
+        response_subject:
+          type: string
+          nullable: true
+          default: ''
+        response_body_html:
+          type: string
+          nullable: true
+          default: ''
+        restrict_to_contacts:
+          type: boolean
+          nullable: true
+          default: false
+        restrict_to_domain:
+          type: boolean
+          nullable: true
+          default: false
+        start_time:
+          type: string
+          format: date-time
+          nullable: true
+        end_time:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - enable_auto_reply
+    WorkspaceDomain:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        domain:
+          type: string
+          readOnly: true
+        client_id:
+          type: string
+          readOnly: true
+        service_account_email:
+          type: string
+          readOnly: true
+        scopes:
+          type: string
+          readOnly: true
+        last_test_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_test_ok:
+          type: boolean
+          readOnly: true
+        last_test_error:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - client_id
+      - created_at
+      - domain
+      - id
+      - last_test_at
+      - last_test_error
+      - last_test_ok
+      - scopes
+      - service_account_email
+    WorkspaceDomainWriteRequest:
+      type: object
+      properties:
+        domain:
+          type: string
+          minLength: 1
+          maxLength: 253
+        service_account_json:
+          type: string
+          minLength: 1
+          maxLength: 20000
+      required:
+      - domain
+      - service_account_json
+    WorkspaceTestRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: cm_session

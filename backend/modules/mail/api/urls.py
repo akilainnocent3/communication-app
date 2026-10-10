@@ -1,0 +1,62 @@
+from django.urls import path
+
+from . import compose, mailboxes, threads, tools
+
+urlpatterns = [
+    # Mailboxes and connecting
+    path("mail/mailboxes/", mailboxes.MailboxListView.as_view()),
+    path("mail/mailboxes/detect/", mailboxes.DetectView.as_view()),
+    path("mail/mailboxes/<int:pk>/", mailboxes.MailboxDetailView.as_view()),
+    path("mail/mailboxes/<int:pk>/detect/", mailboxes.RedetectView.as_view()),
+    path("mail/mailboxes/<int:pk>/connect/", mailboxes.ConnectView.as_view()),
+    path("mail/mailboxes/<int:pk>/invites/", mailboxes.InviteListView.as_view()),
+    path("mail/mailboxes/<int:pk>/invites/<int:invite_id>/revoke/", mailboxes.InviteRevokeView.as_view()),
+    path("mail/mailboxes/<int:pk>/sync/", mailboxes.SyncView.as_view()),
+    path("mail/mailboxes/<int:pk>/status/", mailboxes.StatusView.as_view()),
+    path("mail/mailboxes/<int:pk>/test-imap/", mailboxes.ImapTestView.as_view()),
+    path("mail/mailboxes/<int:pk>/imap/", mailboxes.ImapSaveView.as_view()),
+    path("mail/mailboxes/<int:pk>/disconnect/", mailboxes.DisconnectView.as_view()),
+    path("mail/mailboxes/<int:pk>/access/", mailboxes.AccessView.as_view()),
+    path("mail/connect/<str:token>/", mailboxes.PublicInviteView.as_view()),
+    path("mail/oauth/start/", mailboxes.OAuthStartView.as_view()),
+    path("mail/oauth/callback/", mailboxes.OAuthCallbackView.as_view()),
+    # Labels, threads, actions
+    path("mail/labels/", threads.LabelListView.as_view()),
+    path("mail/labels/<int:pk>/", threads.LabelDetailView.as_view()),
+    path("mail/threads/", threads.ThreadListView.as_view()),
+    path("mail/threads/server-search/", threads.ServerSearchView.as_view()),
+    path("mail/threads/<int:pk>/", threads.ThreadDetailView.as_view()),
+    path("mail/threads/<int:pk>/notes/", threads.NoteListView.as_view()),
+    path("mail/threads/<int:pk>/notes/<int:note_id>/", threads.NoteDetailView.as_view()),
+    path("mail/actions/", threads.ActionView.as_view()),
+    path("mail/actions/undo/", threads.UndoView.as_view()),
+    path("mail/messages/<int:pk>/attachments/<str:attachment_id>/", threads.AttachmentView.as_view()),
+    path("mail/messages/<int:pk>/raw/", threads.RawMessageView.as_view()),
+    path("mail/messages/<int:pk>/unsubscribe/", threads.UnsubscribeView.as_view()),
+    path("mail/trusted-senders/", threads.TrustedSenderView.as_view()),
+    path("mail/contacts/suggest/", threads.ContactSuggestView.as_view()),
+    path("mail/assignees/", threads.AssigneeListView.as_view()),
+    path("mail/stats/", threads.StatsView.as_view()),
+    # Compose
+    path("mail/uploads/", compose.UploadView.as_view()),
+    path("mail/uploads/<int:pk>/", compose.UploadDetailView.as_view()),
+    path("mail/send/", compose.SendView.as_view()),
+    path("mail/send/<int:pk>/cancel/", compose.CancelSendView.as_view()),
+    path("mail/scheduled/", compose.ScheduledListView.as_view()),
+    path("mail/scheduled/<int:pk>/", compose.ScheduledDetailView.as_view()),
+    path("mail/drafts/", compose.DraftListView.as_view()),
+    path("mail/drafts/<int:pk>/", compose.DraftDetailView.as_view()),
+    path("mail/templates/", compose.TemplateListView.as_view()),
+    path("mail/templates/<int:pk>/", compose.TemplateDetailView.as_view()),
+    # Per-mailbox settings
+    path("mail/settings/<int:mailbox>/send-as/", tools.SendAsView.as_view()),
+    path("mail/settings/<int:mailbox>/signature/", tools.SignatureView.as_view()),
+    path("mail/settings/<int:mailbox>/vacation/", tools.VacationView.as_view()),
+    path("mail/settings/<int:mailbox>/filters/", tools.FilterListView.as_view()),
+    path("mail/settings/<int:mailbox>/filters/<str:filter_id>/", tools.FilterDetailView.as_view()),
+    # Settings → Integrations
+    path("settings/integrations/", tools.IntegrationsView.as_view()),
+    path("settings/integrations/workspace/", tools.WorkspaceDomainListView.as_view()),
+    path("settings/integrations/workspace/<int:pk>/", tools.WorkspaceDomainDetailView.as_view()),
+    path("settings/integrations/workspace/<int:pk>/test/", tools.WorkspaceDomainTestView.as_view()),
+]

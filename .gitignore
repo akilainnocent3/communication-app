@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+reference/
+*.zip
+**/__pycache__/
+backend/.venv/
+backend/staticfiles/
+backend/.coverage
+backend/htmlcov/
+.pytest_cache/
+frontend/node_modules/
+frontend/.next/
+frontend/test-results/
+frontend/playwright-report/
+frontend/tsconfig.tsbuildinfo
