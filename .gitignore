@@ -15,3 +15,5 @@ frontend/test-results/
 frontend/playwright-report/
 frontend/tsconfig.tsbuildinfo
 backend/private/
+build/
+mobile/android/build/
