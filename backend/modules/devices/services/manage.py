@@ -34,7 +34,7 @@ def update(device: Device, user, values: dict, request=None) -> Device:
                 changes["options"]["signature"] = "changed"
             device.options = options
     if changes:
-        device.save()
+        device.save(update_fields=list(changes))
         record("device.update", request=request, actor=user, target_type="device", target_id=device.pk, metadata={"device": device.code, "changes": changes})
     return device
 
@@ -55,8 +55,9 @@ def _set_status(device: Device, user, status: str, action: str, request=None, re
         device.save()
         if status == DeviceStatus.REVOKED:
             DeviceToken.objects.filter(device=device, expires_at__lt=now).delete()
-        # Every request re-checks the device status (services/auth.authenticate), so outstanding tokens stop working
-        # at once and the phone is told why (device_suspended / device_revoked) on its next call.
+        # Live tokens are kept on purpose: every request re-checks the device status (services/auth.authenticate), so
+        # outstanding tokens stop working at once and the phone is told why (device_suspended / device_revoked).
+        # That check is only sound because nothing else writes `status` from a stale copy (save(update_fields=...)).
         record(action, request=request, actor=user, target_type="device", target_id=device.pk, metadata={"device": device.code, "reason": reason[:200]})
     return device
 

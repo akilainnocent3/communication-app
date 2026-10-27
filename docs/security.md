@@ -160,6 +160,52 @@ Audited SMS/device actions: enrollment code create/revoke, enroll success and fa
 conversation opens, sensitive reveals, sends/schedules/cancels/retries, expiries and unknowns, blocks, notes,
 quick-reply and rule changes, media downloads, retention purges, SMS settings.
 
+### Security review of the SMS and phone surface (2026-10-27)
+
+A full review of the branch against `main` (backend `modules/devices` and `modules/sms`, the URL and settings changes,
+Nginx, the admin SMS UI, and the Android/Flutter app) was run as two passes: one to identify issues, then an
+independent false-positive check for each candidate. Only findings scored **≥ 8/10** count as vulnerabilities.
+**None reached that bar.** Two candidates were real bugs below it, and both were fixed anyway with regression tests:
+
+| Candidate | Score | What was wrong | Fix |
+|---|---|---|---|
+| Attestation chain accepted a forged leaf | 7 | `verify_attestation` checked only that each certificate was signed by the next. A genuine attested Keystore key (which can sign any bytes) could therefore "issue" a forged leaf for a software key carrying a made-up KeyDescription, and the phone was stored as hardware-backed. Only mattered with `SMS_REQUIRE_KEY_ATTESTATION=true` | Every issuer must be a CA (`BasicConstraints ca=True`, `keyCertSign` when KeyUsage is present), the leaf must not be a CA, and only the leaf may carry the KeyDescription (`identity.py`; `test_attestation_rejects_leaf_forged_with_a_genuine_attested_key`, `…_key_description_outside_the_leaf`) |
+| A heartbeat could undo a revoke | 5 | `record_heartbeat` and the admin `update` saved the whole `Device` row from the copy loaded at the start of the request, so one that finished after a concurrent suspend/revoke wrote `status=active` back. Exploiting it means winning a race of a few tens of ms | Both save only the columns they own (`save(update_fields=…)`), so nothing but `_set_status` (row-locked) writes `status` (`test_stale_heartbeat_or_edit_cannot_undo_a_revoke`) |
+
+Live device tokens are still kept on suspend/revoke on purpose: every request re-checks the status, which is how the
+phone learns `device_suspended` / `device_revoked` instead of a generic `invalid_token`.
+
+Checked and dismissed (no issue):
+
+- **Surface mixing:** the admin API authenticates only by session + CSRF, so a device token is ignored. Device views
+  set their own authentication class; `IsDevice` needs a device principal and token; Nginx drops `Cookie` on
+  `/api/v1/device/`; a device principal holds no permissions.
+- **Cross-device writes and reads:** every lookup in `store.py`, `sync.py`, `outbound.py` (claim, report,
+  command acks), the MMS upload and the SIM helpers filters on the authenticated device. A foreign `client_uuid` is
+  rejected (`foreign_message`), and phone-originated messages never store one, so it can't be pre-claimed.
+- **Admin object access:** every view resolves through `get_device`, `get_conversation(s)`, `get_message` or
+  `accessible_devices` (404 for invisible phones). Read-only users can't send, retry, cancel or change
+  conversations; blocking needs manage. Managers can't grant `can_manage` / `can_reveal_sensitive` they don't have.
+- **Enrollment:** the invite is locked with `select_for_update`, consumed in the same transaction, and burned
+  after 5 failures. PoP signing strings are separated by purpose (ENROLL / AUTH), P-256 only, ±300 s window,
+  single-use nonces, hashed random tokens.
+- **MMS / media XSS:** the type is sniffed server-side (HTML/SVG become `text/plain`), there is an inline allow-list,
+  and responses carry `nosniff`, a sandbox CSP and a sanitised filename. Storage names are random hex and checked;
+  chunk names are integers; size and SHA-256 are verified.
+- **Admin UI XSS:** `linkify` only builds `http(s)` links; message text is rendered as React text; the only
+  `dangerouslySetInnerHTML` is the server QR SVG, passed through DOMPurify.
+- **Sensitive-message leaks:** snippets, the dashboard's recent list and message bodies are masked unless revealed
+  (flag + audit). In-conversation search skips sensitive messages, so it can't be used as an oracle. FCM carries no
+  content. Logs carry ids, device codes and masked numbers only.
+- **Android:** each exported component is guarded by its system permission. Mutable PendingIntents are explicit. The
+  FileProvider is unexported and limited to `cache/mms/`. SENDTO only pre-fills a draft. The enroll URI needs HTTPS,
+  an exact allow-listed host and no userinfo; native HTTPS repeats the host check and refuses redirects.
+- **Simulator / dev keys:** production refuses to start with either; the simulator endpoints also need
+  `is_simulated`, which a phone cannot set.
+
+Follow-ups (hardening, not vulnerabilities): check Google's attestation revocation list, and optionally require
+`verifiedBootState=Verified` / a locked bootloader when attestation is required (see decision 23).
+
 ## Reporting
 
 Report suspected vulnerabilities privately to the system owner. Do not open a public issue.

@@ -66,6 +66,12 @@ def touch(device: Device) -> None:
         device.last_seen_at = now
 
 
+HEARTBEAT_FIELDS = [
+    "last_seen_at", "battery", "charging", "network_type", "signal", "is_default_sms_app", "permissions", "battery_optimised",
+    "pending_outbox", "app_version", "android_version", "last_sync_at", "risk_signals", "attention",
+]
+
+
 def record_heartbeat(device: Device, data: dict) -> Device:
     from .enrollment import save_sims
 
@@ -87,7 +93,9 @@ def record_heartbeat(device: Device, data: dict) -> Device:
         device.last_sync_at = data["last_sync_at"]
     device.risk_signals = {str(k)[:32]: bool(v) for k, v in (data.get("risk_signals") or {}).items()}
     device.attention = attention_for(device, now)
-    device.save()
+    # Only the telemetry columns: a full save from this request's copy could undo a suspend or revoke that an admin
+    # committed after the phone authenticated, or an admin's edit of name, office or options.
+    device.save(update_fields=HEARTBEAT_FIELDS)
     if data.get("sims") is not None:
         save_sims(device, data["sims"])
     DeviceHeartbeat.objects.create(

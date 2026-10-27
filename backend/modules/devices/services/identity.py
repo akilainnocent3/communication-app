@@ -170,6 +170,26 @@ def parse_key_description(value: bytes) -> dict:
     }
 
 
+def _has_extension(cert: x509.Certificate, oid) -> bool:
+    try:
+        cert.extensions.get_extension_for_oid(oid)
+    except x509.ExtensionNotFound:
+        return False
+    return True
+
+
+def _is_ca(cert: x509.Certificate) -> bool:
+    try:
+        if not cert.extensions.get_extension_for_class(x509.BasicConstraints).value.ca:
+            return False
+    except x509.ExtensionNotFound:
+        return False
+    try:
+        return cert.extensions.get_extension_for_class(x509.KeyUsage).value.key_cert_sign
+    except x509.ExtensionNotFound:
+        return True
+
+
 def verify_attestation(chain_b64: list[str], spki_der: bytes, challenge: bytes, now: datetime | None = None) -> Attestation:
     """Check an Android key attestation chain (leaf first) for the enrolling key.
 
@@ -192,6 +212,15 @@ def verify_attestation(chain_b64: list[str], spki_der: bytes, challenge: bytes, 
             return result
         for child, issuer in zip(certs, certs[1:]):
             child.verify_directly_issued_by(issuer)
+        # Only a CA may issue, and only the leaf may describe a key: otherwise anyone with a genuine attested
+        # Keystore key could sign a forged "attested" leaf for a software key.
+        for position, cert in enumerate(certs):
+            if position and not _is_ca(cert):
+                raise ValueError("issuer is not a CA")
+            if not position and _is_ca(cert):
+                raise ValueError("leaf is a CA")
+            if position and _has_extension(cert, KEY_DESCRIPTION_OID):
+                raise ValueError("key description outside the leaf")
         for cert in certs:
             if not (cert.not_valid_before_utc <= now <= cert.not_valid_after_utc):
                 result.error = "certificate_expired"

@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from modules.audit.models import AuditEvent
 from modules.devices.models import Device, DeviceHeartbeat, DeviceStatus, DeviceToken, EnrollmentInvite
-from modules.devices.services import enrollment, health, identity, push
+from modules.devices.services import enrollment, health, identity, manage, push
 from tests.phone import APP_VERSION, Phone
 
 pytestmark = pytest.mark.django_db
@@ -207,6 +207,60 @@ def test_attestation_rejects_untrusted_root_wrong_challenge_and_foreign_key(invi
     assert identity.verify_attestation(["bm9wZQ=="], spki, challenge).error == "invalid_chain"
 
 
+def _cert(subject: str, issuer: x509.Certificate, signer, public_key, *, ca: bool, extensions=()):
+    now = datetime.now(dt_timezone.utc)
+    builder = (x509.CertificateBuilder().subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, subject)])).issuer_name(issuer.subject)
+               .public_key(public_key).serial_number(x509.random_serial_number()).not_valid_before(now - timedelta(days=1)).not_valid_after(now + timedelta(days=30)))
+    if ca:
+        builder = builder.add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+    for extension in extensions:
+        builder = builder.add_extension(extension, critical=False)
+    return builder.sign(signer, hashes.SHA256())
+
+
+def _der(*certs) -> list[str]:
+    return [base64.b64encode(c.public_bytes(serialization.Encoding.DER)).decode() for c in certs]
+
+
+def test_attestation_rejects_leaf_forged_with_a_genuine_attested_key(invite_token, trusted_root):
+    """A real phone's attested key can sign anything, so it must not be accepted as an issuer of another "attested" key."""
+    _, token = invite_token()
+    challenge = hashlib.sha256(token.encode()).digest()
+    software = Phone()  # the key the attacker wants enrolled as hardware-backed
+    genuine_key = ec.generate_private_key(ec.SECP256R1())  # stands in for a real phone's Keystore key
+    genuine_chain, root = _chain(genuine_key, b"any" * 8, level=1)
+    trusted_root(root)
+    genuine_leaf = x509.load_der_x509_certificate(base64.b64decode(genuine_chain[0]))
+    forged = _cert("Android Keystore Key", genuine_leaf, genuine_key, software.key.public_key(), ca=False,
+                   extensions=[x509.UnrecognizedExtension(identity.KEY_DESCRIPTION_OID, _key_description(challenge, 2))])
+    chain = [*_der(forged), *genuine_chain]
+    spki = base64.b64decode(software.enroll_body(token)["public_key"])
+    result = identity.verify_attestation(chain, spki, challenge)
+    assert result.error == "invalid_chain" and not result.hardware_backed
+    # Enrolled anyway (attestation is optional by default), but never marked hardware-backed.
+    assert software.enroll(token, attestation_chain=chain).status_code == 201
+    assert Device.objects.get(pk=software.device_id).hardware_backed is False
+
+
+def test_attestation_rejects_key_description_outside_the_leaf(trusted_root):
+    challenge = b"c" * 32
+    root_key, mid_key, leaf_key = (ec.generate_private_key(ec.SECP256R1()) for _ in range(3))
+    now = datetime.now(dt_timezone.utc)
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Test attestation root")])
+    root = (x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(root_key.public_key()).serial_number(1)
+            .not_valid_before(now - timedelta(days=1)).not_valid_after(now + timedelta(days=365))
+            .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True).sign(root_key, hashes.SHA256()))
+    trusted_root(root)
+    description = x509.UnrecognizedExtension(identity.KEY_DESCRIPTION_OID, _key_description(challenge, 2))
+    spki = leaf_key.public_key().public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
+    leaf_of = lambda mid: _cert("Android Keystore Key", mid, mid_key, leaf_key.public_key(), ca=False, extensions=[description])  # noqa: E731
+
+    good_mid = _cert("Intermediate", root, root_key, mid_key.public_key(), ca=True)
+    assert identity.verify_attestation(_der(leaf_of(good_mid), good_mid, root), spki, challenge).hardware_backed  # control
+    bad_mid = _cert("Intermediate", root, root_key, mid_key.public_key(), ca=True, extensions=[description])
+    assert identity.verify_attestation(_der(leaf_of(bad_mid), bad_mid, root), spki, challenge).error == "invalid_chain"
+
+
 def test_required_attestation_refuses_software_keys(invite_token, settings):
     settings.SMS_REQUIRE_KEY_ATTESTATION = True
     response = Phone().enroll(invite_token()[1])
@@ -324,6 +378,19 @@ def test_heartbeat_updates_state_history_and_alerts(phone):
     Device.objects.filter(pk=device.pk).update(last_seen_at=timezone.now() - timedelta(hours=3))
     health.refresh_all()
     assert "offline" in Device.objects.get(pk=device.pk).attention
+
+
+def test_stale_heartbeat_or_edit_cannot_undo_a_revoke(phone, admin):
+    """The phone's request holds the device row it authenticated with; saving it must not write `status` back."""
+    stale = Device.objects.get(pk=phone.device_id)
+    stale_admin_copy = Device.objects.get(pk=phone.device_id)
+    manage.revoke(Device.objects.get(pk=phone.device_id), admin)
+    health.record_heartbeat(stale, {"battery": 50, "is_default_sms_app": True})
+    manage.update(stale_admin_copy, admin, {"name": "Renamed"})
+    device = Device.objects.get(pk=phone.device_id)
+    assert device.status == DeviceStatus.REVOKED and device.revoked_at is not None and device.push_token == ""
+    assert device.battery == 50 and device.name == "Renamed"
+    assert phone.get("config/").json()["code"] == "device_revoked"
 
 
 def test_heartbeat_validates_input(phone):
