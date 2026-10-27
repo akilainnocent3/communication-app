@@ -22,3 +22,15 @@ def platforms_for(user, include_disabled: bool = False) -> list[dict]:
             continue
         result.append({"key": spec.key, "name": spec.name, "permission": spec.permission, "is_enabled": row.is_enabled, "order": row.order})
     return sorted(result, key=lambda item: (item["order"], item["key"]))
+
+
+def is_platform_enabled(key: str) -> bool:
+    """Whether a super admin has the platform switched on. A disabled platform refuses its whole API.
+
+    Unknown keys are off. A registered platform without a row yet uses its default enablement.
+    """
+    spec = registry.get(key)
+    if spec is None:
+        return False
+    row = Platform.objects.filter(key=key).values_list("is_enabled", flat=True).first()
+    return spec.default_enabled if row is None else bool(row)

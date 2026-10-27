@@ -10,6 +10,7 @@ from django.db.models import Count, Q, QuerySet
 from rest_framework import status
 
 from common.errors import ApiError
+from modules.platforms.services import is_platform_enabled
 
 from ..models import Mailbox, MailboxAccess, Thread
 
@@ -22,7 +23,7 @@ def is_mail_admin(user) -> bool:
 
 
 def can_use_mail(user) -> bool:
-    return bool(user and user.is_authenticated and user.has_perm("mail.access"))
+    return bool(user and user.is_authenticated and user.has_perm("mail.access") and is_platform_enabled("gmail"))
 
 
 def accessible_mailboxes(user, perm: str = READ) -> QuerySet[Mailbox]:
