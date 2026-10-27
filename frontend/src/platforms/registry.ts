@@ -3,12 +3,13 @@
  * ⌘K palette, context bar) reads only from here. See docs/adding-a-platform.md.
  */
 import { gmail } from "./gmail/definition";
-import { callsComingSoon, mediaComingSoon, smsComingSoon } from "./coming-soon";
+import { callsComingSoon, mediaComingSoon } from "./coming-soon";
+import { sms } from "./sms/definition";
 import type { PlatformDefinition } from "./types";
 
 export type { PlatformDefinition, PlatformNavItem, PlatformNavChild, PlatformNavSection, CommandDef } from "./types";
 
-export const PLATFORMS: PlatformDefinition[] = [gmail, smsComingSoon, callsComingSoon, mediaComingSoon];
+export const PLATFORMS: PlatformDefinition[] = [gmail, sms, callsComingSoon, mediaComingSoon];
 
 /** The platform owning a pathname (first URL segment), if any. */
 export function platformForPath(pathname: string | null): PlatformDefinition | undefined {

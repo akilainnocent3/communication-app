@@ -165,6 +165,176 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/device/auth/token/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Enrollment and token minting: no auth, throttled per client IP. */
+        post: operations["device_auth_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/config/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        get: operations["device_sms_config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/enroll/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Enrollment and token minting: no auth, throttled per client IP. */
+        post: operations["device_enroll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/enroll/info/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What the app shows before enrolling: company, device name and the monitoring notice to accept. */
+        get: operations["device_enroll_info"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/heartbeat/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        post: operations["device_heartbeat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/outbox/claim/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        post: operations["device_outbox_claim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/outbox/status/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        post: operations["device_outbox_status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/push-token/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        post: operations["device_push_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/sync/events/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        post: operations["device_sync_events"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/sync/media/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        post: operations["device_sync_media"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/mail/actions/": {
         parameters: {
             query?: never;
@@ -1136,6 +1306,575 @@ export interface paths {
         patch: operations["settings_users_update"];
         trace?: never;
     };
+    "/api/v1/sms/assignees/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_assignees_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/blocked/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_blocked_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/blocked/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["sms_blocked_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/contacts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_contacts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/conversations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_conversations_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/conversations/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_conversations_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/conversations/{id}/messages/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Messages of one conversation, newest first (the UI reverses them). `q` searches inside this conversation only:
+         *     the text is decrypted for this request and never stored decrypted.
+         */
+        get: operations["sms_messages_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/conversations/{id}/notes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_notes_list"];
+        put?: never;
+        post: operations["sms_notes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/conversations/{id}/notes/{note_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["sms_notes_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/conversations/actions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_conversations_actions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/devices/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_devices_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/devices/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_devices_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["sms_devices_update"];
+        trace?: never;
+    };
+    "/api/v1/sms/devices/{id}/{action}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description suspend / resume / revoke. Revoking needs the device code typed back (confirm_code). */
+        post: operations["sms_devices_status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/devices/{id}/access/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_device_access_list"];
+        put: operations["sms_device_access_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/devices/{id}/heartbeats/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_devices_heartbeats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/devices/{id}/resync/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_devices_resync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/devices/{id}/sims/{sim_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["sms_sims_update"];
+        trace?: never;
+    };
+    "/api/v1/sms/devices/{id}/simulator/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Demo phones only (SMS_ENABLE_SIMULATOR, refused in production): go online/offline, run a tick, receive a text. */
+        post: operations["sms_devices_simulator"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/enrollments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_enrollments_list"];
+        put?: never;
+        post: operations["sms_enrollments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/enrollments/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_enrollments_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/enrollments/{id}/revoke/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_enrollments_revoke"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/messages/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_messages_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/messages/{id}/media/{part_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description MMS media: permission-checked, audited, never a public URL, and sandboxed like mail attachments. */
+        get: operations["sms_media_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/messages/{id}/retry/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_messages_retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/messages/{id}/reveal/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_messages_reveal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/messages/{id}/star/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_messages_star"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/outbox/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Admin messages still on their way (queued, at the phone, sending) or that need a decision. */
+        get: operations["sms_outbox_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/quick-replies/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_quick_replies_list"];
+        put?: never;
+        post: operations["sms_quick_replies_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/quick-replies/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["sms_quick_replies_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["sms_quick_replies_update"];
+        trace?: never;
+    };
+    "/api/v1/sms/rules/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_rules_list"];
+        put?: never;
+        post: operations["sms_rules_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/rules/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["sms_rules_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["sms_rules_update"];
+        trace?: never;
+    };
+    "/api/v1/sms/segments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The composer counts segments locally; this endpoint exists so the phone and admin agree on the rules. */
+        get: operations["sms_segments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/send/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sms_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/settings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_settings_get"];
+        put: operations["sms_settings_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sms/stats/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sms_stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1214,6 +1953,10 @@ export interface components {
             /** @default  */
             name: string;
         };
+        Alert: {
+            code: string;
+            label: string;
+        };
         Assignee: {
             id: number;
             email: string;
@@ -1232,6 +1975,14 @@ export interface components {
             size: number;
             inline: boolean;
             url: string;
+        };
+        Attestation: {
+            present: boolean;
+            chain_valid: boolean;
+            root_trusted: boolean;
+            challenge_ok: boolean;
+            security_level: string;
+            hardware_backed: boolean;
         };
         AuditEvent: {
             readonly id: number;
@@ -1253,6 +2004,16 @@ export interface components {
             results: components["schemas"]["AuditEvent"][];
             next_cursor: string | null;
         };
+        BatchRequest: {
+            events: components["schemas"]["EventRequest"][];
+        };
+        /** @enum {unknown} */
+        BlankEnum: "";
+        BlockRequestRequest: {
+            /** Format: uuid */
+            device: string;
+            address: string;
+        };
         Capabilities: {
             labels: boolean;
             categories: boolean;
@@ -1263,6 +2024,24 @@ export interface components {
             important: boolean;
             server_search: boolean;
             revoke: boolean;
+        };
+        ClaimRequest: {
+            /** @default 10 */
+            limit: number;
+        };
+        ClaimResult: {
+            messages: {
+                [key: string]: unknown;
+            }[];
+            commands: {
+                [key: string]: unknown;
+            }[];
+            lease_seconds: number;
+        };
+        CommandAckRequest: {
+            id: number;
+            /** @default true */
+            ok: boolean;
         };
         ComposeRequest: {
             mailbox: number;
@@ -1284,12 +2063,49 @@ export interface components {
             send_at?: string | null;
             undo_seconds?: (components["schemas"]["UndoSendSecondsEnum"] | components["schemas"]["NullEnum"]) | null;
         };
+        ConfigResponse: {
+            device: {
+                [key: string]: unknown;
+            };
+            options: {
+                [key: string]: unknown;
+            };
+            sims: {
+                [key: string]: unknown;
+            }[];
+            quick_replies: {
+                [key: string]: unknown;
+            }[];
+            poll_seconds: number;
+            show_admin_name: boolean;
+            outbound_ttl_hours: number;
+            acked_seq: number;
+            resync_requested: boolean;
+            server_time: number;
+        };
         /**
          * @description * `ssl` - ssl
          *     * `starttls` - starttls
          * @enum {string}
          */
         ConnectionSecurityEnum: "ssl" | "starttls";
+        ContactPage: {
+            results: components["schemas"]["ContactRow"][];
+            next_cursor: string | null;
+        };
+        ContactRow: {
+            id: number;
+            device: components["schemas"]["DeviceRef"];
+            address: string;
+            display: string;
+            name: string;
+            kind: string;
+            is_blocked: boolean;
+            messages: number;
+            /** Format: date-time */
+            last_contact_at: string | null;
+            conversation: number | null;
+        };
         ContactSuggestion: {
             email: string;
             name: string;
@@ -1297,6 +2113,80 @@ export interface components {
         ContactSuggestionRequest: {
             email: string;
             name: string;
+        };
+        ConversationDetail: {
+            id: number;
+            readonly device: components["schemas"]["DeviceRef"];
+            readonly participants: components["schemas"]["SmsParticipant"][];
+            readonly title: string;
+            is_group: boolean;
+            readonly snippet: string;
+            snippet_sensitive: boolean;
+            /** Format: date-time */
+            last_message_at: string;
+            last_direction: string;
+            last_status: string;
+            unread_count: number;
+            message_count: number;
+            is_pinned: boolean;
+            is_archived: boolean;
+            is_muted: boolean;
+            is_spam: boolean;
+            is_starred: boolean;
+            state: string;
+            readonly assigned_to: components["schemas"]["UserRef"] | null;
+            readonly sim: components["schemas"]["SimRef"] | null;
+            has_mms: boolean;
+            /** Format: date-time */
+            awaiting_since: string | null;
+            /** Format: date-time */
+            deleted_on_device_at: string | null;
+            thread_id: number | null;
+            readonly permissions: components["schemas"]["DevicePermissions"];
+            readonly stats: components["schemas"]["ConversationStats"];
+            readonly device_status: {
+                [key: string]: unknown;
+            };
+        };
+        ConversationPage: {
+            results: components["schemas"]["ConversationSummary"][];
+            next_cursor: string | null;
+            total: number | null;
+        };
+        ConversationStats: {
+            /** Format: date-time */
+            first_contact_at: string | null;
+            inbound: number;
+            outbound: number;
+            avg_response_minutes: number | null;
+        };
+        ConversationSummary: {
+            id: number;
+            readonly device: components["schemas"]["DeviceRef"];
+            readonly participants: components["schemas"]["SmsParticipant"][];
+            readonly title: string;
+            is_group: boolean;
+            readonly snippet: string;
+            snippet_sensitive: boolean;
+            /** Format: date-time */
+            last_message_at: string;
+            last_direction: string;
+            last_status: string;
+            unread_count: number;
+            message_count: number;
+            is_pinned: boolean;
+            is_archived: boolean;
+            is_muted: boolean;
+            is_spam: boolean;
+            is_starred: boolean;
+            state: string;
+            readonly assigned_to: components["schemas"]["UserRef"] | null;
+            readonly sim: components["schemas"]["SimRef"] | null;
+            has_mms: boolean;
+            /** Format: date-time */
+            awaiting_since: string | null;
+            /** Format: date-time */
+            deleted_on_device_at: string | null;
         };
         Csrf: {
             csrf_token: string;
@@ -1328,6 +2218,157 @@ export interface components {
          * @enum {string}
          */
         DetectionProviderEnum: "gmail_oauth" | "workspace_delegation" | "imap_smtp" | "unsupported" | "fake";
+        Device: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            readonly office: components["schemas"]["SmsOfficeRef"];
+            readonly assigned_to: components["schemas"]["UserRef"] | null;
+            status: string;
+            readonly online: boolean;
+            /** Format: date-time */
+            last_seen_at: string | null;
+            readonly attention: components["schemas"]["Alert"][];
+            manufacturer: string;
+            model: string;
+            android_version: string;
+            app_version: string;
+            battery: number | null;
+            charging: boolean;
+            network_type: string;
+            signal: number | null;
+            is_default_sms_app: boolean;
+            battery_optimised: boolean;
+            pending_outbox: number;
+            /** Format: date-time */
+            last_sync_at: string | null;
+            sync_progress: {
+                [key: string]: unknown;
+            };
+            hardware_backed: boolean;
+            is_simulated: boolean;
+            readonly sims: components["schemas"]["SimLine"][];
+            readonly permissions: components["schemas"]["DevicePermissions"];
+            readonly unread: number;
+            /** Format: date-time */
+            enrolled_at: string;
+        };
+        DeviceAccessEntry: {
+            user: number;
+            readonly email: string;
+            readonly display_name: string;
+            /** @default true */
+            can_read: boolean;
+            /** @default false */
+            can_send: boolean;
+            /** @default false */
+            can_manage: boolean;
+            /** @default false */
+            can_reveal_sensitive: boolean;
+        };
+        DeviceAccessEntryRequest: {
+            user: number;
+            /** @default true */
+            can_read: boolean;
+            /** @default false */
+            can_send: boolean;
+            /** @default false */
+            can_manage: boolean;
+            /** @default false */
+            can_reveal_sensitive: boolean;
+        };
+        DeviceDetail: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            readonly office: components["schemas"]["SmsOfficeRef"];
+            readonly assigned_to: components["schemas"]["UserRef"] | null;
+            status: string;
+            readonly online: boolean;
+            /** Format: date-time */
+            last_seen_at: string | null;
+            readonly attention: components["schemas"]["Alert"][];
+            manufacturer: string;
+            model: string;
+            android_version: string;
+            app_version: string;
+            battery: number | null;
+            charging: boolean;
+            network_type: string;
+            signal: number | null;
+            is_default_sms_app: boolean;
+            battery_optimised: boolean;
+            pending_outbox: number;
+            /** Format: date-time */
+            last_sync_at: string | null;
+            sync_progress: {
+                [key: string]: unknown;
+            };
+            hardware_backed: boolean;
+            is_simulated: boolean;
+            readonly sims: components["schemas"]["SimLine"][];
+            readonly permissions: components["schemas"]["DevicePermissions"];
+            readonly unread: number;
+            /** Format: date-time */
+            enrolled_at: string;
+            sdk_int: number;
+            options: {
+                [key: string]: unknown;
+            };
+            permissions_granted: {
+                [key: string]: unknown;
+            };
+            risk_signals: {
+                [key: string]: unknown;
+            };
+            readonly attestation: components["schemas"]["Attestation"];
+            /** Format: date-time */
+            notice_accepted_at: string | null;
+            notice_text: string;
+            /** Format: date-time */
+            suspended_at: string | null;
+            /** Format: date-time */
+            revoked_at: string | null;
+            readonly enrolled_by: components["schemas"]["UserRef"] | null;
+            readonly push_enabled: boolean;
+        };
+        DeviceFactsRequest: {
+            /** @default  */
+            manufacturer: string;
+            /** @default  */
+            model: string;
+            /** @default  */
+            android_version: string;
+            /** @default 0 */
+            sdk_int: number;
+        };
+        DeviceOptionsRequest: {
+            signature_enabled?: boolean;
+            signature?: string;
+            mark_read_on_open?: boolean;
+            backfill_days?: number | null;
+        };
+        DevicePermissions: {
+            read: boolean;
+            send: boolean;
+            manage: boolean;
+            reveal: boolean;
+        };
+        DeviceRef: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            colour: string;
+        };
+        DeviceStatusChangeRequest: {
+            /** @default  */
+            reason: string;
+            /** @default  */
+            confirm_code: string;
+        };
         Draft: {
             id: number;
             mailbox: number;
@@ -1364,6 +2405,113 @@ export interface components {
             send_at?: string | null;
             undo_seconds?: (components["schemas"]["UndoSendSecondsEnum"] | components["schemas"]["NullEnum"]) | null;
         };
+        EnrollInfo: {
+            state: string;
+            company_name: string;
+            device_name: string;
+            office: string;
+            notice: string;
+            /** Format: date-time */
+            expires_at: string;
+            server_time: number;
+        };
+        EnrollRequestRequest: {
+            token: string;
+            public_key: string;
+            signature: string;
+            timestamp: number;
+            nonce: string;
+            attestation_chain?: string[];
+            /** @default  */
+            integrity_token: string;
+            app_version: string;
+            device?: components["schemas"]["DeviceFactsRequest"];
+            sims?: components["schemas"]["SimRequest"][];
+            notice_accepted: boolean;
+            /** @default  */
+            notice_text: string;
+        };
+        EnrollResponse: {
+            access_token: string;
+            token_type: string;
+            expires_in: number;
+            /** Format: uuid */
+            device_id: string;
+            device_code: string;
+            name: string;
+            office: string;
+            options: {
+                [key: string]: unknown;
+            };
+            hardware_backed: boolean;
+        };
+        Enrollment: {
+            id: number;
+            name: string;
+            readonly office: components["schemas"]["SmsOfficeRef"];
+            state: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            used_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            readonly created_by: string | null;
+            readonly device: components["schemas"]["DeviceRef"] | null;
+            failed_attempts: number;
+            last_failure: string;
+        };
+        EnrollmentCreateRequest: {
+            name: string;
+            office: number;
+            assigned_to?: number | null;
+            backfill_days?: number | null;
+            /** @default false */
+            signature_enabled: boolean;
+            /** @default  */
+            signature: string;
+            /** @default true */
+            mark_read_on_open: boolean;
+        };
+        EnrollmentCreated: {
+            id: number;
+            name: string;
+            readonly office: components["schemas"]["SmsOfficeRef"];
+            state: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            used_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            readonly created_by: string | null;
+            readonly device: components["schemas"]["DeviceRef"] | null;
+            failed_attempts: number;
+            last_failure: string;
+            code: string;
+            uri: string;
+            qr_svg: string;
+        };
+        EventRequest: {
+            seq: number;
+            type: components["schemas"]["EventTypeEnum"];
+            payload: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * @description * `backfill.progress` - backfill.progress
+         *     * `block.add` - block.add
+         *     * `block.remove` - block.remove
+         *     * `contact.upsert` - contact.upsert
+         *     * `message.delete` - message.delete
+         *     * `message.read` - message.read
+         *     * `message.upsert` - message.upsert
+         *     * `thread.delete` - thread.delete
+         *     * `thread.read` - thread.read
+         * @enum {string}
+         */
+        EventTypeEnum: "backfill.progress" | "block.add" | "block.remove" | "contact.upsert" | "message.delete" | "message.read" | "message.upsert" | "thread.delete" | "thread.read";
         Filter: {
             readonly id: string;
             criteria: components["schemas"]["FilterCriteria"];
@@ -1396,6 +2544,49 @@ export interface components {
         FilterRequest: {
             criteria: components["schemas"]["FilterCriteriaRequest"];
             action: components["schemas"]["FilterActionRequest"];
+        };
+        HeartbeatHistory: {
+            /** Format: date-time */
+            created_at: string;
+            battery: number | null;
+            charging: boolean;
+            network_type: string;
+            signal: number | null;
+            is_default_sms_app: boolean;
+            pending_outbox: number;
+            app_version: string;
+        };
+        HeartbeatRequest: {
+            battery?: number | null;
+            /** @default false */
+            charging: boolean;
+            /** @default  */
+            network_type: components["schemas"]["NetworkTypeEnum"] | components["schemas"]["BlankEnum"];
+            signal?: number | null;
+            is_default_sms_app: boolean;
+            permissions?: {
+                [key: string]: boolean;
+            };
+            /** @default false */
+            battery_optimised: boolean;
+            /** @default 0 */
+            pending_outbox: number;
+            /** @default  */
+            app_version: string;
+            /** @default  */
+            android_version: string;
+            /** Format: date-time */
+            last_sync_at?: string | null;
+            risk_signals?: {
+                [key: string]: boolean;
+            };
+            sims?: components["schemas"]["SimRequest"][] | null;
+        };
+        HeartbeatResponse: {
+            status: string;
+            attention: string[];
+            server_time: number;
+            poll_seconds: number;
         };
         ImapDefaults: {
             imap_host: string;
@@ -1610,6 +2801,25 @@ export interface components {
             };
             totp_enabled: boolean;
         };
+        /**
+         * @description * `mms` - mms
+         * @enum {string}
+         */
+        MediaChunkKindEnum: "mms";
+        MediaChunkRequest: {
+            /** @default mms */
+            kind: components["schemas"]["MediaChunkKindEnum"];
+            provider_id: number;
+            date: number;
+            seq: number;
+            offset: number;
+            /** Format: binary */
+            chunk: string;
+        };
+        MediaChunkResult: {
+            received_bytes: number;
+            complete: boolean;
+        };
         Message: {
             readonly id: number;
             from_addr: components["schemas"]["Address"] | null;
@@ -1642,6 +2852,16 @@ export interface components {
          * @enum {string}
          */
         ModeEnum: "new" | "reply" | "reply_all" | "forward";
+        /**
+         * @description * `wifi` - wifi
+         *     * `cellular` - cellular
+         *     * `ethernet` - ethernet
+         *     * `none` - none
+         *     * `other` - other
+         *     * `` -
+         * @enum {string}
+         */
+        NetworkTypeEnum: "wifi" | "cellular" | "ethernet" | "none" | "other";
         Note: {
             readonly id: number;
             body: string;
@@ -1678,11 +2898,66 @@ export interface components {
             code: string;
             colour?: string;
         };
+        OutboxItem: {
+            id: number;
+            conversation: number;
+            kind: string;
+            direction: string;
+            origin: string;
+            address: string;
+            readonly body: string;
+            readonly is_masked: boolean;
+            is_sensitive: boolean;
+            sensitive_kind: string;
+            segments: number;
+            encoding: string;
+            subject: string;
+            /** Format: date-time */
+            at: string;
+            status: string;
+            status_label: string;
+            status_history: components["schemas"]["StatusEntry"][];
+            readonly sent_by: components["schemas"]["UserRef"] | null;
+            readonly sim: components["schemas"]["SimRef"] | null;
+            error_code: number | null;
+            error_detail: string;
+            is_read: boolean;
+            is_starred: boolean;
+            /** Format: date-time */
+            deleted_on_device_at: string | null;
+            /** Format: date-time */
+            send_at: string | null;
+            is_scheduled: boolean;
+            /** Format: date-time */
+            sent_at: string | null;
+            /** Format: date-time */
+            delivered_at: string | null;
+            /** Format: uuid */
+            client_uuid: string | null;
+            retry_of: number | null;
+            readonly parts: components["schemas"]["Part"][];
+            readonly device: components["schemas"]["DeviceRef"];
+            readonly conversation_title: string;
+        };
+        Part: {
+            id: number;
+            seq: number;
+            content_type: string;
+            filename: string;
+            size: number;
+            available: boolean;
+        };
         Participant: {
             email: string;
             name: string;
             unread?: boolean;
             is_me?: boolean;
+        };
+        PatchedDeviceUpdateRequest: {
+            name?: string;
+            office?: number;
+            assigned_to?: number | null;
+            options?: components["schemas"]["DeviceOptionsRequest"];
         };
         PatchedDraftWriteRequest: {
             mailbox?: number;
@@ -1731,6 +3006,12 @@ export interface components {
             undo_send_seconds?: components["schemas"]["UndoSendSecondsEnum"];
             timezone?: string;
         };
+        PatchedQuickReplyRequest: {
+            title?: string;
+            body?: string;
+            /** Format: uuid */
+            device?: string | null;
+        };
         PatchedRescheduleRequest: {
             /** Format: date-time */
             send_at?: string;
@@ -1740,6 +3021,19 @@ export interface components {
             /** @default  */
             description: string;
             permissions?: string[];
+        };
+        PatchedSensitiveRuleRequest: {
+            name?: string;
+            kind?: components["schemas"]["SensitiveRuleKindEnum"];
+            /** @description Regex on the sender address (optional). */
+            sender_pattern?: string;
+            /** @description Regex on the text (optional). */
+            body_pattern?: string;
+            is_enabled?: boolean;
+        };
+        PatchedSimUpdateRequest: {
+            display_name?: string;
+            colour?: string;
         };
         PatchedTemplateRequest: {
             name?: string;
@@ -1792,6 +3086,9 @@ export interface components {
             expires_at: string;
             google_configured: boolean;
         };
+        PushTokenRequest: {
+            token: string;
+        };
         Queued: {
             readonly id: number;
             mailbox: number;
@@ -1817,12 +3114,30 @@ export interface components {
          * @enum {string}
          */
         QueuedStatusEnum: "pending" | "sending" | "sent" | "cancelled" | "failed";
+        QuickReply: {
+            readonly id: number;
+            title: string;
+            body: string;
+            /** Format: uuid */
+            device?: string | null;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        QuickReplyRequest: {
+            title: string;
+            body: string;
+            /** Format: uuid */
+            device?: string | null;
+        };
         /**
          * @description * `right` - right
          *     * `none` - none
          * @enum {string}
          */
         ReadingPaneEnum: "right" | "none";
+        Reveal: {
+            body: string;
+        };
         Role: {
             readonly id: number;
             slug: string;
@@ -1840,6 +3155,13 @@ export interface components {
             description: string;
             permissions?: string[];
         };
+        SegmentInfo: {
+            encoding: string;
+            units: number;
+            segments: number;
+            per_segment: number;
+            remaining: number;
+        };
         SelectionQueryRequest: {
             mailbox: string;
             label?: string;
@@ -1856,10 +3178,246 @@ export interface components {
             is_primary: boolean;
             signature: string;
         };
+        SensitiveRule: {
+            readonly id: number;
+            name: string;
+            kind: components["schemas"]["SensitiveRuleKindEnum"];
+            /** @description Regex on the sender address (optional). */
+            sender_pattern?: string;
+            /** @description Regex on the text (optional). */
+            body_pattern?: string;
+            is_enabled?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `otp` - One-time code
+         *     * `money` - Banking / mobile money
+         * @enum {string}
+         */
+        SensitiveRuleKindEnum: "otp" | "money";
+        SensitiveRuleRequest: {
+            name: string;
+            kind: components["schemas"]["SensitiveRuleKindEnum"];
+            /** @description Regex on the sender address (optional). */
+            sender_pattern?: string;
+            /** @description Regex on the text (optional). */
+            body_pattern?: string;
+            is_enabled?: boolean;
+        };
         SignatureWriteRequest: {
             /** Format: email */
             send_as: string;
             signature: string;
+        };
+        SimLine: {
+            id: number;
+            subscription_id: number;
+            slot: number;
+            carrier: string;
+            country_iso: string;
+            number: string;
+            display_name: string;
+            label: string;
+            colour: string;
+            is_default: boolean;
+            is_active: boolean;
+        };
+        SimRef: {
+            id: number;
+            label: string;
+            slot: number;
+            colour: string;
+        };
+        SimRequest: {
+            subscription_id: number;
+            /** @default 0 */
+            slot: number;
+            /** @default  */
+            carrier: string;
+            /** @default  */
+            country_iso: string;
+            /** @default  */
+            number: string;
+            /** @default false */
+            is_default: boolean;
+        };
+        /**
+         * @description * `online` - online
+         *     * `offline` - offline
+         *     * `tick` - tick
+         *     * `inbound` - inbound
+         * @enum {string}
+         */
+        SimulatorActionActionEnum: "online" | "offline" | "tick" | "inbound";
+        SimulatorActionRequest: {
+            action: components["schemas"]["SimulatorActionActionEnum"];
+        };
+        /**
+         * @description * `archive` - archive
+         *     * `assign` - assign
+         *     * `block` - block
+         *     * `done` - done
+         *     * `mute` - mute
+         *     * `not_spam` - not_spam
+         *     * `pin` - pin
+         *     * `read` - read
+         *     * `reopen` - reopen
+         *     * `spam` - spam
+         *     * `star` - star
+         *     * `unarchive` - unarchive
+         *     * `unassign` - unassign
+         *     * `unblock` - unblock
+         *     * `unmute` - unmute
+         *     * `unpin` - unpin
+         *     * `unread` - unread
+         *     * `unstar` - unstar
+         * @enum {string}
+         */
+        SmsActionRequestActionEnum: "archive" | "assign" | "block" | "done" | "mute" | "not_spam" | "pin" | "read" | "reopen" | "spam" | "star" | "unarchive" | "unassign" | "unblock" | "unmute" | "unpin" | "unread" | "unstar";
+        SmsActionRequestRequest: {
+            action: components["schemas"]["SmsActionRequestActionEnum"];
+            conversation_ids: number[];
+            assignee?: number | null;
+        };
+        SmsActionResult: {
+            conversations: components["schemas"]["ConversationSummary"][];
+        };
+        SmsAssignee: {
+            id: number;
+            email: string;
+            display_name: string;
+        };
+        SmsComposeRequest: {
+            /** Format: uuid */
+            device: string;
+            conversation?: number | null;
+            to?: string[];
+            body: string;
+            sim_line?: number | null;
+            /** Format: date-time */
+            send_at?: string | null;
+            undo_seconds?: number | null;
+            /** Format: uuid */
+            client_uuid?: string | null;
+        };
+        SmsComposeResult: {
+            message: components["schemas"]["SmsMessage"];
+            conversation: number;
+        };
+        SmsMessage: {
+            id: number;
+            conversation: number;
+            kind: string;
+            direction: string;
+            origin: string;
+            address: string;
+            readonly body: string;
+            readonly is_masked: boolean;
+            is_sensitive: boolean;
+            sensitive_kind: string;
+            segments: number;
+            encoding: string;
+            subject: string;
+            /** Format: date-time */
+            at: string;
+            status: string;
+            status_label: string;
+            status_history: components["schemas"]["StatusEntry"][];
+            readonly sent_by: components["schemas"]["UserRef"] | null;
+            readonly sim: components["schemas"]["SimRef"] | null;
+            error_code: number | null;
+            error_detail: string;
+            is_read: boolean;
+            is_starred: boolean;
+            /** Format: date-time */
+            deleted_on_device_at: string | null;
+            /** Format: date-time */
+            send_at: string | null;
+            is_scheduled: boolean;
+            /** Format: date-time */
+            sent_at: string | null;
+            /** Format: date-time */
+            delivered_at: string | null;
+            /** Format: uuid */
+            client_uuid: string | null;
+            retry_of: number | null;
+            readonly parts: components["schemas"]["Part"][];
+        };
+        SmsMessagePage: {
+            results: components["schemas"]["SmsMessage"][];
+            next_cursor: string | null;
+        };
+        SmsNote: {
+            readonly id: number;
+            body: string;
+            readonly author: components["schemas"]["UserRef"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        SmsNoteRequest: {
+            body: string;
+        };
+        SmsOfficeRef: {
+            id: number;
+            name: string;
+            colour: string;
+        };
+        SmsParticipant: {
+            address: string;
+            display: string;
+            name: string;
+            kind: string;
+            is_blocked: boolean;
+        };
+        SmsSettings: {
+            monitoring_notice: string;
+            default_signature: string;
+            readonly retention_days: number;
+            readonly mirror_device_deletes: boolean;
+            readonly outbound_ttl_hours: number;
+            readonly daily_cap: number;
+            readonly allow_short_codes: boolean;
+            readonly push_configured: boolean;
+            readonly simulator_enabled: boolean;
+        };
+        SmsSettingsRequest: {
+            monitoring_notice: string;
+            default_signature: string;
+        };
+        StarRequest: {
+            starred: boolean;
+        };
+        StatusBatchRequest: {
+            reports?: components["schemas"]["StatusReportRequest"][];
+            command_acks?: components["schemas"]["CommandAckRequest"][];
+        };
+        StatusEntry: {
+            status: string;
+            /** Format: date-time */
+            at: string;
+        };
+        StatusReportRequest: {
+            /** Format: uuid */
+            client_uuid: string;
+            status: components["schemas"]["StatusReportStatusEnum"];
+            at?: number | null;
+            error_code?: number | null;
+            parts?: number | null;
+        };
+        /**
+         * @description * `delivered` - delivered
+         *     * `failed` - failed
+         *     * `sending` - sending
+         *     * `sent` - sent
+         *     * `unknown` - unknown
+         * @enum {string}
+         */
+        StatusReportStatusEnum: "delivered" | "failed" | "sending" | "sent" | "unknown";
+        StatusResult: {
+            results: {
+                [key: string]: unknown;
+            }[];
         };
         /**
          * @description * `archive` - archive
@@ -1869,6 +3427,14 @@ export interface components {
          * @enum {string}
          */
         SwipeActionEnum: "archive" | "trash" | "read" | "none";
+        SyncResult: {
+            acked_seq: number;
+            processed: number;
+            skipped: number;
+            rejected: {
+                [key: string]: unknown;
+            }[];
+        };
         Template: {
             readonly id: number;
             name: string;
@@ -1935,6 +3501,17 @@ export interface components {
             readonly snoozed_until: string | null;
             readonly assignment: components["schemas"]["Assignment"] | null;
         };
+        TokenRequestRequest: {
+            device_id: string;
+            timestamp: number;
+            nonce: string;
+            signature: string;
+        };
+        TokenResponse: {
+            access_token: string;
+            token_type: string;
+            expires_in: number;
+        };
         TotpCodeRequest: {
             code: string;
         };
@@ -1991,6 +3568,10 @@ export interface components {
             date_joined?: string;
             /** Format: date-time */
             last_login?: string | null;
+        };
+        UserRef: {
+            id: number;
+            display_name: string;
         };
         UserWriteRequest: {
             /** Format: email */
@@ -2289,6 +3870,243 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TotpSetup"];
+                };
+            };
+        };
+    };
+    device_auth_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenRequestRequest"];
+                "multipart/form-data": components["schemas"]["TokenRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TokenRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    device_sms_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+        };
+    };
+    device_enroll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrollRequestRequest"];
+                "multipart/form-data": components["schemas"]["EnrollRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EnrollRequestRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollResponse"];
+                };
+            };
+        };
+    };
+    device_enroll_info: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollInfo"];
+                };
+            };
+        };
+    };
+    device_heartbeat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeartbeatRequest"];
+                "multipart/form-data": components["schemas"]["HeartbeatRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["HeartbeatRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeartbeatResponse"];
+                };
+            };
+        };
+    };
+    device_outbox_claim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ClaimRequest"];
+                "multipart/form-data": components["schemas"]["ClaimRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ClaimRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimResult"];
+                };
+            };
+        };
+    };
+    device_outbox_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StatusBatchRequest"];
+                "multipart/form-data": components["schemas"]["StatusBatchRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StatusBatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatusResult"];
+                };
+            };
+        };
+    };
+    device_push_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushTokenRequest"];
+                "multipart/form-data": components["schemas"]["PushTokenRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PushTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    device_sync_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchRequest"];
+                "multipart/form-data": components["schemas"]["BatchRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncResult"];
+                };
+            };
+        };
+    };
+    device_sync_media: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["MediaChunkRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaChunkResult"];
                 };
             };
         };
@@ -4245,6 +6063,1034 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["User"];
+                };
+            };
+        };
+    };
+    sms_assignees_list: {
+        parameters: {
+            query: {
+                device: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsAssignee"][];
+                };
+            };
+        };
+    };
+    sms_blocked_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockRequestRequest"];
+                "multipart/form-data": components["schemas"]["BlockRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BlockRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sms_blocked_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sms_contacts_list: {
+        parameters: {
+            query?: {
+                blocked?: boolean;
+                cursor?: string;
+                device?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactPage"];
+                };
+            };
+        };
+    };
+    sms_conversations_list: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM-DD */
+                after?: string;
+                assigned_to?: string;
+                /** @description YYYY-MM-DD */
+                before?: string;
+                cursor?: string;
+                /** @description Device id or 'all' (every phone you can open) */
+                device?: string;
+                direction?: "in" | "out";
+                folder?: "all" | "archived" | "assigned" | "awaiting" | "inbox" | "spam" | "starred" | "unread";
+                has_mms?: boolean;
+                /** @description Contact name or number */
+                q?: string;
+                sim?: number;
+                state?: "done" | "open";
+                unread?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationPage"];
+                };
+            };
+        };
+    };
+    sms_conversations_retrieve: {
+        parameters: {
+            query?: {
+                peek?: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDetail"];
+                };
+            };
+        };
+    };
+    sms_messages_list: {
+        parameters: {
+            query?: {
+                /** @description Only messages with id greater than this (polling) */
+                after?: number;
+                cursor?: string;
+                q?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsMessagePage"];
+                };
+            };
+        };
+    };
+    sms_notes_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsNote"][];
+                };
+            };
+        };
+    };
+    sms_notes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SmsNoteRequest"];
+                "multipart/form-data": components["schemas"]["SmsNoteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SmsNoteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsNote"];
+                };
+            };
+        };
+    };
+    sms_notes_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                note_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sms_conversations_actions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SmsActionRequestRequest"];
+                "multipart/form-data": components["schemas"]["SmsActionRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SmsActionRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsActionResult"];
+                };
+            };
+        };
+    };
+    sms_devices_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Device"][];
+                };
+            };
+        };
+    };
+    sms_devices_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceDetail"];
+                };
+            };
+        };
+    };
+    sms_devices_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDeviceUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedDeviceUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedDeviceUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceDetail"];
+                };
+            };
+        };
+    };
+    sms_devices_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DeviceStatusChangeRequest"];
+                "multipart/form-data": components["schemas"]["DeviceStatusChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DeviceStatusChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceDetail"];
+                };
+            };
+        };
+    };
+    sms_device_access_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceAccessEntry"][];
+                };
+            };
+        };
+    };
+    sms_device_access_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceAccessEntryRequest"][];
+                "multipart/form-data": components["schemas"]["DeviceAccessEntryRequest"][];
+                "application/x-www-form-urlencoded": components["schemas"]["DeviceAccessEntryRequest"][];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceAccessEntry"][];
+                };
+            };
+        };
+    };
+    sms_devices_heartbeats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeartbeatHistory"][];
+                };
+            };
+        };
+    };
+    sms_devices_resync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sms_sims_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                sim_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedSimUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedSimUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedSimUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimLine"];
+                };
+            };
+        };
+    };
+    sms_devices_simulator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulatorActionRequest"];
+                "multipart/form-data": components["schemas"]["SimulatorActionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SimulatorActionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceDetail"];
+                };
+            };
+        };
+    };
+    sms_enrollments_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"][];
+                };
+            };
+        };
+    };
+    sms_enrollments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrollmentCreateRequest"];
+                "multipart/form-data": components["schemas"]["EnrollmentCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EnrollmentCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentCreated"];
+                };
+            };
+        };
+    };
+    sms_enrollments_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"];
+                };
+            };
+        };
+    };
+    sms_enrollments_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"];
+                };
+            };
+        };
+    };
+    sms_messages_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsMessage"];
+                };
+            };
+        };
+    };
+    sms_media_retrieve: {
+        parameters: {
+            query?: {
+                download?: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+                part_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+        };
+    };
+    sms_messages_retry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsComposeResult"];
+                };
+            };
+        };
+    };
+    sms_messages_reveal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reveal"];
+                };
+            };
+        };
+    };
+    sms_messages_star: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarRequest"];
+                "multipart/form-data": components["schemas"]["StarRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StarRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsMessage"];
+                };
+            };
+        };
+    };
+    sms_outbox_list: {
+        parameters: {
+            query?: {
+                device?: string;
+                view?: "pending" | "problems" | "scheduled";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutboxItem"][];
+                };
+            };
+        };
+    };
+    sms_quick_replies_list: {
+        parameters: {
+            query?: {
+                device?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickReply"][];
+                };
+            };
+        };
+    };
+    sms_quick_replies_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickReplyRequest"];
+                "multipart/form-data": components["schemas"]["QuickReplyRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["QuickReplyRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickReply"];
+                };
+            };
+        };
+    };
+    sms_quick_replies_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sms_quick_replies_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedQuickReplyRequest"];
+                "multipart/form-data": components["schemas"]["PatchedQuickReplyRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedQuickReplyRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickReply"];
+                };
+            };
+        };
+    };
+    sms_rules_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SensitiveRule"][];
+                };
+            };
+        };
+    };
+    sms_rules_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SensitiveRuleRequest"];
+                "multipart/form-data": components["schemas"]["SensitiveRuleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SensitiveRuleRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SensitiveRule"];
+                };
+            };
+        };
+    };
+    sms_rules_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sms_rules_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedSensitiveRuleRequest"];
+                "multipart/form-data": components["schemas"]["PatchedSensitiveRuleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedSensitiveRuleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SensitiveRule"];
+                };
+            };
+        };
+    };
+    sms_segments: {
+        parameters: {
+            query?: {
+                text?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentInfo"];
+                };
+            };
+        };
+    };
+    sms_send: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SmsComposeRequest"];
+                "multipart/form-data": components["schemas"]["SmsComposeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SmsComposeRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsComposeResult"];
+                };
+            };
+        };
+    };
+    sms_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsSettings"];
+                };
+            };
+        };
+    };
+    sms_settings_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SmsSettingsRequest"];
+                "multipart/form-data": components["schemas"]["SmsSettingsRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SmsSettingsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsSettings"];
+                };
+            };
+        };
+    };
+    sms_stats: {
+        parameters: {
+            query?: {
+                device?: string;
+                range?: 30 | 7 | 90;
+                sim?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };

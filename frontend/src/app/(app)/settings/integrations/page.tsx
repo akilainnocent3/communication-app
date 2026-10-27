@@ -17,6 +17,7 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { dateTime } from "@/lib/format";
 import { errorMessage, fieldError, mutate, request } from "@/services/api/client";
 import type { MailSettings, WorkspaceDomain } from "@/services/api/types";
+import { SmsNoticeCard } from "@/platforms/sms/components/tools/settings-card";
 
 const KEY = ["settings", "integrations"] as const;
 const WORKSPACE = ["settings", "workspace"] as const;
@@ -40,18 +41,23 @@ function CopyValue({ label, value }: { label: string; value: string }) {
 export default function IntegrationsPage() {
   usePageTitle({ page: "Integrations", section: "Settings" });
   const { can, isSuperAdmin } = useSession();
-  const settings = useQuery({ queryKey: KEY, queryFn: () => request<MailSettings>("settings/integrations/"), enabled: can("mail.manage_mailboxes") });
-  if (!can("mail.manage_mailboxes")) return <Page><PageHeader title="Integrations" description="You don't have permission to change integrations." /></Page>;
+  const mail = can("mail.manage_mailboxes");
+  const sms = can("sms.manage_devices");
+  const settings = useQuery({ queryKey: KEY, queryFn: () => request<MailSettings>("settings/integrations/"), enabled: mail });
+  if (!mail && !sms) return <Page><PageHeader title="Integrations" description="You don't have permission to change integrations." /></Page>;
   return (
     <Page className="max-w-4xl">
-      <PageHeader title="Integrations" description="How Communication Manager connects to Google and other mail services." />
-      {settings.isPending ? <PageSkeleton /> : settings.error ? <RequestState loading={false} error={errorMessage(settings.error)} onRetry={() => settings.refetch()} /> : (
-        <div className="space-y-4 sm:space-y-5">
-          <GoogleOAuth data={settings.data!} />
-          <ConnectNotice data={settings.data!} />
-          {isSuperAdmin && <Workspace />}
-        </div>
-      )}
+      <PageHeader title="Integrations" description="How Communication Manager connects to Google, other mail services and company phones." />
+      <div className="space-y-4 sm:space-y-5">
+        {mail && (settings.isPending ? <PageSkeleton /> : settings.error ? <RequestState loading={false} error={errorMessage(settings.error)} onRetry={() => settings.refetch()} /> : (
+          <>
+            <GoogleOAuth data={settings.data!} />
+            <ConnectNotice data={settings.data!} />
+            {isSuperAdmin && <Workspace />}
+          </>
+        ))}
+        {sms && <SmsNoticeCard />}
+      </div>
     </Page>
   );
 }

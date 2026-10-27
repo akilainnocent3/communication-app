@@ -115,3 +115,7 @@ export const UnsubscribeIcon = glyph(<><rect x="3" y="5" width="18" height="14" 
 export const SplitIcon = glyph(<><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M10 4v16" /></>, "SplitIcon");
 export const NoSplitIcon = glyph(<><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18" /></>, "NoSplitIcon");
 export const OfflineIcon = glyph(<><path d="M2 8.5a15 15 0 0 1 4-2.4M9.5 5.2A15 15 0 0 1 22 8.5M5 12a10 10 0 0 1 3.5-2M13 9.6a10 10 0 0 1 6 2.4M8.5 15.5a5 5 0 0 1 7 0M12 19h.01M3 3l18 18" /></>, "OfflineIcon");
+export const SmartphoneIcon = glyph(<><rect x="6.5" y="2.5" width="11" height="19" rx="2" /><path d="M10.5 18.5h3" /></>, "SmartphoneIcon");
+export const BlockIcon = glyph(<><circle cx="12" cy="12" r="9" /><path d="m5.7 5.7 12.6 12.6" /></>, "BlockIcon");
+export const OutboxIcon = glyph(<><path d="M3 13h4.5l1.5 3h6l1.5-3H21" /><path d="M5.5 10 3 13v5a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18v-5l-2.5-3" /><path d="M12 11V3M9 6l3-3 3 3" /></>, "OutboxIcon");
+export const QrIcon = glyph(<><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" /></>, "QrIcon");
