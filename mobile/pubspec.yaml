@@ -39,9 +39,15 @@ flutter:
   uses-material-design: true
   generate: true
 
-# The local sync database is encrypted with SQLCipher (package:sqlite3 build hook). The native Kotlin layer opens
-# the same file with net.zetetic:sqlcipher-android, so both sides agree on the format.
+# The local sync database is encrypted with SQLCipher. On Android, Dart loads libsqlcipher.so from
+# net.zetetic:sqlcipher-android, the same library the native Kotlin layer opens the file with. A second
+# libsqlcipher.so from the build hook would replace it in the APK, and that one has no JNI functions, so native code
+# could not open the database. Host tests (flutter test) use the hook's SQLCipher build.
 hooks:
   user_defines:
     sqlite3:
-      source: sqlcipher
+      source:
+        android: system
+        default: sqlcipher
+      name:
+        android: sqlcipher
