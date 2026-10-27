@@ -102,3 +102,58 @@ def grant():
         return MailboxAccess.objects.update_or_create(user=user, mailbox=mailbox, defaults=values)[0]
 
     return build
+
+
+# --- Devices and SMS -----------------------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _sms_media_root(tmp_path, settings):
+    settings.SMS_MEDIA_ROOT = str(tmp_path / "sms-media")
+
+
+@pytest.fixture
+def invite_token(admin, office):
+    from modules.devices.services.enrollment import create_invite
+
+    def build(name="Front desk", target_office=None, **options):
+        invite, token = create_invite(admin, name=name, office=target_office or office, options=options)
+        return invite, token
+
+    return build
+
+
+@pytest.fixture
+def enrolled(invite_token):
+    """An enrolled phone (tests.phone.Phone) with a fresh access token."""
+    from tests.phone import Phone
+
+    def build(name="Front desk", target_office=None, **options):
+        _, token = invite_token(name=name, target_office=target_office, **options)
+        phone = Phone()
+        response = phone.enroll(token)
+        assert response.status_code == 201, response.json()
+        return phone
+
+    return build
+
+
+@pytest.fixture
+def phone(enrolled):
+    return enrolled()
+
+
+@pytest.fixture
+def other_phone(enrolled, other_office):
+    return enrolled(name="Arusha desk", target_office=other_office)
+
+
+@pytest.fixture
+def device_grant():
+    from modules.sms.models import DeviceAccess
+
+    def build(user, device_id, **flags):
+        values = {"can_read": True, "can_send": False, "can_manage": False, "can_reveal_sensitive": False, **flags}
+        return DeviceAccess.objects.update_or_create(user=user, device_id=device_id, defaults=values)[0]
+
+    return build

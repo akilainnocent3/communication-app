@@ -15,5 +15,6 @@ nh3
 dnspython
 imapclient
 qrcode
+phonenumbers
 pyotp
 gunicorn

@@ -14,10 +14,17 @@ api = [
     path("", include("modules.platforms.api.urls")),
     path("", include("modules.audit.api.urls")),
     path("", include("modules.mail.api.urls")),
+    path("", include("modules.sms.api.urls")),
     path("health/", health),
 ]
 
-urlpatterns = [path("api/v1/", include(api))]
+# Phone-facing API: device-token auth only, never session auth. Nginx sends /api/v1/device/ straight to Django.
+device_api = [
+    path("", include("modules.devices.api.urls")),
+    path("", include("modules.sms.api.device_urls")),
+]
+
+urlpatterns = [path("api/v1/device/", include(device_api)), path("api/v1/", include(api))]
 
 if settings.DEBUG:
     urlpatterns += [path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"), path("django-admin/", admin.site.urls)]

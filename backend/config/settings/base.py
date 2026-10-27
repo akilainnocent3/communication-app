@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     "modules.audit",
     "modules.platforms",
     "modules.mail",
+    "modules.devices",
+    "modules.sms",
 ]
 
 MIDDLEWARE = [
@@ -109,7 +111,14 @@ REST_FRAMEWORK = {
     ],
     "EXCEPTION_HANDLER": "common.errors.exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_THROTTLE_RATES": {"login": "10/min", "public_connect": "60/min"},
+    "DEFAULT_THROTTLE_RATES": {
+        "login": "10/min",
+        "public_connect": "60/min",
+        # Phone-facing API (/api/v1/device/...): public enrollment and token minting per client IP, the rest per device.
+        "device_enroll": "10/min",
+        "device_auth": "30/min",
+        "device": "300/min",
+    },
     "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
 }
 
@@ -126,6 +135,10 @@ SPECTACULAR_SETTINGS = {
         "ConnectionSecurityEnum": [("ssl", "ssl"), ("starttls", "starttls")],
         "SwipeActionEnum": [("archive", "archive"), ("trash", "trash"), ("read", "read"), ("none", "none")],
         "UndoSendSecondsEnum": [(0, 0), (5, 5), (10, 10), (20, 20), (30, 30)],
+        # Pinned so the SMS platform's own enums never rename the Gmail ones in the generated types.
+        "ActionEnum": "modules.mail.services.actions.ACTIONS",
+        "KindEnum": [("undo", "Undo window"), ("scheduled", "Scheduled")],
+        "TypeEnum": [("system", "System"), ("user", "User")],
     },
 }
 
@@ -142,6 +155,13 @@ CELERY_BEAT_SCHEDULE = {
     "mail-dispatch-due-sends": {"task": "mail.dispatch_due_sends", "schedule": timedelta(seconds=5)},
     "mail-wake-snoozed": {"task": "mail.wake_snoozed_threads", "schedule": timedelta(seconds=60)},
     "mail-evict-bodies": {"task": "mail.evict_cached_bodies", "schedule": timedelta(hours=6)},
+    "devices-refresh-health": {"task": "devices.refresh_health", "schedule": timedelta(minutes=1)},
+    "devices-prune": {"task": "devices.prune", "schedule": timedelta(hours=1)},
+    "sms-dispatch-due": {"task": "sms.dispatch_due", "schedule": timedelta(seconds=5)},
+    "sms-expire-outbound": {"task": "sms.expire_outbound", "schedule": timedelta(minutes=1)},
+    "sms-retention-purge": {"task": "sms.retention_purge", "schedule": timedelta(hours=6)},
+    "sms-media-cleanup": {"task": "sms.media_cleanup", "schedule": timedelta(hours=1)},
+    "sms-simulator-tick": {"task": "sms.simulator_tick", "schedule": timedelta(seconds=5)},
 }
 
 # --- Company / product ----------------------------------------------------------------------------------
@@ -173,6 +193,44 @@ MAIL_MAX_ATTACHMENT_BYTES = env.int("MAIL_MAX_ATTACHMENT_BYTES", default=25 * 10
 MAIL_RATE_PER_SECOND = env.float("MAIL_RATE_PER_SECOND", default=15.0)
 # Allow the fake provider in this environment (dev, demo, tests). Off in production by default.
 MAIL_ENABLE_FAKE_PROVIDER = env.bool("MAIL_ENABLE_FAKE_PROVIDER", default=True)
+
+# --- Devices (shared by SMS and, later, Calls) and the SMS platform -------------------------------------------
+# MultiFernet keys for SMS bodies and MMS files, comma separated, newest first. Separate from MAIL_TOKEN_KEYS so
+# a leak of one key ring does not expose the other. Rotate with `python manage.py rotate_sms_keys`.
+SMS_DATA_KEYS = env.list("SMS_DATA_KEYS", default=[])
+# Encrypted MMS files. Private storage outside any web root; never served directly.
+SMS_MEDIA_ROOT = env("SMS_MEDIA_ROOT", default=str(BASE_DIR / "private" / "sms-media"))
+SMS_MAX_MMS_BYTES = env.int("SMS_MAX_MMS_BYTES", default=2 * 1024 * 1024)
+SMS_INITIAL_SYNC_DAYS = env.int("SMS_INITIAL_SYNC_DAYS", default=90)
+SMS_ENROLL_TTL_HOURS = env.int("SMS_ENROLL_TTL_HOURS", default=24)
+SMS_DEVICE_TOKEN_TTL = env.int("SMS_DEVICE_TOKEN_TTL", default=15)  # minutes
+SMS_MIN_APP_VERSION = env("SMS_MIN_APP_VERSION", default="1.0.0")
+# Refuse phones whose key is not hardware-backed with a verified Android key attestation chain. Needs the
+# Google attestation roots in SMS_ATTESTATION_ROOTS_FILE (PEM bundle).
+SMS_REQUIRE_KEY_ATTESTATION = env.bool("SMS_REQUIRE_KEY_ATTESTATION", default=False)
+SMS_ATTESTATION_ROOTS_FILE = env("SMS_ATTESTATION_ROOTS_FILE", default="")
+# Refuse phones without a passing Play Integrity verdict (needs PLAY_INTEGRITY_* below).
+SMS_REQUIRE_PLAY_INTEGRITY = env.bool("SMS_REQUIRE_PLAY_INTEGRITY", default=False)
+PLAY_INTEGRITY_PACKAGE_NAME = env("PLAY_INTEGRITY_PACKAGE_NAME", default="")
+PLAY_INTEGRITY_SERVICE_ACCOUNT_FILE = env("PLAY_INTEGRITY_SERVICE_ACCOUNT_FILE", default="")
+# Base64 SHA-256 of the company's APK signing certificate(s), for privately distributed builds.
+PLAY_INTEGRITY_CERT_DIGESTS = env.list("PLAY_INTEGRITY_CERT_DIGESTS", default=[])
+SMS_OUTBOUND_TTL_HOURS = env.int("SMS_OUTBOUND_TTL_HOURS", default=24)
+SMS_DEVICE_DAILY_CAP = env.int("SMS_DEVICE_DAILY_CAP", default=300)
+SMS_DEVICE_RATE_PER_MINUTE = env.int("SMS_DEVICE_RATE_PER_MINUTE", default=20)
+SMS_USER_RATE_PER_MINUTE = env.int("SMS_USER_RATE_PER_MINUTE", default=30)
+SMS_ALLOW_SHORT_CODES = env.bool("SMS_ALLOW_SHORT_CODES", default=False)
+SMS_RETENTION_DAYS = env.int("SMS_RETENTION_DAYS", default=365)  # 0 = keep forever
+SMS_MIRROR_DEVICE_DELETES = env.bool("SMS_MIRROR_DEVICE_DELETES", default=False)
+SMS_DEFAULT_REGION = env("SMS_DEFAULT_REGION", default="TZ")
+SMS_SHOW_ADMIN_NAME_ON_PHONE = env.bool("SMS_SHOW_ADMIN_NAME_ON_PHONE", default=True)
+# Foreground-service poll interval the phone uses when FCM is not configured (seconds).
+SMS_DEVICE_POLL_SECONDS = env.int("SMS_DEVICE_POLL_SECONDS", default=20)
+# Simulated phones for demos and E2E tests. Production refuses to start with it on.
+SMS_ENABLE_SIMULATOR = env.bool("SMS_ENABLE_SIMULATOR", default=MAIL_ENABLE_FAKE_PROVIDER)
+# Firebase Cloud Messaging (optional): data-only wake-ups. The service-account file is a mounted secret.
+FCM_PROJECT_ID = env("FCM_PROJECT_ID", default="")
+FCM_SERVICE_ACCOUNT_FILE = env("FCM_SERVICE_ACCOUNT_FILE", default="")
 
 LOGGING = {
     "version": 1,
