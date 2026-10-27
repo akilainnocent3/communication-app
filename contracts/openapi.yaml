@@ -241,6 +241,254 @@ paths:
               schema:
                 $ref: '#/components/schemas/TotpSetup'
           description: ''
+  /api/v1/device/auth/token/:
+    post:
+      operationId: device_auth_token
+      description: 'Enrollment and token minting: no auth, throttled per client IP.'
+      tags:
+      - device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRequestRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+          description: ''
+  /api/v1/device/config/:
+    get:
+      operationId: device_sms_config
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+          description: ''
+  /api/v1/device/enroll/:
+    post:
+      operationId: device_enroll
+      description: 'Enrollment and token minting: no auth, throttled per client IP.'
+      tags:
+      - device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EnrollRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EnrollRequestRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollResponse'
+          description: ''
+  /api/v1/device/enroll/info/:
+    get:
+      operationId: device_enroll_info
+      description: 'What the app shows before enrolling: company, device name and
+        the monitoring notice to accept.'
+      parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - device
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollInfo'
+          description: ''
+  /api/v1/device/heartbeat/:
+    post:
+      operationId: device_heartbeat
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeartbeatRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HeartbeatRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HeartbeatRequest'
+        required: true
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartbeatResponse'
+          description: ''
+  /api/v1/device/outbox/claim/:
+    post:
+      operationId: device_outbox_claim
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClaimRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClaimRequest'
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResult'
+          description: ''
+  /api/v1/device/outbox/status/:
+    post:
+      operationId: device_outbox_status
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusBatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StatusBatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StatusBatchRequest'
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResult'
+          description: ''
+  /api/v1/device/push-token/:
+    post:
+      operationId: device_push_token
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PushTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PushTokenRequest'
+        required: true
+      security:
+      - deviceToken: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/device/sync/events/:
+    post:
+      operationId: device_sync_events
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BatchRequest'
+        required: true
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResult'
+          description: ''
+  /api/v1/device/sync/media/:
+    post:
+      operationId: device_sync_media
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MediaChunkRequest'
+        required: true
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaChunkResult'
+          description: ''
   /api/v1/mail/actions/:
     post:
       operationId: mail_actions
@@ -2290,6 +2538,1155 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
+  /api/v1/sms/assignees/:
+    get:
+      operationId: sms_assignees_list
+      parameters:
+      - in: query
+        name: device
+        schema:
+          type: string
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SmsAssignee'
+          description: ''
+  /api/v1/sms/blocked/:
+    post:
+      operationId: sms_blocked_create
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BlockRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BlockRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sms/blocked/{id}/:
+    delete:
+      operationId: sms_blocked_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sms/contacts/:
+    get:
+      operationId: sms_contacts_list
+      parameters:
+      - in: query
+        name: blocked
+        schema:
+          type: boolean
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: device
+        schema:
+          type: string
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactPage'
+          description: ''
+  /api/v1/sms/conversations/:
+    get:
+      operationId: sms_conversations_list
+      parameters:
+      - in: query
+        name: after
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: assigned_to
+        schema:
+          type: string
+      - in: query
+        name: before
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: device
+        schema:
+          type: string
+        description: Device id or 'all' (every phone you can open)
+      - in: query
+        name: direction
+        schema:
+          type: string
+          enum:
+          - in
+          - out
+      - in: query
+        name: folder
+        schema:
+          type: string
+          enum:
+          - all
+          - archived
+          - assigned
+          - awaiting
+          - inbox
+          - spam
+          - starred
+          - unread
+      - in: query
+        name: has_mms
+        schema:
+          type: boolean
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Contact name or number
+      - in: query
+        name: sim
+        schema:
+          type: integer
+      - in: query
+        name: state
+        schema:
+          type: string
+          enum:
+          - done
+          - open
+      - in: query
+        name: unread
+        schema:
+          type: boolean
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationPage'
+          description: ''
+  /api/v1/sms/conversations/{id}/:
+    get:
+      operationId: sms_conversations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: peek
+        schema:
+          type: boolean
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationDetail'
+          description: ''
+  /api/v1/sms/conversations/{id}/messages/:
+    get:
+      operationId: sms_messages_list
+      description: |-
+        Messages of one conversation, newest first (the UI reverses them). `q` searches inside this conversation only:
+        the text is decrypted for this request and never stored decrypted.
+      parameters:
+      - in: query
+        name: after
+        schema:
+          type: integer
+        description: Only messages with id greater than this (polling)
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsMessagePage'
+          description: ''
+  /api/v1/sms/conversations/{id}/notes/:
+    get:
+      operationId: sms_notes_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SmsNote'
+          description: ''
+    post:
+      operationId: sms_notes_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsNoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SmsNoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SmsNoteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsNote'
+          description: ''
+  /api/v1/sms/conversations/{id}/notes/{note_id}/:
+    delete:
+      operationId: sms_notes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: note_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sms/conversations/actions/:
+    post:
+      operationId: sms_conversations_actions
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsActionRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SmsActionRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SmsActionRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsActionResult'
+          description: ''
+  /api/v1/sms/devices/:
+    get:
+      operationId: sms_devices_list
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+          description: ''
+  /api/v1/sms/devices/{id}/:
+    get:
+      operationId: sms_devices_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+    patch:
+      operationId: sms_devices_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/sms/devices/{id}/{action}/:
+    post:
+      operationId: sms_devices_status
+      description: suspend / resume / revoke. Revoking needs the device code typed
+        back (confirm_code).
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+          pattern: ^suspend|resume|revoke$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^[0-9a-f-]{36}$
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceStatusChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceStatusChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceStatusChangeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/sms/devices/{id}/access/:
+    get:
+      operationId: sms_device_access_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceAccessEntry'
+          description: ''
+    put:
+      operationId: sms_device_access_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceAccessEntryRequest'
+          multipart/form-data:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceAccessEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceAccessEntryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceAccessEntry'
+          description: ''
+  /api/v1/sms/devices/{id}/heartbeats/:
+    get:
+      operationId: sms_devices_heartbeats
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HeartbeatHistory'
+          description: ''
+  /api/v1/sms/devices/{id}/resync/:
+    post:
+      operationId: sms_devices_resync
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          description: No response body
+  /api/v1/sms/devices/{id}/sims/{sim_id}/:
+    patch:
+      operationId: sms_sims_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: sim_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSimUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSimUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSimUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimLine'
+          description: ''
+  /api/v1/sms/devices/{id}/simulator/:
+    post:
+      operationId: sms_devices_simulator
+      description: 'Demo phones only (SMS_ENABLE_SIMULATOR, refused in production):
+        go online/offline, run a tick, receive a text.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatorActionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SimulatorActionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SimulatorActionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/sms/enrollments/:
+    get:
+      operationId: sms_enrollments_list
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Enrollment'
+          description: ''
+    post:
+      operationId: sms_enrollments_create
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollmentCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EnrollmentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EnrollmentCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentCreated'
+          description: ''
+  /api/v1/sms/enrollments/{id}/:
+    get:
+      operationId: sms_enrollments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+          description: ''
+  /api/v1/sms/enrollments/{id}/revoke/:
+    post:
+      operationId: sms_enrollments_revoke
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+          description: ''
+  /api/v1/sms/messages/{id}/cancel/:
+    post:
+      operationId: sms_messages_cancel
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsMessage'
+          description: ''
+  /api/v1/sms/messages/{id}/media/{part_id}/:
+    get:
+      operationId: sms_media_retrieve
+      description: 'MMS media: permission-checked, audited, never a public URL, and
+        sandboxed like mail attachments.'
+      parameters:
+      - in: query
+        name: download
+        schema:
+          type: boolean
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: part_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/sms/messages/{id}/retry/:
+    post:
+      operationId: sms_messages_retry
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsComposeResult'
+          description: ''
+  /api/v1/sms/messages/{id}/reveal/:
+    post:
+      operationId: sms_messages_reveal
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reveal'
+          description: ''
+  /api/v1/sms/messages/{id}/star/:
+    post:
+      operationId: sms_messages_star
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StarRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StarRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StarRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsMessage'
+          description: ''
+  /api/v1/sms/outbox/:
+    get:
+      operationId: sms_outbox_list
+      description: Admin messages still on their way (queued, at the phone, sending)
+        or that need a decision.
+      parameters:
+      - in: query
+        name: device
+        schema:
+          type: string
+      - in: query
+        name: view
+        schema:
+          type: string
+          enum:
+          - pending
+          - problems
+          - scheduled
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OutboxItem'
+          description: ''
+  /api/v1/sms/quick-replies/:
+    get:
+      operationId: sms_quick_replies_list
+      parameters:
+      - in: query
+        name: device
+        schema:
+          type: string
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuickReply'
+          description: ''
+    post:
+      operationId: sms_quick_replies_create
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuickReplyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QuickReplyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QuickReplyRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuickReply'
+          description: ''
+  /api/v1/sms/quick-replies/{id}/:
+    patch:
+      operationId: sms_quick_replies_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedQuickReplyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedQuickReplyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedQuickReplyRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuickReply'
+          description: ''
+    delete:
+      operationId: sms_quick_replies_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sms/rules/:
+    get:
+      operationId: sms_rules_list
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SensitiveRule'
+          description: ''
+    post:
+      operationId: sms_rules_create
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensitiveRuleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SensitiveRuleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SensitiveRuleRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensitiveRule'
+          description: ''
+  /api/v1/sms/rules/{id}/:
+    patch:
+      operationId: sms_rules_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSensitiveRuleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSensitiveRuleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSensitiveRuleRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensitiveRule'
+          description: ''
+    delete:
+      operationId: sms_rules_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sms/segments/:
+    get:
+      operationId: sms_segments
+      description: The composer counts segments locally; this endpoint exists so the
+        phone and admin agree on the rules.
+      parameters:
+      - in: query
+        name: text
+        schema:
+          type: string
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentInfo'
+          description: ''
+  /api/v1/sms/send/:
+    post:
+      operationId: sms_send
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsComposeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SmsComposeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SmsComposeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsComposeResult'
+          description: ''
+  /api/v1/sms/settings/:
+    get:
+      operationId: sms_settings_get
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsSettings'
+          description: ''
+    put:
+      operationId: sms_settings_update
+      tags:
+      - sms
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsSettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SmsSettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SmsSettingsRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsSettings'
+          description: ''
+  /api/v1/sms/stats/:
+    get:
+      operationId: sms_stats
+      parameters:
+      - in: query
+        name: device
+        schema:
+          type: string
+      - in: query
+        name: range
+        schema:
+          type: integer
+          enum:
+          - 30
+          - 7
+          - 90
+      - in: query
+        name: sim
+        schema:
+          type: integer
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
 components:
   schemas:
     AccessEntry:
@@ -2453,6 +3850,16 @@ components:
           default: ''
       required:
       - email
+    Alert:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+      required:
+      - code
+      - label
     Assignee:
       type: object
       properties:
@@ -2499,6 +3906,28 @@ components:
       - mime_type
       - size
       - url
+    Attestation:
+      type: object
+      properties:
+        present:
+          type: boolean
+        chain_valid:
+          type: boolean
+        root_trusted:
+          type: boolean
+        challenge_ok:
+          type: boolean
+        security_level:
+          type: string
+        hardware_backed:
+          type: boolean
+      required:
+      - chain_valid
+      - challenge_ok
+      - hardware_backed
+      - present
+      - root_trusted
+      - security_level
     AuditEvent:
       type: object
       properties:
@@ -2557,6 +3986,31 @@ components:
       required:
       - next_cursor
       - results
+    BatchRequest:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRequest'
+      required:
+      - events
+    BlankEnum:
+      enum:
+      - ''
+    BlockRequestRequest:
+      type: object
+      properties:
+        device:
+          type: string
+          format: uuid
+        address:
+          type: string
+          minLength: 1
+          maxLength: 40
+      required:
+      - address
+      - device
     Capabilities:
       type: object
       properties:
@@ -2588,6 +4042,43 @@ components:
       - server_search
       - signatures
       - vacation
+    ClaimRequest:
+      type: object
+      properties:
+        limit:
+          type: integer
+          maximum: 10
+          minimum: 1
+          default: 10
+    ClaimResult:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        commands:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        lease_seconds:
+          type: integer
+      required:
+      - commands
+      - lease_seconds
+      - messages
+    CommandAckRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        ok:
+          type: boolean
+          default: true
+      required:
+      - id
     ComposeRequest:
       type: object
       properties:
@@ -2648,6 +4139,48 @@ components:
           - $ref: '#/components/schemas/NullEnum'
       required:
       - mailbox
+    ConfigResponse:
+      type: object
+      properties:
+        device:
+          type: object
+          additionalProperties: {}
+        options:
+          type: object
+          additionalProperties: {}
+        sims:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        quick_replies:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        poll_seconds:
+          type: integer
+        show_admin_name:
+          type: boolean
+        outbound_ttl_hours:
+          type: integer
+        acked_seq:
+          type: integer
+        resync_requested:
+          type: boolean
+        server_time:
+          type: integer
+      required:
+      - acked_seq
+      - device
+      - options
+      - outbound_ttl_hours
+      - poll_seconds
+      - quick_replies
+      - resync_requested
+      - server_time
+      - show_admin_name
+      - sims
     ConnectionSecurityEnum:
       enum:
       - ssl
@@ -2656,6 +4189,56 @@ components:
       description: |-
         * `ssl` - ssl
         * `starttls` - starttls
+    ContactPage:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactRow'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - next_cursor
+      - results
+    ContactRow:
+      type: object
+      properties:
+        id:
+          type: integer
+        device:
+          $ref: '#/components/schemas/DeviceRef'
+        address:
+          type: string
+        display:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        is_blocked:
+          type: boolean
+        messages:
+          type: integer
+        last_contact_at:
+          type: string
+          format: date-time
+          nullable: true
+        conversation:
+          type: integer
+          nullable: true
+      required:
+      - address
+      - conversation
+      - device
+      - display
+      - id
+      - is_blocked
+      - kind
+      - last_contact_at
+      - messages
+      - name
     ContactSuggestion:
       type: object
       properties:
@@ -2677,6 +4260,243 @@ components:
       required:
       - email
       - name
+    ConversationDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        device:
+          allOf:
+          - $ref: '#/components/schemas/DeviceRef'
+          readOnly: true
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsParticipant'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        is_group:
+          type: boolean
+        snippet:
+          type: string
+          readOnly: true
+        snippet_sensitive:
+          type: boolean
+        last_message_at:
+          type: string
+          format: date-time
+        last_direction:
+          type: string
+        last_status:
+          type: string
+        unread_count:
+          type: integer
+        message_count:
+          type: integer
+        is_pinned:
+          type: boolean
+        is_archived:
+          type: boolean
+        is_muted:
+          type: boolean
+        is_spam:
+          type: boolean
+        is_starred:
+          type: boolean
+        state:
+          type: string
+        assigned_to:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          readOnly: true
+        sim:
+          allOf:
+          - $ref: '#/components/schemas/SimRef'
+          nullable: true
+          readOnly: true
+        has_mms:
+          type: boolean
+        awaiting_since:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_on_device_at:
+          type: string
+          format: date-time
+          nullable: true
+        thread_id:
+          type: integer
+          nullable: true
+        permissions:
+          allOf:
+          - $ref: '#/components/schemas/DevicePermissions'
+          readOnly: true
+        stats:
+          allOf:
+          - $ref: '#/components/schemas/ConversationStats'
+          readOnly: true
+        device_status:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - assigned_to
+      - awaiting_since
+      - deleted_on_device_at
+      - device
+      - device_status
+      - has_mms
+      - id
+      - is_archived
+      - is_group
+      - is_muted
+      - is_pinned
+      - is_spam
+      - is_starred
+      - last_direction
+      - last_message_at
+      - last_status
+      - message_count
+      - participants
+      - permissions
+      - sim
+      - snippet
+      - snippet_sensitive
+      - state
+      - stats
+      - thread_id
+      - title
+      - unread_count
+    ConversationPage:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationSummary'
+        next_cursor:
+          type: string
+          nullable: true
+        total:
+          type: integer
+          nullable: true
+      required:
+      - next_cursor
+      - results
+      - total
+    ConversationStats:
+      type: object
+      properties:
+        first_contact_at:
+          type: string
+          format: date-time
+          nullable: true
+        inbound:
+          type: integer
+        outbound:
+          type: integer
+        avg_response_minutes:
+          type: integer
+          nullable: true
+      required:
+      - avg_response_minutes
+      - first_contact_at
+      - inbound
+      - outbound
+    ConversationSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        device:
+          allOf:
+          - $ref: '#/components/schemas/DeviceRef'
+          readOnly: true
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsParticipant'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        is_group:
+          type: boolean
+        snippet:
+          type: string
+          readOnly: true
+        snippet_sensitive:
+          type: boolean
+        last_message_at:
+          type: string
+          format: date-time
+        last_direction:
+          type: string
+        last_status:
+          type: string
+        unread_count:
+          type: integer
+        message_count:
+          type: integer
+        is_pinned:
+          type: boolean
+        is_archived:
+          type: boolean
+        is_muted:
+          type: boolean
+        is_spam:
+          type: boolean
+        is_starred:
+          type: boolean
+        state:
+          type: string
+        assigned_to:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          readOnly: true
+        sim:
+          allOf:
+          - $ref: '#/components/schemas/SimRef'
+          nullable: true
+          readOnly: true
+        has_mms:
+          type: boolean
+        awaiting_since:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_on_device_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - assigned_to
+      - awaiting_since
+      - deleted_on_device_at
+      - device
+      - has_mms
+      - id
+      - is_archived
+      - is_group
+      - is_muted
+      - is_pinned
+      - is_spam
+      - is_starred
+      - last_direction
+      - last_message_at
+      - last_status
+      - message_count
+      - participants
+      - sim
+      - snippet
+      - snippet_sensitive
+      - state
+      - title
+      - unread_count
     Csrf:
       type: object
       properties:
@@ -2741,6 +4561,403 @@ components:
         * `imap_smtp` - imap_smtp
         * `unsupported` - unsupported
         * `fake` - fake
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        office:
+          allOf:
+          - $ref: '#/components/schemas/SmsOfficeRef'
+          readOnly: true
+        assigned_to:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          readOnly: true
+        status:
+          type: string
+        online:
+          type: boolean
+          readOnly: true
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        attention:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+          readOnly: true
+        manufacturer:
+          type: string
+        model:
+          type: string
+        android_version:
+          type: string
+        app_version:
+          type: string
+        battery:
+          type: integer
+          nullable: true
+        charging:
+          type: boolean
+        network_type:
+          type: string
+        signal:
+          type: integer
+          nullable: true
+        is_default_sms_app:
+          type: boolean
+        battery_optimised:
+          type: boolean
+        pending_outbox:
+          type: integer
+        last_sync_at:
+          type: string
+          format: date-time
+          nullable: true
+        sync_progress:
+          type: object
+          additionalProperties: {}
+        hardware_backed:
+          type: boolean
+        is_simulated:
+          type: boolean
+        sims:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimLine'
+          readOnly: true
+        permissions:
+          allOf:
+          - $ref: '#/components/schemas/DevicePermissions'
+          readOnly: true
+        unread:
+          type: integer
+          readOnly: true
+        enrolled_at:
+          type: string
+          format: date-time
+      required:
+      - android_version
+      - app_version
+      - assigned_to
+      - attention
+      - battery
+      - battery_optimised
+      - charging
+      - code
+      - enrolled_at
+      - hardware_backed
+      - id
+      - is_default_sms_app
+      - is_simulated
+      - last_seen_at
+      - last_sync_at
+      - manufacturer
+      - model
+      - name
+      - network_type
+      - office
+      - online
+      - pending_outbox
+      - permissions
+      - signal
+      - sims
+      - status
+      - sync_progress
+      - unread
+    DeviceAccessEntry:
+      type: object
+      properties:
+        user:
+          type: integer
+        email:
+          type: string
+          readOnly: true
+        display_name:
+          type: string
+          readOnly: true
+        can_read:
+          type: boolean
+          default: true
+        can_send:
+          type: boolean
+          default: false
+        can_manage:
+          type: boolean
+          default: false
+        can_reveal_sensitive:
+          type: boolean
+          default: false
+      required:
+      - display_name
+      - email
+      - user
+    DeviceAccessEntryRequest:
+      type: object
+      properties:
+        user:
+          type: integer
+        can_read:
+          type: boolean
+          default: true
+        can_send:
+          type: boolean
+          default: false
+        can_manage:
+          type: boolean
+          default: false
+        can_reveal_sensitive:
+          type: boolean
+          default: false
+      required:
+      - user
+    DeviceDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        office:
+          allOf:
+          - $ref: '#/components/schemas/SmsOfficeRef'
+          readOnly: true
+        assigned_to:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          readOnly: true
+        status:
+          type: string
+        online:
+          type: boolean
+          readOnly: true
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        attention:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+          readOnly: true
+        manufacturer:
+          type: string
+        model:
+          type: string
+        android_version:
+          type: string
+        app_version:
+          type: string
+        battery:
+          type: integer
+          nullable: true
+        charging:
+          type: boolean
+        network_type:
+          type: string
+        signal:
+          type: integer
+          nullable: true
+        is_default_sms_app:
+          type: boolean
+        battery_optimised:
+          type: boolean
+        pending_outbox:
+          type: integer
+        last_sync_at:
+          type: string
+          format: date-time
+          nullable: true
+        sync_progress:
+          type: object
+          additionalProperties: {}
+        hardware_backed:
+          type: boolean
+        is_simulated:
+          type: boolean
+        sims:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimLine'
+          readOnly: true
+        permissions:
+          allOf:
+          - $ref: '#/components/schemas/DevicePermissions'
+          readOnly: true
+        unread:
+          type: integer
+          readOnly: true
+        enrolled_at:
+          type: string
+          format: date-time
+        sdk_int:
+          type: integer
+        options:
+          type: object
+          additionalProperties: {}
+        permissions_granted:
+          type: object
+          additionalProperties: {}
+        risk_signals:
+          type: object
+          additionalProperties: {}
+        attestation:
+          allOf:
+          - $ref: '#/components/schemas/Attestation'
+          readOnly: true
+        notice_accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        notice_text:
+          type: string
+        suspended_at:
+          type: string
+          format: date-time
+          nullable: true
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        enrolled_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          readOnly: true
+        push_enabled:
+          type: boolean
+          readOnly: true
+      required:
+      - android_version
+      - app_version
+      - assigned_to
+      - attention
+      - attestation
+      - battery
+      - battery_optimised
+      - charging
+      - code
+      - enrolled_at
+      - enrolled_by
+      - hardware_backed
+      - id
+      - is_default_sms_app
+      - is_simulated
+      - last_seen_at
+      - last_sync_at
+      - manufacturer
+      - model
+      - name
+      - network_type
+      - notice_accepted_at
+      - notice_text
+      - office
+      - online
+      - options
+      - pending_outbox
+      - permissions
+      - permissions_granted
+      - push_enabled
+      - revoked_at
+      - risk_signals
+      - sdk_int
+      - signal
+      - sims
+      - status
+      - suspended_at
+      - sync_progress
+      - unread
+    DeviceFactsRequest:
+      type: object
+      properties:
+        manufacturer:
+          type: string
+          default: ''
+          maxLength: 80
+        model:
+          type: string
+          default: ''
+          maxLength: 80
+        android_version:
+          type: string
+          default: ''
+          maxLength: 20
+        sdk_int:
+          type: integer
+          maximum: 100
+          minimum: 0
+          default: 0
+    DeviceOptionsRequest:
+      type: object
+      properties:
+        signature_enabled:
+          type: boolean
+        signature:
+          type: string
+          maxLength: 40
+        mark_read_on_open:
+          type: boolean
+        backfill_days:
+          type: integer
+          maximum: 730
+          minimum: 0
+          nullable: true
+    DevicePermissions:
+      type: object
+      properties:
+        read:
+          type: boolean
+        send:
+          type: boolean
+        manage:
+          type: boolean
+        reveal:
+          type: boolean
+      required:
+      - manage
+      - read
+      - reveal
+      - send
+    DeviceRef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        colour:
+          type: string
+      required:
+      - code
+      - colour
+      - id
+      - name
+    DeviceStatusChangeRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          default: ''
+          maxLength: 200
+        confirm_code:
+          type: string
+          default: ''
+          maxLength: 16
     Draft:
       type: object
       properties:
@@ -2853,6 +5070,293 @@ components:
           oneOf:
           - $ref: '#/components/schemas/UndoSendSecondsEnum'
           - $ref: '#/components/schemas/NullEnum'
+    EnrollInfo:
+      type: object
+      properties:
+        state:
+          type: string
+        company_name:
+          type: string
+        device_name:
+          type: string
+        office:
+          type: string
+        notice:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        server_time:
+          type: integer
+      required:
+      - company_name
+      - device_name
+      - expires_at
+      - notice
+      - office
+      - server_time
+      - state
+    EnrollRequestRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 100
+        public_key:
+          type: string
+          minLength: 1
+          maxLength: 1024
+        signature:
+          type: string
+          minLength: 1
+          maxLength: 256
+        timestamp:
+          type: integer
+        nonce:
+          type: string
+          minLength: 1
+          maxLength: 64
+        attestation_chain:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 8192
+          maxItems: 8
+        integrity_token:
+          type: string
+          default: ''
+          maxLength: 8192
+        app_version:
+          type: string
+          minLength: 1
+          maxLength: 32
+        device:
+          $ref: '#/components/schemas/DeviceFactsRequest'
+        sims:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimRequest'
+        notice_accepted:
+          type: boolean
+        notice_text:
+          type: string
+          default: ''
+          maxLength: 4000
+      required:
+      - app_version
+      - nonce
+      - notice_accepted
+      - public_key
+      - signature
+      - timestamp
+      - token
+    EnrollResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+        device_id:
+          type: string
+          format: uuid
+        device_code:
+          type: string
+        name:
+          type: string
+        office:
+          type: string
+        options:
+          type: object
+          additionalProperties: {}
+        hardware_backed:
+          type: boolean
+      required:
+      - access_token
+      - device_code
+      - device_id
+      - expires_in
+      - hardware_backed
+      - name
+      - office
+      - options
+      - token_type
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        office:
+          allOf:
+          - $ref: '#/components/schemas/SmsOfficeRef'
+          readOnly: true
+        state:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          nullable: true
+          readOnly: true
+        device:
+          allOf:
+          - $ref: '#/components/schemas/DeviceRef'
+          nullable: true
+          readOnly: true
+        failed_attempts:
+          type: integer
+        last_failure:
+          type: string
+      required:
+      - created_at
+      - created_by
+      - device
+      - expires_at
+      - failed_attempts
+      - id
+      - last_failure
+      - name
+      - office
+      - state
+      - used_at
+    EnrollmentCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        office:
+          type: integer
+        assigned_to:
+          type: integer
+          nullable: true
+        backfill_days:
+          type: integer
+          maximum: 730
+          minimum: 0
+          nullable: true
+        signature_enabled:
+          type: boolean
+          default: false
+        signature:
+          type: string
+          default: ''
+          maxLength: 40
+        mark_read_on_open:
+          type: boolean
+          default: true
+      required:
+      - name
+      - office
+    EnrollmentCreated:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        office:
+          allOf:
+          - $ref: '#/components/schemas/SmsOfficeRef'
+          readOnly: true
+        state:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          nullable: true
+          readOnly: true
+        device:
+          allOf:
+          - $ref: '#/components/schemas/DeviceRef'
+          nullable: true
+          readOnly: true
+        failed_attempts:
+          type: integer
+        last_failure:
+          type: string
+        code:
+          type: string
+        uri:
+          type: string
+        qr_svg:
+          type: string
+      required:
+      - code
+      - created_at
+      - created_by
+      - device
+      - expires_at
+      - failed_attempts
+      - id
+      - last_failure
+      - name
+      - office
+      - qr_svg
+      - state
+      - uri
+      - used_at
+    EventRequest:
+      type: object
+      properties:
+        seq:
+          type: integer
+          minimum: 1
+        type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        payload:
+          type: object
+          additionalProperties: {}
+      required:
+      - payload
+      - seq
+      - type
+    EventTypeEnum:
+      enum:
+      - backfill.progress
+      - block.add
+      - block.remove
+      - contact.upsert
+      - message.delete
+      - message.read
+      - message.upsert
+      - thread.delete
+      - thread.read
+      type: string
+      description: |-
+        * `backfill.progress` - backfill.progress
+        * `block.add` - block.add
+        * `block.remove` - block.remove
+        * `contact.upsert` - contact.upsert
+        * `message.delete` - message.delete
+        * `message.read` - message.read
+        * `message.upsert` - message.upsert
+        * `thread.delete` - thread.delete
+        * `thread.read` - thread.read
     Filter:
       type: object
       properties:
@@ -2939,6 +5443,113 @@ components:
       required:
       - action
       - criteria
+    HeartbeatHistory:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        battery:
+          type: integer
+          nullable: true
+        charging:
+          type: boolean
+        network_type:
+          type: string
+        signal:
+          type: integer
+          nullable: true
+        is_default_sms_app:
+          type: boolean
+        pending_outbox:
+          type: integer
+        app_version:
+          type: string
+      required:
+      - app_version
+      - battery
+      - charging
+      - created_at
+      - is_default_sms_app
+      - network_type
+      - pending_outbox
+      - signal
+    HeartbeatRequest:
+      type: object
+      properties:
+        battery:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+        charging:
+          type: boolean
+          default: false
+        network_type:
+          default: ''
+          oneOf:
+          - $ref: '#/components/schemas/NetworkTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        signal:
+          type: integer
+          maximum: 4
+          minimum: -1
+          nullable: true
+        is_default_sms_app:
+          type: boolean
+        permissions:
+          type: object
+          additionalProperties:
+            type: boolean
+        battery_optimised:
+          type: boolean
+          default: false
+        pending_outbox:
+          type: integer
+          maximum: 10000000
+          minimum: 0
+          default: 0
+        app_version:
+          type: string
+          default: ''
+          maxLength: 32
+        android_version:
+          type: string
+          default: ''
+          maxLength: 20
+        last_sync_at:
+          type: string
+          format: date-time
+          nullable: true
+        risk_signals:
+          type: object
+          additionalProperties:
+            type: boolean
+        sims:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimRequest'
+          nullable: true
+      required:
+      - is_default_sms_app
+    HeartbeatResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        attention:
+          type: array
+          items:
+            type: string
+        server_time:
+          type: integer
+        poll_seconds:
+          type: integer
+      required:
+      - attention
+      - poll_seconds
+      - server_time
+      - status
     ImapDefaults:
       type: object
       properties:
@@ -3486,6 +6097,49 @@ components:
       - preferences
       - timezone
       - totp_enabled
+    MediaChunkKindEnum:
+      enum:
+      - mms
+      type: string
+      description: '* `mms` - mms'
+    MediaChunkRequest:
+      type: object
+      properties:
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/MediaChunkKindEnum'
+          default: mms
+        provider_id:
+          type: integer
+          minimum: 0
+        date:
+          type: integer
+        seq:
+          type: integer
+          maximum: 50
+          minimum: 0
+        offset:
+          type: integer
+          minimum: 0
+        chunk:
+          type: string
+          format: binary
+      required:
+      - chunk
+      - date
+      - offset
+      - provider_id
+      - seq
+    MediaChunkResult:
+      type: object
+      properties:
+        received_bytes:
+          type: integer
+        complete:
+          type: boolean
+      required:
+      - complete
+      - received_bytes
     Message:
       type: object
       properties:
@@ -3582,6 +6236,16 @@ components:
         * `reply` - reply
         * `reply_all` - reply_all
         * `forward` - forward
+    NetworkTypeEnum:
+      enum:
+      - wifi
+      - cellular
+      - ethernet
+      - none
+      - other
+      type: string
+      description: "* `wifi` - wifi\n* `cellular` - cellular\n* `ethernet` - ethernet\n*
+        `none` - none\n* `other` - other\n* `` - "
     Note:
       type: object
       properties:
@@ -3678,6 +6342,160 @@ components:
       required:
       - code
       - name
+    OutboxItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversation:
+          type: integer
+        kind:
+          type: string
+        direction:
+          type: string
+        origin:
+          type: string
+        address:
+          type: string
+        body:
+          type: string
+          readOnly: true
+        is_masked:
+          type: boolean
+          readOnly: true
+        is_sensitive:
+          type: boolean
+        sensitive_kind:
+          type: string
+        segments:
+          type: integer
+        encoding:
+          type: string
+        subject:
+          type: string
+        at:
+          type: string
+          format: date-time
+        status:
+          type: string
+        status_label:
+          type: string
+        status_history:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusEntry'
+        sent_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          readOnly: true
+        sim:
+          allOf:
+          - $ref: '#/components/schemas/SimRef'
+          nullable: true
+          readOnly: true
+        error_code:
+          type: integer
+          nullable: true
+        error_detail:
+          type: string
+        is_read:
+          type: boolean
+        is_starred:
+          type: boolean
+        deleted_on_device_at:
+          type: string
+          format: date-time
+          nullable: true
+        send_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_scheduled:
+          type: boolean
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        delivered_at:
+          type: string
+          format: date-time
+          nullable: true
+        client_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        retry_of:
+          type: integer
+          nullable: true
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Part'
+          readOnly: true
+        device:
+          allOf:
+          - $ref: '#/components/schemas/DeviceRef'
+          readOnly: true
+        conversation_title:
+          type: string
+          readOnly: true
+      required:
+      - address
+      - at
+      - body
+      - client_uuid
+      - conversation
+      - conversation_title
+      - deleted_on_device_at
+      - delivered_at
+      - device
+      - direction
+      - encoding
+      - error_code
+      - error_detail
+      - id
+      - is_masked
+      - is_read
+      - is_scheduled
+      - is_sensitive
+      - is_starred
+      - kind
+      - origin
+      - parts
+      - retry_of
+      - segments
+      - send_at
+      - sensitive_kind
+      - sent_at
+      - sent_by
+      - sim
+      - status
+      - status_history
+      - status_label
+      - subject
+    Part:
+      type: object
+      properties:
+        id:
+          type: integer
+        seq:
+          type: integer
+        content_type:
+          type: string
+        filename:
+          type: string
+        size:
+          type: integer
+        available:
+          type: boolean
+      required:
+      - available
+      - content_type
+      - filename
+      - id
+      - seq
+      - size
     Participant:
       type: object
       properties:
@@ -3692,6 +6510,20 @@ components:
       required:
       - email
       - name
+    PatchedDeviceUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        office:
+          type: integer
+        assigned_to:
+          type: integer
+          nullable: true
+        options:
+          $ref: '#/components/schemas/DeviceOptionsRequest'
     PatchedDraftWriteRequest:
       type: object
       properties:
@@ -3814,6 +6646,21 @@ components:
           type: string
           minLength: 1
           maxLength: 64
+    PatchedQuickReplyRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 80
+        body:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        device:
+          type: string
+          format: uuid
+          nullable: true
     PatchedRescheduleRequest:
       type: object
       properties:
@@ -3836,6 +6683,35 @@ components:
           items:
             type: string
             minLength: 1
+    PatchedSensitiveRuleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        kind:
+          $ref: '#/components/schemas/SensitiveRuleKindEnum'
+        sender_pattern:
+          type: string
+          description: Regex on the sender address (optional).
+          maxLength: 200
+        body_pattern:
+          type: string
+          description: Regex on the text (optional).
+          maxLength: 300
+        is_enabled:
+          type: boolean
+    PatchedSimUpdateRequest:
+      type: object
+      properties:
+        display_name:
+          type: string
+          maxLength: 60
+        colour:
+          type: string
+          minLength: 1
+          maxLength: 7
     PatchedTemplateRequest:
       type: object
       properties:
@@ -3959,6 +6835,14 @@ components:
       - mailbox_name
       - notice
       - state
+    PushTokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 4096
+      required:
+      - token
     Queued:
       type: object
       properties:
@@ -4015,6 +6899,49 @@ components:
         * `sent` - Sent
         * `cancelled` - Cancelled
         * `failed` - Failed
+    QuickReply:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 80
+        body:
+          type: string
+          maxLength: 1000
+        device:
+          type: string
+          format: uuid
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - body
+      - id
+      - title
+      - updated_at
+    QuickReplyRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 80
+        body:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        device:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - body
+      - title
     ReadingPaneEnum:
       enum:
       - right
@@ -4023,6 +6950,13 @@ components:
       description: |-
         * `right` - right
         * `none` - none
+    Reveal:
+      type: object
+      properties:
+        body:
+          type: string
+      required:
+      - body
     Role:
       type: object
       properties:
@@ -4078,6 +7012,25 @@ components:
             minLength: 1
       required:
       - name
+    SegmentInfo:
+      type: object
+      properties:
+        encoding:
+          type: string
+        units:
+          type: integer
+        segments:
+          type: integer
+        per_segment:
+          type: integer
+        remaining:
+          type: integer
+      required:
+      - encoding
+      - per_segment
+      - remaining
+      - segments
+      - units
     SelectionQueryRequest:
       type: object
       properties:
@@ -4120,6 +7073,66 @@ components:
       - is_default
       - is_primary
       - signature
+    SensitiveRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        kind:
+          $ref: '#/components/schemas/SensitiveRuleKindEnum'
+        sender_pattern:
+          type: string
+          description: Regex on the sender address (optional).
+          maxLength: 200
+        body_pattern:
+          type: string
+          description: Regex on the text (optional).
+          maxLength: 300
+        is_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - kind
+      - name
+    SensitiveRuleKindEnum:
+      enum:
+      - otp
+      - money
+      type: string
+      description: |-
+        * `otp` - One-time code
+        * `money` - Banking / mobile money
+    SensitiveRuleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        kind:
+          $ref: '#/components/schemas/SensitiveRuleKindEnum'
+        sender_pattern:
+          type: string
+          description: Regex on the sender address (optional).
+          maxLength: 200
+        body_pattern:
+          type: string
+          description: Regex on the text (optional).
+          maxLength: 300
+        is_enabled:
+          type: boolean
+      required:
+      - kind
+      - name
     SignatureWriteRequest:
       type: object
       properties:
@@ -4133,6 +7146,558 @@ components:
       required:
       - send_as
       - signature
+    SimLine:
+      type: object
+      properties:
+        id:
+          type: integer
+        subscription_id:
+          type: integer
+        slot:
+          type: integer
+        carrier:
+          type: string
+        country_iso:
+          type: string
+        number:
+          type: string
+        display_name:
+          type: string
+        label:
+          type: string
+        colour:
+          type: string
+        is_default:
+          type: boolean
+        is_active:
+          type: boolean
+      required:
+      - carrier
+      - colour
+      - country_iso
+      - display_name
+      - id
+      - is_active
+      - is_default
+      - label
+      - number
+      - slot
+      - subscription_id
+    SimRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        slot:
+          type: integer
+        colour:
+          type: string
+      required:
+      - colour
+      - id
+      - label
+      - slot
+    SimRequest:
+      type: object
+      properties:
+        subscription_id:
+          type: integer
+        slot:
+          type: integer
+          maximum: 7
+          minimum: 0
+          default: 0
+        carrier:
+          type: string
+          default: ''
+          maxLength: 80
+        country_iso:
+          type: string
+          default: ''
+          maxLength: 2
+        number:
+          type: string
+          default: ''
+          maxLength: 32
+        is_default:
+          type: boolean
+          default: false
+      required:
+      - subscription_id
+    SimulatorActionActionEnum:
+      enum:
+      - online
+      - offline
+      - tick
+      - inbound
+      type: string
+      description: |-
+        * `online` - online
+        * `offline` - offline
+        * `tick` - tick
+        * `inbound` - inbound
+    SimulatorActionRequest:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/SimulatorActionActionEnum'
+      required:
+      - action
+    SmsActionRequestActionEnum:
+      enum:
+      - archive
+      - assign
+      - block
+      - done
+      - mute
+      - not_spam
+      - pin
+      - read
+      - reopen
+      - spam
+      - star
+      - unarchive
+      - unassign
+      - unblock
+      - unmute
+      - unpin
+      - unread
+      - unstar
+      type: string
+      description: |-
+        * `archive` - archive
+        * `assign` - assign
+        * `block` - block
+        * `done` - done
+        * `mute` - mute
+        * `not_spam` - not_spam
+        * `pin` - pin
+        * `read` - read
+        * `reopen` - reopen
+        * `spam` - spam
+        * `star` - star
+        * `unarchive` - unarchive
+        * `unassign` - unassign
+        * `unblock` - unblock
+        * `unmute` - unmute
+        * `unpin` - unpin
+        * `unread` - unread
+        * `unstar` - unstar
+    SmsActionRequestRequest:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/SmsActionRequestActionEnum'
+        conversation_ids:
+          type: array
+          items:
+            type: integer
+          maxItems: 500
+        assignee:
+          type: integer
+          nullable: true
+      required:
+      - action
+      - conversation_ids
+    SmsActionResult:
+      type: object
+      properties:
+        conversations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationSummary'
+      required:
+      - conversations
+    SmsAssignee:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        display_name:
+          type: string
+      required:
+      - display_name
+      - email
+      - id
+    SmsComposeRequest:
+      type: object
+      properties:
+        device:
+          type: string
+          format: uuid
+        conversation:
+          type: integer
+          nullable: true
+        to:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+          maxItems: 20
+        body:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        sim_line:
+          type: integer
+          nullable: true
+        send_at:
+          type: string
+          format: date-time
+          nullable: true
+        undo_seconds:
+          type: integer
+          maximum: 30
+          minimum: 0
+          nullable: true
+        client_uuid:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - body
+      - device
+    SmsComposeResult:
+      type: object
+      properties:
+        message:
+          $ref: '#/components/schemas/SmsMessage'
+        conversation:
+          type: integer
+      required:
+      - conversation
+      - message
+    SmsMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversation:
+          type: integer
+        kind:
+          type: string
+        direction:
+          type: string
+        origin:
+          type: string
+        address:
+          type: string
+        body:
+          type: string
+          readOnly: true
+        is_masked:
+          type: boolean
+          readOnly: true
+        is_sensitive:
+          type: boolean
+        sensitive_kind:
+          type: string
+        segments:
+          type: integer
+        encoding:
+          type: string
+        subject:
+          type: string
+        at:
+          type: string
+          format: date-time
+        status:
+          type: string
+        status_label:
+          type: string
+        status_history:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusEntry'
+        sent_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          readOnly: true
+        sim:
+          allOf:
+          - $ref: '#/components/schemas/SimRef'
+          nullable: true
+          readOnly: true
+        error_code:
+          type: integer
+          nullable: true
+        error_detail:
+          type: string
+        is_read:
+          type: boolean
+        is_starred:
+          type: boolean
+        deleted_on_device_at:
+          type: string
+          format: date-time
+          nullable: true
+        send_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_scheduled:
+          type: boolean
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        delivered_at:
+          type: string
+          format: date-time
+          nullable: true
+        client_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        retry_of:
+          type: integer
+          nullable: true
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Part'
+          readOnly: true
+      required:
+      - address
+      - at
+      - body
+      - client_uuid
+      - conversation
+      - deleted_on_device_at
+      - delivered_at
+      - direction
+      - encoding
+      - error_code
+      - error_detail
+      - id
+      - is_masked
+      - is_read
+      - is_scheduled
+      - is_sensitive
+      - is_starred
+      - kind
+      - origin
+      - parts
+      - retry_of
+      - segments
+      - send_at
+      - sensitive_kind
+      - sent_at
+      - sent_by
+      - sim
+      - status
+      - status_history
+      - status_label
+      - subject
+    SmsMessagePage:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsMessage'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - next_cursor
+      - results
+    SmsNote:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        body:
+          type: string
+        author:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - body
+      - created_at
+      - id
+    SmsNoteRequest:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+      required:
+      - body
+    SmsOfficeRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        colour:
+          type: string
+      required:
+      - colour
+      - id
+      - name
+    SmsParticipant:
+      type: object
+      properties:
+        address:
+          type: string
+        display:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        is_blocked:
+          type: boolean
+      required:
+      - address
+      - display
+      - is_blocked
+      - kind
+      - name
+    SmsSettings:
+      type: object
+      properties:
+        monitoring_notice:
+          type: string
+          maxLength: 2000
+        default_signature:
+          type: string
+          maxLength: 40
+        retention_days:
+          type: integer
+          readOnly: true
+        mirror_device_deletes:
+          type: boolean
+          readOnly: true
+        outbound_ttl_hours:
+          type: integer
+          readOnly: true
+        daily_cap:
+          type: integer
+          readOnly: true
+        allow_short_codes:
+          type: boolean
+          readOnly: true
+        push_configured:
+          type: boolean
+          readOnly: true
+        simulator_enabled:
+          type: boolean
+          readOnly: true
+      required:
+      - allow_short_codes
+      - daily_cap
+      - default_signature
+      - mirror_device_deletes
+      - monitoring_notice
+      - outbound_ttl_hours
+      - push_configured
+      - retention_days
+      - simulator_enabled
+    SmsSettingsRequest:
+      type: object
+      properties:
+        monitoring_notice:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        default_signature:
+          type: string
+          maxLength: 40
+      required:
+      - default_signature
+      - monitoring_notice
+    StarRequest:
+      type: object
+      properties:
+        starred:
+          type: boolean
+      required:
+      - starred
+    StatusBatchRequest:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusReportRequest'
+        command_acks:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommandAckRequest'
+    StatusEntry:
+      type: object
+      properties:
+        status:
+          type: string
+        at:
+          type: string
+          format: date-time
+      required:
+      - at
+      - status
+    StatusReportRequest:
+      type: object
+      properties:
+        client_uuid:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/StatusReportStatusEnum'
+        at:
+          type: integer
+          nullable: true
+        error_code:
+          type: integer
+          nullable: true
+        parts:
+          type: integer
+          maximum: 50
+          minimum: 1
+          nullable: true
+      required:
+      - client_uuid
+      - status
+    StatusReportStatusEnum:
+      enum:
+      - delivered
+      - failed
+      - sending
+      - sent
+      - unknown
+      type: string
+      description: |-
+        * `delivered` - delivered
+        * `failed` - failed
+        * `sending` - sending
+        * `sent` - sent
+        * `unknown` - unknown
+    StatusResult:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - results
     SwipeActionEnum:
       enum:
       - archive
@@ -4145,6 +7710,25 @@ components:
         * `trash` - trash
         * `read` - read
         * `none` - none
+    SyncResult:
+      type: object
+      properties:
+        acked_seq:
+          type: integer
+        processed:
+          type: integer
+        skipped:
+          type: integer
+        rejected:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - acked_seq
+      - processed
+      - rejected
+      - skipped
     Template:
       type: object
       properties:
@@ -4358,6 +7942,41 @@ components:
       - mailbox
       - participants
       - snoozed_until
+    TokenRequestRequest:
+      type: object
+      properties:
+        device_id:
+          type: string
+          minLength: 1
+          maxLength: 40
+        timestamp:
+          type: integer
+        nonce:
+          type: string
+          minLength: 1
+          maxLength: 64
+        signature:
+          type: string
+          minLength: 1
+          maxLength: 256
+      required:
+      - device_id
+      - nonce
+      - signature
+      - timestamp
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+      required:
+      - access_token
+      - expires_in
+      - token_type
     TotpCodeRequest:
       type: object
       properties:
@@ -4486,6 +8105,16 @@ components:
       - id
       - office
       - role
+    UserRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        display_name:
+          type: string
+      required:
+      - display_name
+      - id
     UserWriteRequest:
       type: object
       properties:
@@ -4645,3 +8274,7 @@ components:
       type: apiKey
       in: cookie
       name: cm_session
+    deviceToken:
+      type: http
+      scheme: bearer
+      description: Short-lived device access token from POST /device/auth/token/.
