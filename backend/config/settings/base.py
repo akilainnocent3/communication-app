@@ -199,6 +199,9 @@ MAIL_ENABLE_FAKE_PROVIDER = env.bool("MAIL_ENABLE_FAKE_PROVIDER", default=True)
 # a leak of one key ring does not expose the other. Rotate with `python manage.py rotate_sms_keys`.
 SMS_DATA_KEYS = env.list("SMS_DATA_KEYS", default=[])
 # Encrypted MMS files. Private storage outside any web root; never served directly.
+# Base URL phones use for /api/v1/device/ (encoded in the enrollment QR). Set it when the API has its own domain;
+# it must be one of the hosts in the app's ALLOWED_SERVER_HOSTS build define.
+SMS_DEVICE_API_URL = env("SMS_DEVICE_API_URL", default="").rstrip("/") or PUBLIC_APP_URL
 SMS_MEDIA_ROOT = env("SMS_MEDIA_ROOT", default=str(BASE_DIR / "private" / "sms-media"))
 SMS_MAX_MMS_BYTES = env.int("SMS_MAX_MMS_BYTES", default=2 * 1024 * 1024)
 SMS_INITIAL_SYNC_DAYS = env.int("SMS_INITIAL_SYNC_DAYS", default=90)

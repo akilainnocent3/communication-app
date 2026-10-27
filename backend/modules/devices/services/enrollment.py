@@ -49,7 +49,7 @@ def hash_token(token: str) -> str:
 
 def enroll_uri(token: str) -> str:
     """What the QR code encodes. The app refuses servers outside its build-time allow-list and non-HTTPS URLs."""
-    return f"cmsms://enroll?{urlencode({'server': settings.PUBLIC_APP_URL, 'token': token})}"
+    return f"cmsms://enroll?{urlencode({'server': settings.SMS_DEVICE_API_URL, 'token': token})}"
 
 
 def clean_options(options: dict | None) -> dict:

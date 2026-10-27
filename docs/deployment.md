@@ -150,6 +150,25 @@ docker compose up -d
    set `FCM_PROJECT_ID` and mount the service account (`FCM_SERVICE_ACCOUNT_FILE`, never baked into the image).
 3. In the admin: **SMS → Enroll phone**, scan the QR code with the app.
 
+### Separate domains for the admin and the phone API
+
+Phones may use their own domain, for example admin at `https://communicationadmin.schoolsoft.online` and phones at
+`https://communicationapi.schoolsoft.online`:
+
+```bash
+PUBLIC_APP_URL=https://communicationadmin.schoolsoft.online     # connect links, OAuth redirect
+SMS_DEVICE_API_URL=https://communicationapi.schoolsoft.online   # what the enrollment QR tells phones
+DJANGO_ALLOWED_HOSTS=communicationadmin.schoolsoft.online,communicationapi.schoolsoft.online,127.0.0.1,localhost
+```
+
+Build the app with `--dart-define=ALLOWED_SERVER_HOSTS=communicationapi.schoolsoft.online` (the QR host must be on
+that list, or the phone refuses it). Production refuses to start unless `SMS_DEVICE_API_URL` is `https://`.
+
+On the API domain, expose **only** `/api/v1/device/` (the `location /api/v1/device/` block of `deploy/nginx.conf`,
+with `return 404` for everything else). The admin API stays behind Next.js: keep `CM_API_ORIGIN` pointing at Django
+over the private network (`http://127.0.0.1:8000` or `http://backend:8000`), not at the public API domain. That keeps
+the admin API off the internet and keeps a single proxy hop, which `X-Forwarded-For` handling relies on.
+
 ## 8. Monitoring
 
 - `docker compose logs -f backend worker beat` shows request logs and sync errors. Email bodies and tokens are
@@ -194,6 +213,7 @@ docker compose up -d
 | `GOOGLE_OAUTH_SCOPES` | openid, email, mail.google.com, gmail.settings.basic | Comma separated |
 | `SECURE_HSTS_SECONDS` | `2592000` | Prod only |
 | `SMS_DATA_KEYS` | dev-only value | **Required in prod.** Fernet keys for SMS bodies and MMS files, newest first, not shared with `MAIL_TOKEN_KEYS` |
+| `SMS_DEVICE_API_URL` | `PUBLIC_APP_URL` | https URL phones use, encoded in the enrollment QR; must be in the app's `ALLOWED_SERVER_HOSTS` |
 | `SMS_MEDIA_ROOT` | `backend/private/sms-media` (`/data/sms-media` in compose) | Encrypted MMS files, private |
 | `SMS_MAX_MMS_BYTES` | `2097152` | Per MMS part |
 | `SMS_INITIAL_SYNC_DAYS` | `90` | History copied at enrollment |

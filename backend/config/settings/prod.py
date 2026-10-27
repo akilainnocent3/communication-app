@@ -1,5 +1,5 @@
 from .base import *  # noqa: F401,F403
-from .base import MAIL_TOKEN_KEYS, SECRET_KEY, SMS_ATTESTATION_ROOTS_FILE, SMS_DATA_KEYS, SMS_REQUIRE_KEY_ATTESTATION, SMS_REQUIRE_PLAY_INTEGRITY, env
+from .base import MAIL_TOKEN_KEYS, SECRET_KEY, SMS_DEVICE_API_URL, SMS_ATTESTATION_ROOTS_FILE, SMS_DATA_KEYS, SMS_REQUIRE_KEY_ATTESTATION, SMS_REQUIRE_PLAY_INTEGRITY, env
 
 DEBUG = False
 SESSION_COOKIE_SECURE = True
@@ -27,6 +27,8 @@ if "q0V6c3Vw8m1yFh3m0dZ8b6m0n3m8sYk2XHkqvQ9QeK4=" in SMS_DATA_KEYS:
     raise RuntimeError("SMS_DATA_KEYS contains the dev-only key from settings/dev.py; generate a new one.")
 if set(SMS_DATA_KEYS) & set(MAIL_TOKEN_KEYS):
     raise RuntimeError("SMS_DATA_KEYS and MAIL_TOKEN_KEYS must not share keys.")
+if not SMS_DEVICE_API_URL.startswith("https://"):
+    raise RuntimeError("SMS_DEVICE_API_URL (or PUBLIC_APP_URL) must be https://: phones refuse any other server.")
 if SMS_ENABLE_SIMULATOR:
     raise RuntimeError("SMS_ENABLE_SIMULATOR must be off in production (simulated phones are for demos and tests).")
 if SMS_REQUIRE_KEY_ATTESTATION and not SMS_ATTESTATION_ROOTS_FILE:

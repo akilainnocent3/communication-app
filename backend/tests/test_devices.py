@@ -42,6 +42,13 @@ def test_admin_creates_enrollment_with_qr_and_only_the_hash_is_stored(client_for
     assert AuditEvent.objects.filter(action="device.invite_revoke").exists()
 
 
+def test_qr_points_phones_at_the_device_api_domain(client_for, admin, office, settings):
+    """With the API on its own domain, the QR carries that domain (the one the app's allow-list names)."""
+    settings.SMS_DEVICE_API_URL = "https://communicationapi.example.com"
+    body = client_for(admin).post("/api/v1/sms/enrollments/", {"name": "Desk", "office": office.pk}, format="json").json()
+    assert body["uri"].startswith("cmsms://enroll?server=https%3A%2F%2Fcommunicationapi.example.com&token=")
+
+
 def test_only_device_managers_create_enrollments(client_for, manager, office):
     response = client_for(manager).post("/api/v1/sms/enrollments/", {"name": "X", "office": office.pk}, format="json")
     assert response.status_code == 403

@@ -16,6 +16,7 @@ GOOGLE_OAUTH_CLIENT_ID = "test-client-id.apps.googleusercontent.com"
 GOOGLE_OAUTH_CLIENT_SECRET = "test-secret"
 GOOGLE_OAUTH_REDIRECT_URI = "http://testserver/api/v1/mail/oauth/callback/"
 PUBLIC_APP_URL = "http://testserver"
+SMS_DEVICE_API_URL = PUBLIC_APP_URL
 MAIL_ENABLE_FAKE_PROVIDER = True
 REST_FRAMEWORK = {**REST_FRAMEWORK, "DEFAULT_THROTTLE_RATES": {"login": "1000/min", "public_connect": "1000/min", "device_enroll": "1000/min", "device_auth": "1000/min", "device": "10000/min"}}  # noqa: F405
 SMS_DATA_KEYS = ["bW9ja19zbXNfa2V5X2Zvcl90ZXN0c19vbmx5XzMyYnk="]
