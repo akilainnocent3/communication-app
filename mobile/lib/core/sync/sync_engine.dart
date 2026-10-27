@@ -39,6 +39,7 @@ class SyncEngine {
     _running = true;
     try {
       await _heartbeatIfDue(force: forceHeartbeat);
+      await _registerPushToken();
       await backfillIfNeeded();
       await uploadEvents();
       await uploadMedia();
@@ -92,6 +93,14 @@ class SyncEngine {
   static Map<String, dynamic> simPayload(SimInfo sim) =>
       {'subscription_id': sim.subscriptionId, 'slot': sim.slot, 'carrier': sim.carrier, 'country_iso': sim.countryIso, 'number': sim.number ?? '', 'is_default': sim.isDefault};
 
+  /// FCM tokens arrive natively (PushService.onNewToken) and wait in the database until registered here.
+  Future<void> _registerPushToken() async {
+    final token = await db.getValue('push_token_pending');
+    if (token == null || token.isEmpty) return;
+    await api.registerPushToken(token);
+    await db.setValue('push_token_pending', null);
+  }
+
   // --- Backfill ----------------------------------------------------------------------------------------------
 
   /// Copies the message history inside the backfill window once (newest first), as ordinary upsert events.
@@ -106,7 +115,14 @@ class SyncEngine {
       if (page.isEmpty) break;
       for (final message in page) {
         addresses.addAll(message.addresses);
-        await db.appendEvent('message.upsert', jsonEncode(messagePayload(message)));
+        final hashes = <int, String>{};
+        if (message.kind == 'mms') {
+          // The server verifies each uploaded part against the SHA-256 declared here.
+          for (final part in message.parts.where((p) => p.uri != null)) {
+            hashes[part.seq] = sha256.convert(await phone.readMmsPart(part.uri!)).toString();
+          }
+        }
+        await db.appendEvent('message.upsert', jsonEncode(messagePayload(message, partHashes: hashes)));
         await _queueParts(message);
       }
       offset += page.length;

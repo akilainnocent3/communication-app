@@ -1,8 +1,9 @@
 # Architecture
 
 Communication Manager is a Django API (`backend/`) behind a Next.js app (`frontend/`). Each communication
-channel is a **platform**. Gmail is the only platform built so far. Inside the Gmail platform, every mail
-server is reached through one **provider** interface.
+channel is a **platform**: Gmail and SMS are built. Inside the Gmail platform, every mail server is reached through
+one **provider** interface. The SMS platform talks to enrolled company phones running the Android app in `mobile/`
+(design: [sms-mobile.md](sms-mobile.md)).
 
 ## Request path
 
@@ -18,8 +19,13 @@ flowchart LR
   W --> P
   W -->|Gmail API / IMAP / SMTP| G[(Mail servers)]
   D -->|on-demand bodies, actions| G
+  PH[Company phones<br/>SMS app] -->|HTTPS, pinned<br/>/api/v1/device/*| N
+  N -->|/api/v1/device/*| D
+  W -->|FCM data-only wake-ups| PH
 ```
 
+- Phones use a second path: `Phone → Nginx → Django /api/v1/device/…` (no Next.js hop). That surface accepts only
+  short-lived device tokens (`Authorization: Bearer`), never cookies; the admin surface accepts only sessions.
 - The browser talks only to Next.js. Next.js rewrites `/api/v1/*` to Django, so the session cookie
   (`cm_session`) and CSRF cookie (`cm_csrftoken`) are same-origin and there is no CORS.
 - Django holds all state and business logic. Views are thin. Logic lives in `modules/<module>/services/`.
@@ -35,6 +41,8 @@ flowchart LR
 | `modules/platforms` | `PlatformRegistry` + `Platform` model (enable, disable and order platforms) |
 | `modules/audit` | Append-only `AuditEvent`, list API and CSV export |
 | `modules/mail` | The Gmail platform: models, providers, services, API, Celery tasks |
+| `modules/devices` | Company phones, shared by phone platforms: enrollment invites, Keystore identity + key attestation, proof-of-possession device tokens, `DeviceTokenAuthentication`, heartbeat and health alerts, commands, FCM push, suspend/revoke |
+| `modules/sms` | The SMS platform: encrypted conversations/messages/MMS parts, sync events, outbound queue (leases, at-most-once), access (`DeviceAccess`), analytics, retention, simulated phones |
 
 ## Platform registry
 
@@ -166,6 +174,33 @@ flowchart TB
   5 s) claims due rows. Cancelling before the claim deletes the row.
 - **Push:** Gmail Pub/Sub `users.watch` is not required. A webhook can call `mail.sync_mailbox` later.
 
+## SMS: sync and outbound
+
+```mermaid
+sequenceDiagram
+  participant P as Phone (receiver, native)
+  participant O as SQLCipher outbox
+  participant L as Sync loop (headless Dart, foreground service)
+  participant D as Django /device/
+  participant A as Admin (browser)
+  P->>O: new SMS → provider row + event (seq)
+  P-->>L: event / network back / FCM
+  L->>D: POST sync/events (≤ 200)
+  D-->>L: acked_seq
+  L->>O: delete ≤ acked_seq
+  A->>D: POST /sms/send (queued, send_at = now + undo)
+  D-->>P: FCM {"type":"outbox"} (no content)
+  L->>D: POST outbox/claim (lease 120 s)
+  L->>P: durable "sending" mark → SmsManager
+  P-->>L: sent / delivered receivers
+  L->>D: POST outbox/status (sending, sent, delivered)
+  A->>D: poll chat (5 s): Queued → Sent to phone → Sending → Sent → Delivered
+```
+
+Celery beat adds: `sms.dispatch_due` (5 s, wakes phones whose undo/schedule window ended), `sms.expire_outbound`
+(1 min), `devices.refresh_health` (1 min, offline/attention), `devices.prune` (hourly: heartbeats, tokens, invites,
+commands), `sms.retention_purge` (6 h), `sms.media_cleanup` (hourly), `sms.simulator_tick` (5 s, demo only).
+
 ## Frontend
 
 ```
@@ -177,6 +212,8 @@ src/
   app/(app)/settings/…             users & roles, offices, platforms, integrations, audit log, preferences
   platforms/registry.ts            PLATFORMS + helpers
   platforms/gmail/                 definition, nav, API hooks, mail components, compose, shortcuts
+  platforms/sms/                   definition, DeviceSwitcher, API hooks, inbox/chat/composer, devices, tools
+  app/(app)/sms/…                  inbox folders, outbox, scheduled, dashboard, contacts, phones, tools
   components/tailgrids/core        UI primitives (react-aria-components), from the reference design system
   components/shell, components/ui  app shell and shared page patterns (tables, states, cards)
   services/api/                    fetch client (CSRF, ApiError, session-expired event) + generated schema.d.ts

@@ -1,11 +1,30 @@
+import java.util.Base64
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+/** --dart-define values (base64, comma separated) passed by `flutter build`. */
+fun dartDefines(): Map<String, String> {
+    val raw = (project.findProperty("dart-defines") as String?) ?: return emptyMap()
+    return raw.split(",").mapNotNull {
+        val decoded = String(Base64.getDecoder().decode(it))
+        decoded.split("=", limit = 2).takeIf { pair -> pair.size == 2 }?.let { pair -> pair[0] to pair[1] }
+    }.toMap()
+}
+val defines = dartDefines()
+
+// Release signing comes from android/key.properties (git-ignored); see mobile/README.md.
+val keyProperties = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
 android {
-    namespace = "com.kilimanjaro.communicationmanager.cm_sms"
+    namespace = "com.kilimanjaro.communicationmanager.sms"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -14,27 +33,45 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.kilimanjaro.communicationmanager.cm_sms"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        applicationId = "com.kilimanjaro.communicationmanager.sms"
+        // Android 10: RoleManager.ROLE_SMS.
+        minSdk = 29
         targetSdk = flutter.targetSdkVersion
-        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        buildConfigField("String", "ALLOWED_SERVER_HOSTS", "\"${defines["ALLOWED_SERVER_HOSTS"] ?: ""}\"")
+        buildConfigField("String", "PINNED_SPKI", "\"${defines["PINNED_SPKI"] ?: ""}\"")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            if (keyProperties.isNotEmpty()) {
+                storeFile = file(keyProperties.getProperty("storeFile"))
+                storePassword = keyProperties.getProperty("storePassword")
+                keyAlias = keyProperties.getProperty("keyAlias")
+                keyPassword = keyProperties.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Without key.properties the release build is signed with the debug key so CI can still build it.
+            signingConfig = if (keyProperties.isNotEmpty()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+    }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -44,6 +81,31 @@ kotlin {
     }
 }
 
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("com.squareup.okhttp3:okhttp:5.1.0")
+    implementation("androidx.work:work-runtime-ktx:2.10.3")
+    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.activity:activity-ktx:1.10.1")
+    implementation("net.zetetic:sqlcipher-android:4.10.0@aar")
+    implementation("androidx.sqlite:sqlite:2.5.2")
+    implementation("com.google.firebase:firebase-messaging:25.0.0")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.15.1")
+    testImplementation("androidx.test:core:1.6.1")
+}
+
 flutter {
     source = "../.."
+}
+
+// google-services.json is optional (FCM). Apply the plugin only when the file is present.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
+// Robolectric tests package the merged assets, which the Flutter plugin also writes: order them explicitly.
+tasks.configureEach {
+    if (name == "packageDebugUnitTestForUnitTest") dependsOn("copyFlutterAssetsDebug")
+    if (name == "packageReleaseUnitTestForUnitTest") dependsOn("copyFlutterAssetsRelease")
 }

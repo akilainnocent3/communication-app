@@ -68,8 +68,12 @@ class PlatformPhoneGateway implements PhoneGateway {
 }
 
 /// The server event payload for a provider message (same shape the native receivers write).
-Map<String, dynamic> messagePayload(ProviderMessage m) => {
+Map<String, dynamic> messagePayload(ProviderMessage m, {Map<int, String> partHashes = const {}}) => {
       'kind': m.kind, 'provider_id': m.providerId, 'date': m.date, 'thread_id': m.threadId, 'addresses': m.addresses, 'direction': m.outbound ? 'out' : 'in',
       'body': m.body, 'subject': m.subject ?? '', 'is_read': m.read, 'status': m.status, 'sub_id': m.subscriptionId, 'error_code': m.errorCode,
-      if (m.kind == 'mms') 'parts': [for (final p in m.parts) {'seq': p.seq, 'content_type': p.contentType, 'filename': p.filename ?? '', 'size': p.size}],
+      if (m.kind == 'mms')
+        'parts': [
+          for (final p in m.parts.where((p) => partHashes.containsKey(p.seq)))
+            {'seq': p.seq, 'content_type': p.contentType, 'filename': p.filename ?? '', 'size': p.size, 'sha256': partHashes[p.seq]},
+        ],
     };

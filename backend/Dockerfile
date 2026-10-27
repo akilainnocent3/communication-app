@@ -8,7 +8,8 @@ COPY requirements.lock .
 RUN pip install --no-cache-dir -r requirements.lock
 
 COPY . .
-RUN chown -R app:app /app
+# Encrypted MMS files live in a named volume mounted here; Docker copies this ownership into a new volume.
+RUN mkdir -p /data/sms-media && chown -R app:app /app /data/sms-media && chmod 700 /data/sms-media
 USER app
 
 EXPOSE 8000

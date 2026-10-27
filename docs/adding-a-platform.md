@@ -13,8 +13,11 @@ The switcher shows the **intersection**: platforms in `PLATFORMS` with `status: 
 `GET /api/v1/platforms/` (enabled by a super admin **and** permitted for the user), in the server's order.
 `coming_soon` entries are always shown, disabled, with a "Soon" badge.
 
-This guide uses SMS as the example. Every step below was carried out for real on a stub SMS platform behind a
-feature flag (Playwright: switch to SMS from the header, the sidebar changes to SMS's own nav, `/sms`
+This guide uses SMS as the example, and the real SMS platform (`modules/sms`, `src/platforms/sms`) followed it step
+by step. A platform whose data lives on company phones should reuse `modules/devices` (enrollment, identity, device
+tokens, heartbeat, push) rather than build its own; give admin-facing serializers a platform prefix so drf-spectacular
+component names never collide with another platform's. Every step below was first carried out on a stub SMS platform
+behind a feature flag (Playwright: switch to SMS from the header, the sidebar changes to SMS's own nav, `/sms`
 renders, a user without `sms.access` doesn't see it). The stub was then removed. Screenshots:
 `docs/screenshots/desktop-light-sms-stub-proof.png`, `docs/screenshots/mobile-dark-sms-stub-proof.png`.
 

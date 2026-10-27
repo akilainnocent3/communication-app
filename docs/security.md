@@ -15,14 +15,14 @@ where they live in the code.
 - Cookies are `HttpOnly` (session), `SameSite=Lax`, and `Secure` in production. Sessions last 12 hours.
 - The browser talks only to the Next.js origin, which proxies `/api/v1/*` to Django. There is no CORS
   configuration to get wrong.
-- Production settings refuse to start without a real `DJANGO_SECRET_KEY` and `MAIL_TOKEN_KEYS`, or with the
-  dev-only token key.
+- Production settings refuse to start without a real `DJANGO_SECRET_KEY`, `MAIL_TOKEN_KEYS` and `SMS_DATA_KEYS`,
+  with a dev-only key, with the two key rings sharing a key, or with the SMS simulator enabled.
 
 ## Authorisation
 
 | Layer | Rule | Code |
 |---|---|---|
-| Platform | User needs the platform permission (`mail.access`), and the platform must be enabled | `modules/platforms/services.py` |
+| Platform | User needs the platform permission (`mail.access`, `sms.access`), and the platform must be enabled (`is_platform_enabled`) | `modules/platforms/services.py` |
 | Mailbox | Super admin and Admin roles see every mailbox. Everyone else needs a `MailboxAccess` row with `can_read` / `can_send` / `can_delete` / `can_manage` | `modules/mail/services/access.py` |
 | Object | Every mail endpoint resolves threads, messages, labels, drafts and attachments **through** `accessible_mailboxes(user, perm)`. An inaccessible object returns 404, not 403, so its existence is not revealed | `get_mailbox`, `get_threads`, `accessible_threads` |
 | Settings | Users, roles, offices, platforms, integrations and the audit log each check a specific permission | `common/permissions.py: HasPerm` |
@@ -130,6 +130,35 @@ throttle uses the same function, so a client cannot dodge it by sending varied h
   refuses.
 - Demo users and the fake provider are disabled in production (`SEED_DEMO=0`,
   `MAIL_ENABLE_FAKE_PROVIDER=false`, and `seed_demo` refuses to run when the fake provider is off).
+
+## Company phones and SMS
+
+Full design: [sms-mobile.md](sms-mobile.md). The controls, and where they live:
+
+| Control | Code |
+|---|---|
+| Enrollment codes: 32 random bytes, SHA-256 stored, single use, 24 h, revocable, burned after 5 failures, audited | `modules/devices/services/enrollment.py` |
+| Allow-listed HTTPS server only (a malicious QR can't redirect a phone) | `mobile/lib/core/enroll/enroll_uri.dart` |
+| Keystore EC P-256 identity (StrongBox when present); attestation chain + challenge = SHA-256(code) verified; optional hard requirement and Play Integrity | `modules/devices/services/identity.py`, `integrity.py`, `mobile/…/security/DeviceKey.kt` |
+| No long-lived secret on the phone: 15-minute opaque tokens minted from a signed, timestamped, single-use-nonce request; only SHA-256 stored | `modules/devices/services/auth.py` |
+| Separate surfaces: `/api/v1/device/` = device tokens only (no cookies, no CSRF), admin = sessions only | `modules/devices/api/auth.py`, `base.py`, `config/urls.py` |
+| Every device query scoped to `request.auth.device`; foreign `client_uuid`s rejected | `modules/sms/services/store.py`, `outbound.py` |
+| Untrusted input: strict serializers, size caps, timestamp sanity, per-device throttle, Nginx rate limit | `modules/sms/services/sync.py`, `deploy/nginx.conf` |
+| Suspend (403, data kept) / revoke (401, the app wipes key + sync DB); status re-checked on every request | `modules/devices/services/manage.py`, `auth.py` |
+| Bodies, snippets and MMS files encrypted with `SMS_DATA_KEYS` (separate ring, prod refuses to start without it, `rotate_sms_keys`) | `modules/sms/services/crypto.py`, `media.py` |
+| MMS: type from magic bytes, private storage, permission-checked + audited download, `nosniff` + sandbox CSP | `modules/sms/services/media.py`, `api/conversations.py` |
+| Object-level access per phone (read / send / manage / reveal sensitive); 404 for anything not readable; disabled platform refuses all | `modules/sms/services/access.py` |
+| Sensitive messages (codes, banks, mobile money) masked; reveal needs a flag and is audited | `modules/sms/services/text.py`, `api/conversations.py` |
+| At-most-once sending (durable mark before SmsManager, leases, `unknown` instead of resending) | `modules/sms/services/outbound.py`, `mobile/…/telephony/SmsSender.kt` |
+| Outbound abuse limits: per user and per phone rate, daily cap, short codes / premium numbers refused | `modules/sms/services/outbound.py` |
+| Logs: ids and masked numbers only (`+2557•••••331`) | `modules/devices/services/phone.py: mask` |
+| Phone: no backups, no cleartext, SPKI pinning in OkHttp, R8 + obfuscation, SQLCipher DB with a Keystore-wrapped key, only the four role components exported (each behind its system permission), narrow FileProvider, optional FLAG_SECURE and app lock, lock-screen text hidden by default, root/emulator signals reported | `mobile/android/…`, `AndroidManifest.xml` |
+| Retention and PDPA: notice accepted before enrollment and stored; `SMS_RETENTION_DAYS`; phone deletes keep the server copy unless `SMS_MIRROR_DEVICE_DELETES`; contacts minimised | `modules/sms/services/retention.py`, `docs/sms-mobile.md` |
+
+Audited SMS/device actions: enrollment code create/revoke, enroll success and failure (with reason), token failures
+(rate-limited), notice acceptance, suspend/resume/revoke, option and SIM changes, access changes, resync requests,
+conversation opens, sensitive reveals, sends/schedules/cancels/retries, expiries and unknowns, blocks, notes,
+quick-reply and rule changes, media downloads, retention purges, SMS settings.
 
 ## Reporting
 

@@ -10,6 +10,11 @@ x-backend: &backend
     DATABASE_URL: postgres://${POSTGRES_USER:-cm}:${POSTGRES_PASSWORD:-cm}@postgres:5432/${POSTGRES_DB:-cm}
     REDIS_URL: redis://redis:6379/0
     DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+    SMS_MEDIA_ROOT: /data/sms-media
+  volumes:
+    - smsmedia:/data/sms-media
+    # FCM service account (optional): mount the file, never bake it into the image.
+    # - ./secrets/fcm.json:/run/secrets/fcm.json:ro
   depends_on:
     postgres: { condition: service_healthy }
     redis: { condition: service_healthy }
@@ -77,3 +82,4 @@ services:
 volumes:
   pgdata:
   redisdata:
+  smsmedia:

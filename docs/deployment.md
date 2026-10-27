@@ -43,6 +43,8 @@ FRONTEND_PORT=127.0.0.1:3000
 SEED_DEMO=0
 MAIL_ENABLE_FAKE_PROVIDER=false
 MAIL_TOKEN_KEYS=<python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())">
+SMS_DATA_KEYS=<a second, different Fernet key>
+SMS_ENABLE_SIMULATOR=false
 GOOGLE_OAUTH_CLIENT_ID=...
 GOOGLE_OAUTH_CLIENT_SECRET=...
 ```
@@ -51,8 +53,9 @@ Keep `localhost` and `backend` in `DJANGO_ALLOWED_HOSTS`, because the container 
 frontend proxy use those host names. Production settings refuse to start without a real `DJANGO_SECRET_KEY`
 and `MAIL_TOKEN_KEYS`, or with the dev-only key.
 
-**Back up `MAIL_TOKEN_KEYS` somewhere safe outside the server** (a password manager). Without it, every
-stored mailbox connection is unreadable and every mailbox must be reconnected.
+**Back up `MAIL_TOKEN_KEYS` and `SMS_DATA_KEYS` somewhere safe outside the server** (a password manager). Without them, every
+stored mailbox connection is unreadable (every mailbox must be reconnected) and every stored text message and MMS file
+is lost for good.
 
 Set up Google first ([google-setup.md](google-setup.md)) and register
 `https://mail.company.co.tz/api/v1/mail/oauth/callback/` as an authorised redirect URI.
@@ -81,6 +84,11 @@ sudo nginx -t && sudo systemctl reload nginx
 
 Certbot renews certificates automatically (`systemctl list-timers | grep certbot`).
 
+Phones call `/api/v1/device/` directly on Django (the config proxies that prefix to `127.0.0.1:8000`, with its own
+rate limit and a 2 MB body limit). Everything else goes through Next.js. Phones refuse plain HTTP and any host not
+compiled into the app, so the certificate must be valid; if the app was built with SPKI pins, renew the certificate
+**with the same key** or follow the pin rotation steps in `mobile/README.md`.
+
 The config **overwrites** `X-Forwarded-For` with the real client address. The audit log and the login rate
 limit trust that header, so keep it that way. Also keep `FRONTEND_PORT=127.0.0.1:3000`, so that nobody can
 reach the app without going through Nginx.
@@ -99,6 +107,12 @@ alone does not expose the tokens. Treat dumps as confidential anyway: they conta
 cached bodies.
 
 Redis holds only queues and caches, so it does not need a backup.
+
+### SMS media
+
+Encrypted MMS files live in the `smsmedia` Docker volume (`SMS_MEDIA_ROOT=/data/sms-media`). Back it up with the
+database (`docker run --rm -v communication-manager_smsmedia:/v -v /var/backups:/b alpine tar czf /b/sms-media-$(date +%F).tgz -C /v .`).
+It is useless without `SMS_DATA_KEYS`.
 
 ## 6. Updating
 
@@ -119,11 +133,30 @@ docker compose exec backend python manage.py rotate_mail_keys
 docker compose up -d
 ```
 
+## 7b. Rotating the SMS data key
+
+```bash
+# Prepend a new key: SMS_DATA_KEYS=<new>,<old>
+docker compose up -d
+docker compose exec backend python manage.py rotate_sms_keys   # bodies, snippets, MMS files
+# Remove the old key from SMS_DATA_KEYS, then:
+docker compose up -d
+```
+
+## 7c. Phones (SMS)
+
+1. Build and distribute the app privately (`mobile/README.md`).
+2. Optional, for near-instant delivery: create a Firebase project, put `google-services.json` in the app build,
+   set `FCM_PROJECT_ID` and mount the service account (`FCM_SERVICE_ACCOUNT_FILE`, never baked into the image).
+3. In the admin: **SMS → Enroll phone**, scan the QR code with the app.
+
 ## 8. Monitoring
 
 - `docker compose logs -f backend worker beat` shows request logs and sync errors. Email bodies and tokens are
   never logged.
 - The Gmail **Dashboard** shows mailboxes that need reconnecting or have sync errors.
+- The SMS **Dashboard** and **Phones** page show phones that are offline, no longer the default SMS app, missing a
+  permission, battery-optimised, behind on uploads or running an old app.
 - Point an uptime monitor at `https://YOUR.DOMAIN/api/v1/auth/csrf/` (it returns 200 when Django is up).
 
 ## Environment variables
@@ -160,3 +193,23 @@ docker compose up -d
 | `GOOGLE_OAUTH_REDIRECT_URI` | `${PUBLIC_APP_URL}/api/v1/mail/oauth/callback/` | Must match Google Cloud exactly |
 | `GOOGLE_OAUTH_SCOPES` | openid, email, mail.google.com, gmail.settings.basic | Comma separated |
 | `SECURE_HSTS_SECONDS` | `2592000` | Prod only |
+| `SMS_DATA_KEYS` | dev-only value | **Required in prod.** Fernet keys for SMS bodies and MMS files, newest first, not shared with `MAIL_TOKEN_KEYS` |
+| `SMS_MEDIA_ROOT` | `backend/private/sms-media` (`/data/sms-media` in compose) | Encrypted MMS files, private |
+| `SMS_MAX_MMS_BYTES` | `2097152` | Per MMS part |
+| `SMS_INITIAL_SYNC_DAYS` | `90` | History copied at enrollment |
+| `SMS_ENROLL_TTL_HOURS` | `24` | Enrollment code lifetime |
+| `SMS_DEVICE_TOKEN_TTL` | `15` | Device token lifetime, minutes |
+| `SMS_MIN_APP_VERSION` | `1.0.0` | Older apps get 426 |
+| `SMS_REQUIRE_KEY_ATTESTATION` | `false` | Needs `SMS_ATTESTATION_ROOTS_FILE` (Google roots, PEM) |
+| `SMS_REQUIRE_PLAY_INTEGRITY` | `false` | Needs `PLAY_INTEGRITY_PACKAGE_NAME`, `PLAY_INTEGRITY_SERVICE_ACCOUNT_FILE`, optionally `PLAY_INTEGRITY_CERT_DIGESTS` |
+| `SMS_OUTBOUND_TTL_HOURS` | `24` | Unsent admin messages expire |
+| `SMS_DEVICE_DAILY_CAP` | `300` | Admin messages per phone per day |
+| `SMS_DEVICE_RATE_PER_MINUTE` / `SMS_USER_RATE_PER_MINUTE` | `20` / `30` | Send rate limits |
+| `SMS_ALLOW_SHORT_CODES` | `false` | Short codes can be premium-rate |
+| `SMS_RETENTION_DAYS` | `365` | `0` keeps messages forever |
+| `SMS_MIRROR_DEVICE_DELETES` | `false` | Phone deletions also delete the server copy |
+| `SMS_DEFAULT_REGION` | `TZ` | For numbers without a country code |
+| `SMS_SHOW_ADMIN_NAME_ON_PHONE` | `true` | "Sent by admin · Name" on the phone |
+| `SMS_DEVICE_POLL_SECONDS` | `20` | Phone poll interval without FCM |
+| `SMS_ENABLE_SIMULATOR` | `true` (dev) / `false` (prod) | Simulated demo phones; prod refuses `true` |
+| `FCM_PROJECT_ID` / `FCM_SERVICE_ACCOUNT_FILE` | — | Optional push wake-ups; the file is a mounted secret |

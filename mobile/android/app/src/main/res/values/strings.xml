@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native strings (notifications, service). Dart strings live in lib/l10n/app_en.arb. Add values-sw/ for Swahili. -->
+<resources>
+    <string name="app_name">Messages</string>
+    <string name="channel_service">Message sync</string>
+    <string name="channel_admin">Admin replies</string>
+    <string name="channel_failed">Failed messages</string>
+    <string name="channel_mms">Picture messages</string>
+    <string name="service_title">Messages are syncing with your company</string>
+    <string name="new_message">New message</string>
+    <string name="reply">Reply</string>
+    <string name="mark_read">Mark as read</string>
+    <string name="copy_code">Copy code</string>
+    <string name="admin_replied">Admin replied to %1$s</string>
+    <string name="send_failed">Message not sent</string>
+    <string name="mms_waiting">Picture message waiting to download</string>
+    <string name="flash_message">Flash message</string>
+</resources>
