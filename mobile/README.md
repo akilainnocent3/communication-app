@@ -98,6 +98,29 @@ keyPassword=…
 Release builds use R8 (minify + resource shrinking) and Dart obfuscation. Without `key.properties` the release APK is
 signed with the debug key, which is only acceptable for testing.
 
+`build/symbols/` (from `--split-debug-info`) and `build/app/outputs/mapping/release/mapping.txt` are needed to read
+crash stack traces of that exact build. Archive them privately with each release; they are git-ignored and must not
+be committed.
+
+### Building on a small machine (≤ 8 GB RAM)
+
+R8 and Dart's AOT compiler together need most of 8 GB. If the Gradle daemon is killed during
+`minifyReleaseWithR8`, override the project settings for your user only (`~/.gradle/gradle.properties`, which wins
+over `android/gradle.properties`), close other heavy processes, and build one ABI:
+
+```properties
+org.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=512m -XX:ReservedCodeCacheSize=192m
+org.gradle.workers.max=1
+org.gradle.daemon=false
+```
+
+```bash
+flutter build apk --release --target-platform android-arm64 --dart-define=…
+```
+
+On a 2-core, 7.7 GB Codespace this built `app-release.apk` (arm64, 54.5 MB) in about 13 minutes, with memory peaking
+at about 6.9 GB in use.
+
 ### Firebase (optional)
 
 Create a Firebase project, add an Android app with the package `com.kilimanjaro.communicationmanager.sms`, download
