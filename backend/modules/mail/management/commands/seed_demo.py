@@ -1,4 +1,5 @@
-"""Demo data: 3 offices, 4 demo mailboxes with ~300 conversations, and one user per role.
+"""Demo data: 3 offices, 4 demo mailboxes with ~300 conversations, one user per role and (when the SMS simulator
+is enabled) two simulated company phones, one of them dual-SIM.
 
     python manage.py seed_demo            # idempotent: skips what already exists
     python manage.py seed_demo --reset    # wipe demo mailboxes and recreate them
@@ -34,6 +35,13 @@ TEMPLATES = [
     ("Payment received", "Payment received — thank you", "<p>Dear {{first_name}},</p><p>We confirm receipt of your payment. A receipt is attached.</p><p>Asante sana,</p>"),
     ("Out of stock", "", "<p>Hello {{first_name}},</p><p>Unfortunately this item is out of stock. We expect new stock in two weeks.</p>"),
 ]
+PHONES = [("Arusha front desk", "arusha", True, 11), ("Head Office reception", "hq", False, 5)]
+QUICK_REPLIES = [
+    ("Asante", "Asante sana! Tutakujibu hivi punde."),
+    ("Price list", "Thank you for your enquiry. Our latest price list is attached in our email; reply here with the quantity you need."),
+    ("Payment received", "Tumepokea malipo yako. Asante kwa kufanya biashara nasi."),
+    ("Office hours", "Our offices are open Monday to Friday 8:00–17:00 and Saturday 8:00–13:00."),
+]
 
 
 class Command(BaseCommand):
@@ -57,6 +65,9 @@ class Command(BaseCommand):
                 assign_role(user, Role.objects.get(slug=role_slug))
             if reset:
                 Mailbox.objects.filter(provider="fake").delete()
+                from modules.devices.models import Device
+
+                Device.objects.filter(is_simulated=True).delete()
 
         created = []
         for email, display, office, colour, threads in MAILBOXES:
@@ -87,6 +98,28 @@ class Command(BaseCommand):
         for name, subject, body in TEMPLATES:
             EmailTemplate.objects.get_or_create(name=name, defaults={"subject": subject, "body_html": body, "created_by": admin})
 
+        if settings.SMS_ENABLE_SIMULATOR:
+            self._seed_phones(offices, admin, manager, viewer)
+
         self.stdout.write(self.style.SUCCESS("Demo ready. Sign in with any of:"))
         for email, name, role, _ in USERS:
             self.stdout.write(f"  {email:<45} {role:<15} password: {DEMO_PASSWORD}")
+
+    def _seed_phones(self, offices, admin, manager, viewer):
+        from modules.devices.models import Device
+        from modules.sms.models import DeviceAccess, QuickReply
+        from modules.sms.services import simulator
+
+        for name, office, dual_sim, seed in PHONES:
+            if Device.objects.filter(name=name, is_simulated=True).exists():
+                continue
+            device = simulator.create(name=name, office=offices[office], user=admin, dual_sim=dual_sim, backfill_days=45, seed=seed)
+            self.stdout.write(f"  {device.code} {name}: simulated phone{' (dual SIM)' if dual_sim else ''}")
+        arusha = Device.objects.filter(name=PHONES[0][0], is_simulated=True).first()
+        hq = Device.objects.filter(name=PHONES[1][0], is_simulated=True).first()
+        if arusha:
+            DeviceAccess.objects.update_or_create(user=manager, device=arusha, defaults={"can_read": True, "can_send": True, "can_manage": True, "can_reveal_sensitive": False})
+        if hq:
+            DeviceAccess.objects.update_or_create(user=viewer, device=hq, defaults={"can_read": True, "can_send": False, "can_manage": False, "can_reveal_sensitive": False})
+        for title, body in QUICK_REPLIES:
+            QuickReply.objects.get_or_create(title=title, device=None, defaults={"body": body, "created_by": admin})

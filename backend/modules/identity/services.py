@@ -14,18 +14,22 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         "mail.access",
         "mail.access_all_mailboxes",
         "mail.manage_mailboxes",
+        "sms.access",
+        "sms.access_all_devices",
+        "sms.manage_devices",
         "audit.view_auditevent",
         "identity.manage_users",
     ],
-    Role.OFFICE_MANAGER: ["mail.access"],
-    Role.VIEWER: ["mail.access"],
+    # Office managers and viewers reach phones only through DeviceAccess rows.
+    Role.OFFICE_MANAGER: ["mail.access", "sms.access"],
+    Role.VIEWER: ["mail.access", "sms.access"],
 }
 
 SEEDED_ROLES = [
     (Role.SUPER_ADMIN, "Super admin", "Everything, including platforms, integrations and roles.", 0),
-    (Role.ADMIN, "Admin", "Every mailbox, connecting mailboxes, users and the audit log.", 10),
-    (Role.OFFICE_MANAGER, "Office manager", "Works in the mailboxes they are given access to.", 20),
-    (Role.VIEWER, "Viewer", "Reads the mailboxes they are given access to.", 30),
+    (Role.ADMIN, "Admin", "Every mailbox and phone, connecting mailboxes, enrolling phones, users and the audit log.", 10),
+    (Role.OFFICE_MANAGER, "Office manager", "Works in the mailboxes and phones they are given access to.", 20),
+    (Role.VIEWER, "Viewer", "Reads the mailboxes and phones they are given access to.", 30),
 ]
 
 

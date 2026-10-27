@@ -1,0 +1,57 @@
+"""Encryption at rest for SMS bodies, snippets and MMS files: a dedicated MultiFernet key ring, SMS_DATA_KEYS.
+
+Separate from MAIL_TOKEN_KEYS so each key ring protects one kind of data. Put a new key first, keep the old ones
+after it, run `manage.py rotate_sms_keys`, then drop the old key.
+
+Consequence (docs/decisions.md): the database cannot search message text. Search works on contact names and
+numbers (plaintext), and inside one open conversation (decrypted server-side for that request only).
+"""
+
+from functools import lru_cache
+
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+
+
+@lru_cache(maxsize=4)
+def _ring(keys: tuple[str, ...]) -> MultiFernet:
+    if not keys:
+        raise ImproperlyConfigured("SMS_DATA_KEYS is not set. Generate a key and add it to the environment.")
+    return MultiFernet([Fernet(key.encode() if isinstance(key, str) else key) for key in keys])
+
+
+def ring() -> MultiFernet:
+    return _ring(tuple(settings.SMS_DATA_KEYS))
+
+
+def encrypt_text(text: str) -> str:
+    return ring().encrypt((text or "").encode()).decode() if text else ""
+
+
+def decrypt_text(token: str) -> str:
+    if not token:
+        return ""
+    try:
+        return ring().decrypt(token.encode()).decode()
+    except InvalidToken as exc:  # never echo the ciphertext
+        raise ImproperlyConfigured("Stored SMS data cannot be decrypted with SMS_DATA_KEYS.") from exc
+
+
+def encrypt_bytes(data: bytes) -> bytes:
+    return ring().encrypt(data)
+
+
+def decrypt_bytes(data: bytes) -> bytes:
+    try:
+        return ring().decrypt(data)
+    except InvalidToken as exc:
+        raise ImproperlyConfigured("Stored SMS media cannot be decrypted with SMS_DATA_KEYS.") from exc
+
+
+def rotate_text(token: str) -> str:
+    return ring().rotate(token.encode()).decode() if token else token
+
+
+def rotate_bytes(data: bytes) -> bytes:
+    return ring().rotate(data)

@@ -52,16 +52,17 @@ def test_validation_error_shape(client_for, admin):
 
 
 def test_platforms_registry_and_admin(client_for, superadmin, viewer, roles):
-    assert [p["key"] for p in client_for(viewer).get("/api/v1/platforms/").json()] == ["gmail"]
-    registry.register(PlatformSpec(key="sms", name="SMS", permission="mail.access", order=20))
+    assert [p["key"] for p in client_for(viewer).get("/api/v1/platforms/").json()] == ["gmail", "sms"]
+    # A stub platform exercises the registry (SMS itself is a real platform now).
+    registry.register(PlatformSpec(key="calls", name="Calls", permission="mail.access", order=30))
     try:
-        assert [p["key"] for p in client_for(viewer).get("/api/v1/platforms/").json()] == ["gmail", "sms"]
+        assert [p["key"] for p in client_for(viewer).get("/api/v1/platforms/").json()] == ["gmail", "sms", "calls"]
         client = client_for(superadmin)
-        client.put("/api/v1/settings/platforms/", [{"key": "sms", "is_enabled": False, "order": 20}, {"key": "gmail", "is_enabled": True, "order": 1}], format="json")
-        assert [p["key"] for p in client_for(viewer).get("/api/v1/platforms/").json()] == ["gmail"]
+        client.put("/api/v1/settings/platforms/", [{"key": "calls", "is_enabled": False, "order": 30}, {"key": "gmail", "is_enabled": True, "order": 1}], format="json")
+        assert [p["key"] for p in client_for(viewer).get("/api/v1/platforms/").json()] == ["gmail", "sms"]
         assert client_for(viewer).put("/api/v1/settings/platforms/", [], format="json").status_code == 403
     finally:
-        registry.unregister("sms")
+        registry.unregister("calls")
 
 
 def test_thread_list_pagination_filters_and_categories(client_for, admin, mailbox):
