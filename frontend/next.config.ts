@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const backend = (process.env.CM_API_ORIGIN || "http://127.0.0.1:8000").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
+  // The Docker image ships only .next/standalone (server + the production dependencies it traces), .next/static and
+  // public: no dev dependencies, no source, no npm (frontend/Dockerfile).
+  output: "standalone",
   // Django owns trailing slashes; the browser only ever talks to this origin (session + CSRF cookies stay same-origin).
   skipTrailingSlashRedirect: true,
   // The dev-mode "N" badge sits on top of the sidebar account block (and in every E2E screenshot).
