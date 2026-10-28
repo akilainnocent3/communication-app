@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timezone as dt_timezone
 
 from django.conf import settings
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Min, Q
 from django.utils import timezone
 
 from modules.devices.models import Device, SimLine
@@ -82,7 +82,11 @@ def can_advance(current: str, new: str) -> bool:
 def _sim(device: Device, sub_id) -> SimLine | None:
     if sub_id in (None, "", -1):
         return None
-    return SimLine.objects.filter(device=device, subscription_id=sub_id).first()
+    # Memoised on the Device instance, which lives for one sync batch: every event of a batch names the same SIM or two.
+    cache = device.__dict__.setdefault("_sim_cache", {})
+    if sub_id not in cache:
+        cache[sub_id] = SimLine.objects.filter(device=device, subscription_id=sub_id).first()
+    return cache[sub_id]
 
 
 def upsert_message(device: Device, data: dict) -> tuple[Message, bool, int]:
@@ -242,13 +246,15 @@ def refresh_conversation(conversation_id: int) -> None:
     if latest is None:
         conversation.delete()
         return
+    # One aggregate instead of one query per field: a 200-event sync batch refreshes up to 200 conversations.
     counts = visible.aggregate(
         total=Count("id"), unread=Count("id", filter=Q(direction=Message.IN, is_read=False, deleted_on_device_at__isnull=True)),
         mms=Count("id", filter=Q(kind=Message.MMS)),
+        last_in=Max("provider_date", filter=Q(direction=Message.IN)),
+        last_out=Max("provider_date", filter=Q(direction=Message.OUT) & ~Q(status=MessageStatus.CANCELLED)),
+        first=Min("provider_date"),
     )
-    last_in = visible.filter(direction=Message.IN).order_by("-provider_date").values_list("provider_date", flat=True).first()
-    last_out = visible.filter(direction=Message.OUT).exclude(status__in=[MessageStatus.CANCELLED]).order_by("-provider_date").values_list("provider_date", flat=True).first()
-    first = visible.order_by("provider_date").values_list("provider_date", flat=True).first()
+    last_in, last_out, first = counts["last_in"], counts["last_out"], counts["first"]
     body = decrypt_text(latest.encrypted_body)
     text = snippet(body) or ("📎 Attachment" if latest.kind == Message.MMS else "")
     conversation.last_message_at = latest.provider_date

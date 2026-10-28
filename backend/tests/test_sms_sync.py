@@ -44,6 +44,21 @@ def test_unread_and_awaiting_reply(phone):
     assert conversation.unread_count == 1 and conversation.awaiting_since is not None
 
 
+def test_conversation_row_fields_from_one_aggregate(phone):
+    now = int(time.time() * 1000) - 600_000
+    phone.send_events(
+        phone.message(body="kwanza", at_ms=now, is_read=False),
+        phone.message(direction="out", body="jibu", at_ms=now + 1_000, status="sent"),
+        phone.message(body="pili", at_ms=now + 2_000, is_read=False),
+    )
+    conversation = Conversation.objects.get()
+    millis = lambda value: int(value.timestamp() * 1000)  # noqa: E731
+    assert conversation.message_count == 3 and conversation.unread_count == 2 and not conversation.has_mms
+    assert millis(conversation.first_message_at) == now and millis(conversation.last_outbound_at) == now + 1_000
+    assert millis(conversation.last_inbound_at) == now + 2_000 == millis(conversation.awaiting_since) == millis(conversation.last_message_at)
+    assert conversation.last_direction == "in"
+
+
 def test_malformed_events_are_rejected_but_acknowledged(phone):
     bad = phone.message(body="x" * 5001)
     future = phone.message(at_ms=int((time.time() + 3 * 86400) * 1000))

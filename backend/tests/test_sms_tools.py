@@ -125,6 +125,7 @@ def test_message_pagination_star_and_search(client_for, admin, phone, monkeypatc
     second = client.get(f"/api/v1/sms/conversations/{conversation.pk}/messages/?cursor={first['next_cursor']}").json()
     assert [m["body"] for m in first["results"]] == ["ujumbe 0", "ujumbe 1"] and [m["body"] for m in second["results"]] == ["ujumbe 2", "ujumbe 3"]
     assert [m["body"] for m in client.get(f"/api/v1/sms/conversations/{conversation.pk}/messages/?q=UJUMBE 4").json()["results"]] == ["ujumbe 4"]
+    assert [m["body"] for m in client.get(f"/api/v1/sms/conversations/{conversation.pk}/messages/?q=ujumbe").json()["results"]] == [f"ujumbe {i}" for i in range(5)]
     message = first["results"][0]["id"]
     assert client.post(f"/api/v1/sms/messages/{message}/star/", {"starred": True}, format="json").json()["is_starred"]
     assert client.get("/api/v1/sms/conversations/?folder=starred").json()["total"] == 1

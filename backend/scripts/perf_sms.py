@@ -4,8 +4,8 @@ Uses its own database (cm_perf, dropped and recreated) so the dev database stays
 
     cd backend && .venv/bin/python scripts/perf_sms.py [--messages 100000] [--conversations 2500] [--runs 7]
 
-Prints a Markdown table: median and worst time per endpoint, and the number of SQL queries. Anything slower
-than --slow-ms (200 ms) is flagged; for those it also prints the plan of the slowest query.
+Prints a Markdown table: p50, p95 (nearest rank) and worst time per endpoint, and the number of SQL queries. A p95
+over --slow-ms (300 ms, the admin budget) is flagged; for those it also prints the plan of the slowest query.
 """
 
 from __future__ import annotations
@@ -26,8 +26,8 @@ sys.path.insert(0, str(BACKEND))
 parser = argparse.ArgumentParser()
 parser.add_argument("--messages", type=int, default=100_000)
 parser.add_argument("--conversations", type=int, default=2_500)
-parser.add_argument("--runs", type=int, default=7)
-parser.add_argument("--slow-ms", type=float, default=200)
+parser.add_argument("--runs", type=int, default=20)
+parser.add_argument("--slow-ms", type=float, default=300)
 parser.add_argument("--keep", action="store_true", help="Reuse an existing cm_perf database instead of rebuilding it.")
 args = parser.parse_args()
 
@@ -167,7 +167,9 @@ def measure(label: str, call) -> dict:
         queries, status = len(ctx.captured_queries), response.status_code
         selects = [q for q in ctx.captured_queries if q["sql"].lstrip().upper().startswith("SELECT")]
         slowest = max(selects, key=lambda q: float(q["time"]), default=None)
-    return {"label": label, "median": statistics.median(times), "max": max(times), "queries": queries, "status": status, "slowest": slowest}
+    ordered = sorted(times)
+    p95 = ordered[max(0, -(-95 * len(ordered) // 100) - 1)]  # nearest rank
+    return {"label": label, "median": statistics.median(times), "p95": p95, "max": max(times), "queries": queries, "status": status, "slowest": slowest}
 
 
 def main() -> None:
@@ -214,13 +216,13 @@ def main() -> None:
     ]
     results = [measure(label, call) for label, call in cases]
 
-    print("| Endpoint | Median ms | Max ms | SQL queries | HTTP |")
-    print("|---|---:|---:|---:|---:|")
+    print(f"| Endpoint | p50 ms | p95 ms | Max ms | SQL queries | HTTP |  ({args.runs} runs each)")
+    print("|---|---:|---:|---:|---:|---:|")
     for r in results:
-        flag = " ⚠" if r["median"] > args.slow_ms else ""
-        print(f"| {r['label']}{flag} | {r['median']:.0f} | {r['max']:.0f} | {r['queries']} | {r['status']} |")
+        flag = " ⚠" if r["p95"] > args.slow_ms else ""
+        print(f"| {r['label']}{flag} | {r['median']:.0f} | {r['p95']:.0f} | {r['max']:.0f} | {r['queries']} | {r['status']} |")
     for r in results:
-        if r["median"] > args.slow_ms and r["slowest"]:
+        if r["p95"] > args.slow_ms and r["slowest"]:
             print(f"\n### {r['label']}: slowest query ({float(r['slowest']['time']) * 1000:.0f} ms)\n{r['slowest']['sql'][:1500]}")
             with connection.cursor() as cur:
                 cur.execute("EXPLAIN ANALYZE " + r["slowest"]["sql"])

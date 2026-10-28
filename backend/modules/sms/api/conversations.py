@@ -213,12 +213,16 @@ class MessageListView(APIView):
         qs = message_queryset().filter(conversation=conversation)
         q = (request.query_params.get("q") or "").strip().lower()
         if q:
-            matches = []
-            for message in qs.order_by("-provider_date", "-id")[:SEARCH_SCAN_LIMIT]:
-                if q in decrypt_text(message.encrypted_body).lower() and not message.is_sensitive:
-                    matches.append(message)
-                if len(matches) >= 100:
-                    break
+            # Scan only id + ciphertext (no model instances or joins), then load the matches.
+            scan = (Message.objects.filter(conversation=conversation).order_by("-provider_date", "-id")
+                    .values_list("id", "encrypted_body", "is_sensitive")[:SEARCH_SCAN_LIMIT])
+            ids = []
+            for message_id, encrypted, sensitive in scan.iterator(chunk_size=1000):
+                if not sensitive and q in decrypt_text(encrypted).lower():
+                    ids.append(message_id)
+                    if len(ids) >= 100:
+                        break
+            matches = qs.filter(id__in=ids).order_by("-provider_date", "-id")
             return Response({"results": SmsMessageSerializer(matches, many=True).data, "next_cursor": None})
         cursor = decode_cursor(request.query_params.get("cursor"))
         if cursor and "t" in cursor and "id" in cursor:

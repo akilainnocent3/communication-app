@@ -173,3 +173,13 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
 56. **WorkManager initialises on demand.** Its androidx.startup initializer opened its database on the main thread at
     every process start, including every incoming-SMS receiver start; `CmApplication` provides the configuration
     instead. EmojiCompat's initializer is removed (Flutter renders its own emoji).
+57. **Phone sync batches may take seconds; admin endpoints may not.** With 100 000 messages on one phone every admin
+    endpoint is under 300 ms p95 (docs/sms-mobile-performance.md). Searching inside a 6 400-message thread was 659 ms:
+    it built 5 000 full model rows to decrypt their bodies; it now scans only `(id, ciphertext)` and loads the matches
+    (28 ms). A 200-event batch from 200 new numbers takes about 3.5 s, about 14 round trips per event (savepoint,
+    look-ups, insert, row refresh); `refresh_conversation` went from 7 queries to 4 and the SIM look-up is memoised per
+    batch. That worst case only happens during backfill, inside the phone's 60 s read timeout; a live message is one
+    event (about 20 ms). Bulk ingestion would cost per-event rejection and savepoint isolation, so it was not done.
+58. **Native libraries are compressed in the APK.** Phones get the APK file itself (link, MDM), and with stored
+    libraries the arm64 split was about 28 MB (budget 25 MB). Deflated it is about 16 MB; Android extracts the
+    libraries once at install (about 20 MB more on disk). Dex files stay stored so ART can map them.
