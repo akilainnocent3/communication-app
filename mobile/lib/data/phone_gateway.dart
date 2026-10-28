@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import '../platform/telephony_api.g.dart';
 
-/// Everything the app needs from the phone itself. The platform implementation talks to the native Kotlin layer
-/// through Pigeon; tests use a fake. Repositories and the sync engine are the only users.
+/// Everything the UI needs from the phone itself. The platform implementation talks to the native Kotlin layer through
+/// Pigeon (all provider work runs on Dispatchers.IO there); tests use a fake. Syncing with the server is native too.
 abstract class PhoneGateway {
   Future<RoleStatus> roleStatus();
   Future<List<PermissionState>> permissions();
@@ -11,9 +11,10 @@ abstract class PhoneGateway {
   Future<DeviceFacts> deviceFacts();
   Future<ServiceStatus> serviceStatus();
   Future<List<ThreadSummary>> threads(int limit, int offset);
+  Future<ThreadSummary?> thread(int threadId);
   Future<List<ProviderMessage>> messages(int threadId, int limit, int? beforeDate);
-  Future<List<ProviderMessage>> messagesSince(int sinceDate, int limit, int offset);
-  Future<Uint8List> readMmsPart(String uri);
+  Future<List<ProviderMessage>> searchMessages(String query, int limit, int offset);
+  Future<Uint8List?> thumbnail(String uri, int maxPx);
   Future<List<ContactInfo>> lookupContacts(List<String> addresses);
   Future<List<ContactInfo>> searchContacts(String query, int limit);
   Future<SendResult> sendMessage(SendRequest request);
@@ -23,6 +24,7 @@ abstract class PhoneGateway {
   Future<void> blockNumber(String address);
   Future<void> unblockNumber(String address);
   Future<List<String>> blockedNumbers();
+  Future<void> syncNow();
 }
 
 class PlatformPhoneGateway implements PhoneGateway {
@@ -42,11 +44,13 @@ class PlatformPhoneGateway implements PhoneGateway {
   @override
   Future<List<ThreadSummary>> threads(int limit, int offset) => api.threads(limit, offset);
   @override
+  Future<ThreadSummary?> thread(int threadId) => api.thread(threadId);
+  @override
   Future<List<ProviderMessage>> messages(int threadId, int limit, int? beforeDate) => api.messages(threadId, limit, beforeDate);
   @override
-  Future<List<ProviderMessage>> messagesSince(int sinceDate, int limit, int offset) => api.messagesSince(sinceDate, limit, offset);
+  Future<List<ProviderMessage>> searchMessages(String query, int limit, int offset) => api.searchMessages(query, limit, offset);
   @override
-  Future<Uint8List> readMmsPart(String uri) => api.readMmsPart(uri);
+  Future<Uint8List?> thumbnail(String uri, int maxPx) => api.thumbnail(uri, maxPx);
   @override
   Future<List<ContactInfo>> lookupContacts(List<String> addresses) => api.lookupContacts(addresses);
   @override
@@ -65,15 +69,23 @@ class PlatformPhoneGateway implements PhoneGateway {
   Future<void> unblockNumber(String address) => api.unblockNumber(address);
   @override
   Future<List<String>> blockedNumbers() => api.blockedNumbers();
+  @override
+  Future<void> syncNow() => api.syncNow();
 }
 
-/// The server event payload for a provider message (same shape the native receivers write).
-Map<String, dynamic> messagePayload(ProviderMessage m, {Map<int, String> partHashes = const {}}) => {
-      'kind': m.kind, 'provider_id': m.providerId, 'date': m.date, 'thread_id': m.threadId, 'addresses': m.addresses, 'direction': m.outbound ? 'out' : 'in',
-      'body': m.body, 'subject': m.subject ?? '', 'is_read': m.read, 'status': m.status, 'sub_id': m.subscriptionId, 'error_code': m.errorCode,
-      if (m.kind == 'mms')
-        'parts': [
-          for (final p in m.parts.where((p) => partHashes.containsKey(p.seq)))
-            {'seq': p.seq, 'content_type': p.contentType, 'filename': p.filename ?? '', 'size': p.size, 'sha256': partHashes[p.seq]},
-        ],
+/// ProviderMessage ⇄ JSON for the encrypted message cache.
+Map<String, Object?> messageToJson(ProviderMessage m) => {
+      'id': m.providerId, 'kind': m.kind, 'thread': m.threadId, 'addresses': m.addresses, 'body': m.body, 'date': m.date, 'out': m.outbound,
+      'read': m.read, 'status': m.status, 'sub': m.subscriptionId, 'error': m.errorCode, 'subject': m.subject,
+      'parts': [for (final p in m.parts) {'seq': p.seq, 'type': p.contentType, 'name': p.filename, 'size': p.size, 'uri': p.uri}],
     };
+
+ProviderMessage messageFromJson(Map<String, dynamic> j) => ProviderMessage(
+      providerId: j['id'] as int, kind: j['kind'] as String, threadId: j['thread'] as int, addresses: (j['addresses'] as List).cast<String>(),
+      body: j['body'] as String, date: j['date'] as int, outbound: j['out'] as bool, read: j['read'] as bool, status: j['status'] as String,
+      subscriptionId: j['sub'] as int?, errorCode: j['error'] as int?, subject: j['subject'] as String?,
+      parts: [
+        for (final p in (j['parts'] as List).cast<Map<String, dynamic>>())
+          MmsPartData(seq: p['seq'] as int, contentType: p['type'] as String, filename: p['name'] as String?, size: p['size'] as int, uri: p['uri'] as String?),
+      ],
+    );

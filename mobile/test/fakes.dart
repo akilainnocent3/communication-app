@@ -5,6 +5,17 @@ import 'package:cm_sms/core/api/device_api.dart';
 import 'package:cm_sms/core/api/transport.dart';
 import 'package:cm_sms/data/phone_gateway.dart';
 import 'package:cm_sms/platform/telephony_api.g.dart';
+import 'package:cm_sms/providers.dart';
+
+/// Settings without services (widget tests): kept in memory.
+class MemorySettings extends SettingsController {
+  MemorySettings([this.initial = const {}]);
+  final Map<String, String> initial;
+  @override
+  Map<String, String> build() => Map.of(initial);
+  @override
+  Future<void> set(String key, String value) async => state = {...state, key: value};
+}
 
 class FakeSigner implements DeviceSigner {
   final List<String> signed = [];
@@ -41,10 +52,15 @@ class FakePhone implements PhoneGateway {
   List<ProviderMessage> history = [];
   List<ThreadSummary> threadList = [];
   Map<String, String> names = {};
+  List<ProviderMessage> searchHits = [];
   final List<SendRequest> sent = [];
   final Set<String> started = {};
   final List<String> calls = [];
   bool defaultApp = true;
+  /// Completes provider reads when set (to prove the UI draws from the cache first).
+  Future<void>? gate;
+
+  int count(String prefix) => calls.where((c) => c.startsWith(prefix)).length;
 
   @override
   Future<RoleStatus> roleStatus() async => RoleStatus(isDefaultSmsApp: defaultApp, roleAvailable: true);
@@ -55,17 +71,38 @@ class FakePhone implements PhoneGateway {
   @override
   Future<DeviceFacts> deviceFacts() async => DeviceFacts(manufacturer: 'samsung', model: 'A15', androidVersion: '14', sdkInt: 34, appVersion: '1.0.0', isEmulator: false, isRooted: false, debuggerAttached: false);
   @override
-  Future<ServiceStatus> serviceStatus() async => ServiceStatus(running: true, batteryOptimised: false, networkAvailable: true, networkType: 'wifi', battery: 80, charging: false, signal: 3);
+  Future<ServiceStatus> serviceStatus() async =>
+      ServiceStatus(running: true, batteryOptimised: false, networkAvailable: true, networkType: 'wifi', battery: 80, charging: false, signal: 3, backgroundRestricted: false, standbyBucket: 10);
   @override
-  Future<List<ThreadSummary>> threads(int limit, int offset) async => threadList;
+  Future<List<ThreadSummary>> threads(int limit, int offset) async {
+    calls.add('threads:$offset');
+    await gate;
+    return threadList.skip(offset).take(limit).toList();
+  }
   @override
-  Future<List<ProviderMessage>> messages(int threadId, int limit, int? beforeDate) async => history.where((m) => m.threadId == threadId).toList();
+  Future<ThreadSummary?> thread(int threadId) async {
+    calls.add('thread:$threadId');
+    return threadList.where((t) => t.threadId == threadId).firstOrNull;
+  }
   @override
-  Future<List<ProviderMessage>> messagesSince(int sinceDate, int limit, int offset) async => history.where((m) => m.date >= sinceDate).skip(offset).take(limit).toList();
+  Future<List<ProviderMessage>> messages(int threadId, int limit, int? beforeDate) async {
+    calls.add('messages:$threadId:${beforeDate ?? '-'}');
+    await gate;
+    final list = history.where((m) => m.threadId == threadId && (beforeDate == null || m.date < beforeDate)).toList()..sort((a, b) => b.date.compareTo(a.date));
+    return list.take(limit).toList();
+  }
   @override
-  Future<Uint8List> readMmsPart(String uri) async => Uint8List(0);
+  Future<List<ProviderMessage>> searchMessages(String query, int limit, int offset) async {
+    calls.add('search:$query');
+    return searchHits;
+  }
   @override
-  Future<List<ContactInfo>> lookupContacts(List<String> addresses) async => [for (final a in addresses) ContactInfo(address: a, displayName: names[a])];
+  Future<Uint8List?> thumbnail(String uri, int maxPx) async => null;
+  @override
+  Future<List<ContactInfo>> lookupContacts(List<String> addresses) async {
+    calls.add('contacts:${addresses.length}');
+    return [for (final a in addresses) ContactInfo(address: a, displayName: names[a])];
+  }
   @override
   Future<List<ContactInfo>> searchContacts(String query, int limit) async => const [];
   @override
@@ -87,4 +124,9 @@ class FakePhone implements PhoneGateway {
   Future<void> unblockNumber(String address) async => calls.add('unblock:$address');
   @override
   Future<List<String>> blockedNumbers() async => const [];
+  @override
+  Future<void> syncNow() async => calls.add('sync');
 }
+
+ThreadSummary thread(int id, String address, {String snippet = 'Habari', DateTime? date, int unread = 0}) => ThreadSummary(
+    threadId: id, addresses: [address], snippet: snippet, date: (date ?? DateTime.now()).millisecondsSinceEpoch, unreadCount: unread, messageCount: 3, hasMms: false);

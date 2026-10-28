@@ -14,14 +14,13 @@ class AppLockGate extends ConsumerStatefulWidget {
 }
 
 class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingObserver {
-  bool _enabled = false;
-  bool _locked = false;
+  // From the settings read before the first frame: an enabled lock covers the very first frame too.
+  late bool _locked = ref.read(settingsProvider)['app_lock'] == '1';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _load();
   }
 
   @override
@@ -30,16 +29,9 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
     super.dispose();
   }
 
-  Future<void> _load() async {
-    final enabled = await ref.read(servicesProvider).db.getValue('setting.app_lock') == '1';
-    if (mounted) setState(() { _enabled = enabled; _locked = enabled; });
-  }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      _load();
-    }
+    if (state == AppLifecycleState.paused && ref.read(settingsProvider)['app_lock'] == '1') setState(() => _locked = true);
   }
 
   Future<void> _unlock() async {
@@ -49,7 +41,7 @@ class _AppLockGateState extends ConsumerState<AppLockGate> with WidgetsBindingOb
 
   @override
   Widget build(BuildContext context) {
-    if (!_enabled || !_locked) return widget.child;
+    if (!_locked || ref.watch(settingsProvider)['app_lock'] != '1') return widget.child;
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [

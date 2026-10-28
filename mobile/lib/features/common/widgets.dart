@@ -4,31 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../app.dart';
-import '../../core/text/phone_format.dart';
 import '../../l10n/app_localizations.dart';
 
-/// Coloured initials (or "#" for an unsaved number), stable per address.
-class ContactAvatar extends StatelessWidget {
-  const ContactAvatar({super.key, required this.title, required this.address, this.saved = false, this.size = 44});
-  final String title;
-  final String address;
-  final bool saved;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final hue = address.codeUnits.fold<int>(0, (h, c) => (h * 31 + c) & 0x7fffffff) % 360;
-    final words = title.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    final label = saved && words.isNotEmpty
-        ? (words.first[0] + (words.length > 1 ? words.last[0] : '')).toUpperCase()
-        : addressKind(address) == AddressKind.alphanumeric ? address.substring(0, 1).toUpperCase() : '#';
-    return CircleAvatar(
-      radius: size / 2,
-      backgroundColor: HSLColor.fromAHSL(1, hue.toDouble(), 0.5, 0.42).toColor(),
-      child: Text(label, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: size * 0.36)),
-    );
-  }
-}
+export '../../ui/widgets/avatar.dart';
 
 /// "15:42" today, "Tue" this week, "3 Oct" this year, "3 Oct 2024" otherwise.
 String listTime(BuildContext context, int millis) {
@@ -42,6 +20,28 @@ String listTime(BuildContext context, int millis) {
   if (days > 0 && days < 7) return DateFormat.E(locale).format(date);
   if (date.year == now.year) return DateFormat.MMMd(locale).format(date);
   return DateFormat.yMMMd(locale).format(date);
+}
+
+/// Same calendar day (year, month and day: comparing only the day of the month put no separator between 3 Sept
+/// and 3 Oct).
+bool sameDay(int a, int b) {
+  final x = DateTime.fromMillisecondsSinceEpoch(a);
+  final y = DateTime.fromMillisecondsSinceEpoch(b);
+  return x.year == y.year && x.month == y.month && x.day == y.day;
+}
+
+/// The chat's day separator: "Today", "Yesterday", the weekday within a week, then the date.
+String dayLabel(BuildContext context, int millis) {
+  final l10n = AppLocalizations.of(context);
+  final locale = Localizations.localeOf(context).toString();
+  final date = DateTime.fromMillisecondsSinceEpoch(millis);
+  final now = DateTime.now();
+  final days = DateTime(now.year, now.month, now.day).difference(DateTime(date.year, date.month, date.day)).inDays;
+  if (days == 0) return l10n.today;
+  if (days == 1) return l10n.yesterday;
+  if (days > 1 && days < 7) return DateFormat.EEEE(locale).format(date);
+  if (date.year == now.year) return DateFormat.MMMMEEEEd(locale).format(date);
+  return DateFormat.yMMMMEEEEd(locale).format(date);
 }
 
 /// Shown on every main screen while this app is not the default SMS app (the role can be removed at any time).

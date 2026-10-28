@@ -7,6 +7,7 @@ import '../../data/conversations_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/telephony_api.g.dart';
 import '../../providers.dart';
+import '../../ui/skin/tokens.dart';
 
 typedef SendCallback = Future<void> Function(String body, int? subscriptionId, DateTime? at);
 
@@ -79,6 +80,8 @@ class _ComposerState extends ConsumerState<Composer> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final tokens = SkinTokens.of(context);
+    final scheme = Theme.of(context).colorScheme;
     final sims = ref.watch(simsProvider).value ?? const <SimInfo>[];
     final replies = ref.watch(quickRepliesProvider).value ?? const [];
     final info = segmentInfo(_controller.text);
@@ -98,7 +101,7 @@ class _ComposerState extends ConsumerState<Composer> {
             ),
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
             PopupMenuButton<String>(
-              icon: const Icon(Icons.add_circle_outline),
+              icon: Icon(tokens.composePlusButton ? Icons.add : Icons.add_circle_outline),
               tooltip: l10n.attach,
               enabled: widget.enabled,
               onSelected: (value) {
@@ -126,7 +129,8 @@ class _ComposerState extends ConsumerState<Composer> {
                 decoration: InputDecoration(
                   hintText: l10n.messageHint,
                   filled: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                  fillColor: tokens.composeField,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(tokens.composeFieldRadius), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   suffixIcon: sims.length > 1
                       ? PopupMenuButton<int>(
@@ -140,11 +144,21 @@ class _ComposerState extends ConsumerState<Composer> {
               ),
             ),
             const SizedBox(width: 4),
-            IconButton.filled(
-              tooltip: l10n.send,
-              onPressed: widget.enabled && _controller.text.trim().isNotEmpty && !_sending ? () => _send() : null,
-              icon: const Icon(Icons.send),
-            ),
+            if (tokens.sendFilled)
+              IconButton.filled(
+                tooltip: l10n.send,
+                style: IconButton.styleFrom(backgroundColor: tokens.outgoing, foregroundColor: tokens.onOutgoing),
+                onPressed: widget.enabled && _controller.text.trim().isNotEmpty && !_sending ? () => _send() : null,
+                icon: const Icon(Icons.send),
+              )
+            else
+              IconButton(
+                tooltip: l10n.send,
+                color: tokens.outgoing,
+                disabledColor: scheme.onSurfaceVariant.withValues(alpha: 0.5),
+                onPressed: widget.enabled && _controller.text.trim().isNotEmpty && !_sending ? () => _send() : null,
+                icon: const Icon(Icons.send),
+              ),
           ]),
         ]),
       ),

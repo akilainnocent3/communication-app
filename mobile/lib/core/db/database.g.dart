@@ -2645,6 +2645,966 @@ class KeyValuesCompanion extends UpdateCompanion<KvRow> {
   }
 }
 
+class $ThreadCacheTable extends ThreadCache
+    with TableInfo<$ThreadCacheTable, ThreadCacheRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ThreadCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _threadIdMeta = const VerificationMeta(
+    'threadId',
+  );
+  @override
+  late final GeneratedColumn<int> threadId = GeneratedColumn<int>(
+    'thread_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _addressesMeta = const VerificationMeta(
+    'addresses',
+  );
+  @override
+  late final GeneratedColumn<String> addresses = GeneratedColumn<String>(
+    'addresses',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _savedMeta = const VerificationMeta('saved');
+  @override
+  late final GeneratedColumn<bool> saved = GeneratedColumn<bool>(
+    'saved',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("saved" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _photoUriMeta = const VerificationMeta(
+    'photoUri',
+  );
+  @override
+  late final GeneratedColumn<String> photoUri = GeneratedColumn<String>(
+    'photo_uri',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _snippetMeta = const VerificationMeta(
+    'snippet',
+  );
+  @override
+  late final GeneratedColumn<String> snippet = GeneratedColumn<String>(
+    'snippet',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<int> date = GeneratedColumn<int>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unreadMeta = const VerificationMeta('unread');
+  @override
+  late final GeneratedColumn<int> unread = GeneratedColumn<int>(
+    'unread',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _messageCountMeta = const VerificationMeta(
+    'messageCount',
+  );
+  @override
+  late final GeneratedColumn<int> messageCount = GeneratedColumn<int>(
+    'message_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _hasMmsMeta = const VerificationMeta('hasMms');
+  @override
+  late final GeneratedColumn<bool> hasMms = GeneratedColumn<bool>(
+    'has_mms',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_mms" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    threadId,
+    addresses,
+    title,
+    saved,
+    photoUri,
+    snippet,
+    date,
+    unread,
+    messageCount,
+    hasMms,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'thread_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ThreadCacheRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('thread_id')) {
+      context.handle(
+        _threadIdMeta,
+        threadId.isAcceptableOrUnknown(data['thread_id']!, _threadIdMeta),
+      );
+    }
+    if (data.containsKey('addresses')) {
+      context.handle(
+        _addressesMeta,
+        addresses.isAcceptableOrUnknown(data['addresses']!, _addressesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_addressesMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('saved')) {
+      context.handle(
+        _savedMeta,
+        saved.isAcceptableOrUnknown(data['saved']!, _savedMeta),
+      );
+    }
+    if (data.containsKey('photo_uri')) {
+      context.handle(
+        _photoUriMeta,
+        photoUri.isAcceptableOrUnknown(data['photo_uri']!, _photoUriMeta),
+      );
+    }
+    if (data.containsKey('snippet')) {
+      context.handle(
+        _snippetMeta,
+        snippet.isAcceptableOrUnknown(data['snippet']!, _snippetMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_snippetMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('unread')) {
+      context.handle(
+        _unreadMeta,
+        unread.isAcceptableOrUnknown(data['unread']!, _unreadMeta),
+      );
+    }
+    if (data.containsKey('message_count')) {
+      context.handle(
+        _messageCountMeta,
+        messageCount.isAcceptableOrUnknown(
+          data['message_count']!,
+          _messageCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('has_mms')) {
+      context.handle(
+        _hasMmsMeta,
+        hasMms.isAcceptableOrUnknown(data['has_mms']!, _hasMmsMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {threadId};
+  @override
+  ThreadCacheRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ThreadCacheRow(
+      threadId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}thread_id'],
+      )!,
+      addresses: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}addresses'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      saved: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}saved'],
+      )!,
+      photoUri: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}photo_uri'],
+      ),
+      snippet: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snippet'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}date'],
+      )!,
+      unread: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}unread'],
+      )!,
+      messageCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}message_count'],
+      )!,
+      hasMms: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_mms'],
+      )!,
+    );
+  }
+
+  @override
+  $ThreadCacheTable createAlias(String alias) {
+    return $ThreadCacheTable(attachedDatabase, alias);
+  }
+}
+
+class ThreadCacheRow extends DataClass implements Insertable<ThreadCacheRow> {
+  final int threadId;
+
+  /// JSON list of addresses.
+  final String addresses;
+  final String title;
+  final bool saved;
+  final String? photoUri;
+  final String snippet;
+  final int date;
+  final int unread;
+  final int messageCount;
+  final bool hasMms;
+  const ThreadCacheRow({
+    required this.threadId,
+    required this.addresses,
+    required this.title,
+    required this.saved,
+    this.photoUri,
+    required this.snippet,
+    required this.date,
+    required this.unread,
+    required this.messageCount,
+    required this.hasMms,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['thread_id'] = Variable<int>(threadId);
+    map['addresses'] = Variable<String>(addresses);
+    map['title'] = Variable<String>(title);
+    map['saved'] = Variable<bool>(saved);
+    if (!nullToAbsent || photoUri != null) {
+      map['photo_uri'] = Variable<String>(photoUri);
+    }
+    map['snippet'] = Variable<String>(snippet);
+    map['date'] = Variable<int>(date);
+    map['unread'] = Variable<int>(unread);
+    map['message_count'] = Variable<int>(messageCount);
+    map['has_mms'] = Variable<bool>(hasMms);
+    return map;
+  }
+
+  ThreadCacheCompanion toCompanion(bool nullToAbsent) {
+    return ThreadCacheCompanion(
+      threadId: Value(threadId),
+      addresses: Value(addresses),
+      title: Value(title),
+      saved: Value(saved),
+      photoUri: photoUri == null && nullToAbsent
+          ? const Value.absent()
+          : Value(photoUri),
+      snippet: Value(snippet),
+      date: Value(date),
+      unread: Value(unread),
+      messageCount: Value(messageCount),
+      hasMms: Value(hasMms),
+    );
+  }
+
+  factory ThreadCacheRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ThreadCacheRow(
+      threadId: serializer.fromJson<int>(json['threadId']),
+      addresses: serializer.fromJson<String>(json['addresses']),
+      title: serializer.fromJson<String>(json['title']),
+      saved: serializer.fromJson<bool>(json['saved']),
+      photoUri: serializer.fromJson<String?>(json['photoUri']),
+      snippet: serializer.fromJson<String>(json['snippet']),
+      date: serializer.fromJson<int>(json['date']),
+      unread: serializer.fromJson<int>(json['unread']),
+      messageCount: serializer.fromJson<int>(json['messageCount']),
+      hasMms: serializer.fromJson<bool>(json['hasMms']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'threadId': serializer.toJson<int>(threadId),
+      'addresses': serializer.toJson<String>(addresses),
+      'title': serializer.toJson<String>(title),
+      'saved': serializer.toJson<bool>(saved),
+      'photoUri': serializer.toJson<String?>(photoUri),
+      'snippet': serializer.toJson<String>(snippet),
+      'date': serializer.toJson<int>(date),
+      'unread': serializer.toJson<int>(unread),
+      'messageCount': serializer.toJson<int>(messageCount),
+      'hasMms': serializer.toJson<bool>(hasMms),
+    };
+  }
+
+  ThreadCacheRow copyWith({
+    int? threadId,
+    String? addresses,
+    String? title,
+    bool? saved,
+    Value<String?> photoUri = const Value.absent(),
+    String? snippet,
+    int? date,
+    int? unread,
+    int? messageCount,
+    bool? hasMms,
+  }) => ThreadCacheRow(
+    threadId: threadId ?? this.threadId,
+    addresses: addresses ?? this.addresses,
+    title: title ?? this.title,
+    saved: saved ?? this.saved,
+    photoUri: photoUri.present ? photoUri.value : this.photoUri,
+    snippet: snippet ?? this.snippet,
+    date: date ?? this.date,
+    unread: unread ?? this.unread,
+    messageCount: messageCount ?? this.messageCount,
+    hasMms: hasMms ?? this.hasMms,
+  );
+  ThreadCacheRow copyWithCompanion(ThreadCacheCompanion data) {
+    return ThreadCacheRow(
+      threadId: data.threadId.present ? data.threadId.value : this.threadId,
+      addresses: data.addresses.present ? data.addresses.value : this.addresses,
+      title: data.title.present ? data.title.value : this.title,
+      saved: data.saved.present ? data.saved.value : this.saved,
+      photoUri: data.photoUri.present ? data.photoUri.value : this.photoUri,
+      snippet: data.snippet.present ? data.snippet.value : this.snippet,
+      date: data.date.present ? data.date.value : this.date,
+      unread: data.unread.present ? data.unread.value : this.unread,
+      messageCount: data.messageCount.present
+          ? data.messageCount.value
+          : this.messageCount,
+      hasMms: data.hasMms.present ? data.hasMms.value : this.hasMms,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ThreadCacheRow(')
+          ..write('threadId: $threadId, ')
+          ..write('addresses: $addresses, ')
+          ..write('title: $title, ')
+          ..write('saved: $saved, ')
+          ..write('photoUri: $photoUri, ')
+          ..write('snippet: $snippet, ')
+          ..write('date: $date, ')
+          ..write('unread: $unread, ')
+          ..write('messageCount: $messageCount, ')
+          ..write('hasMms: $hasMms')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    threadId,
+    addresses,
+    title,
+    saved,
+    photoUri,
+    snippet,
+    date,
+    unread,
+    messageCount,
+    hasMms,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ThreadCacheRow &&
+          other.threadId == this.threadId &&
+          other.addresses == this.addresses &&
+          other.title == this.title &&
+          other.saved == this.saved &&
+          other.photoUri == this.photoUri &&
+          other.snippet == this.snippet &&
+          other.date == this.date &&
+          other.unread == this.unread &&
+          other.messageCount == this.messageCount &&
+          other.hasMms == this.hasMms);
+}
+
+class ThreadCacheCompanion extends UpdateCompanion<ThreadCacheRow> {
+  final Value<int> threadId;
+  final Value<String> addresses;
+  final Value<String> title;
+  final Value<bool> saved;
+  final Value<String?> photoUri;
+  final Value<String> snippet;
+  final Value<int> date;
+  final Value<int> unread;
+  final Value<int> messageCount;
+  final Value<bool> hasMms;
+  const ThreadCacheCompanion({
+    this.threadId = const Value.absent(),
+    this.addresses = const Value.absent(),
+    this.title = const Value.absent(),
+    this.saved = const Value.absent(),
+    this.photoUri = const Value.absent(),
+    this.snippet = const Value.absent(),
+    this.date = const Value.absent(),
+    this.unread = const Value.absent(),
+    this.messageCount = const Value.absent(),
+    this.hasMms = const Value.absent(),
+  });
+  ThreadCacheCompanion.insert({
+    this.threadId = const Value.absent(),
+    required String addresses,
+    required String title,
+    this.saved = const Value.absent(),
+    this.photoUri = const Value.absent(),
+    required String snippet,
+    required int date,
+    this.unread = const Value.absent(),
+    this.messageCount = const Value.absent(),
+    this.hasMms = const Value.absent(),
+  }) : addresses = Value(addresses),
+       title = Value(title),
+       snippet = Value(snippet),
+       date = Value(date);
+  static Insertable<ThreadCacheRow> custom({
+    Expression<int>? threadId,
+    Expression<String>? addresses,
+    Expression<String>? title,
+    Expression<bool>? saved,
+    Expression<String>? photoUri,
+    Expression<String>? snippet,
+    Expression<int>? date,
+    Expression<int>? unread,
+    Expression<int>? messageCount,
+    Expression<bool>? hasMms,
+  }) {
+    return RawValuesInsertable({
+      if (threadId != null) 'thread_id': threadId,
+      if (addresses != null) 'addresses': addresses,
+      if (title != null) 'title': title,
+      if (saved != null) 'saved': saved,
+      if (photoUri != null) 'photo_uri': photoUri,
+      if (snippet != null) 'snippet': snippet,
+      if (date != null) 'date': date,
+      if (unread != null) 'unread': unread,
+      if (messageCount != null) 'message_count': messageCount,
+      if (hasMms != null) 'has_mms': hasMms,
+    });
+  }
+
+  ThreadCacheCompanion copyWith({
+    Value<int>? threadId,
+    Value<String>? addresses,
+    Value<String>? title,
+    Value<bool>? saved,
+    Value<String?>? photoUri,
+    Value<String>? snippet,
+    Value<int>? date,
+    Value<int>? unread,
+    Value<int>? messageCount,
+    Value<bool>? hasMms,
+  }) {
+    return ThreadCacheCompanion(
+      threadId: threadId ?? this.threadId,
+      addresses: addresses ?? this.addresses,
+      title: title ?? this.title,
+      saved: saved ?? this.saved,
+      photoUri: photoUri ?? this.photoUri,
+      snippet: snippet ?? this.snippet,
+      date: date ?? this.date,
+      unread: unread ?? this.unread,
+      messageCount: messageCount ?? this.messageCount,
+      hasMms: hasMms ?? this.hasMms,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (threadId.present) {
+      map['thread_id'] = Variable<int>(threadId.value);
+    }
+    if (addresses.present) {
+      map['addresses'] = Variable<String>(addresses.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (saved.present) {
+      map['saved'] = Variable<bool>(saved.value);
+    }
+    if (photoUri.present) {
+      map['photo_uri'] = Variable<String>(photoUri.value);
+    }
+    if (snippet.present) {
+      map['snippet'] = Variable<String>(snippet.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<int>(date.value);
+    }
+    if (unread.present) {
+      map['unread'] = Variable<int>(unread.value);
+    }
+    if (messageCount.present) {
+      map['message_count'] = Variable<int>(messageCount.value);
+    }
+    if (hasMms.present) {
+      map['has_mms'] = Variable<bool>(hasMms.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ThreadCacheCompanion(')
+          ..write('threadId: $threadId, ')
+          ..write('addresses: $addresses, ')
+          ..write('title: $title, ')
+          ..write('saved: $saved, ')
+          ..write('photoUri: $photoUri, ')
+          ..write('snippet: $snippet, ')
+          ..write('date: $date, ')
+          ..write('unread: $unread, ')
+          ..write('messageCount: $messageCount, ')
+          ..write('hasMms: $hasMms')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MessageCacheTable extends MessageCache
+    with TableInfo<$MessageCacheTable, MessageCacheRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MessageCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _providerIdMeta = const VerificationMeta(
+    'providerId',
+  );
+  @override
+  late final GeneratedColumn<int> providerId = GeneratedColumn<int>(
+    'provider_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _threadIdMeta = const VerificationMeta(
+    'threadId',
+  );
+  @override
+  late final GeneratedColumn<int> threadId = GeneratedColumn<int>(
+    'thread_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<int> date = GeneratedColumn<int>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dataMeta = const VerificationMeta('data');
+  @override
+  late final GeneratedColumn<String> data = GeneratedColumn<String>(
+    'data',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    kind,
+    providerId,
+    threadId,
+    date,
+    data,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'message_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MessageCacheRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('provider_id')) {
+      context.handle(
+        _providerIdMeta,
+        providerId.isAcceptableOrUnknown(data['provider_id']!, _providerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_providerIdMeta);
+    }
+    if (data.containsKey('thread_id')) {
+      context.handle(
+        _threadIdMeta,
+        threadId.isAcceptableOrUnknown(data['thread_id']!, _threadIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_threadIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('data')) {
+      context.handle(
+        _dataMeta,
+        this.data.isAcceptableOrUnknown(data['data']!, _dataMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dataMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {kind, providerId};
+  @override
+  MessageCacheRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MessageCacheRow(
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      providerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}provider_id'],
+      )!,
+      threadId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}thread_id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}date'],
+      )!,
+      data: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data'],
+      )!,
+    );
+  }
+
+  @override
+  $MessageCacheTable createAlias(String alias) {
+    return $MessageCacheTable(attachedDatabase, alias);
+  }
+}
+
+class MessageCacheRow extends DataClass implements Insertable<MessageCacheRow> {
+  final String kind;
+  final int providerId;
+  final int threadId;
+  final int date;
+
+  /// The ProviderMessage as JSON (addresses, body, status, parts…).
+  final String data;
+  const MessageCacheRow({
+    required this.kind,
+    required this.providerId,
+    required this.threadId,
+    required this.date,
+    required this.data,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['kind'] = Variable<String>(kind);
+    map['provider_id'] = Variable<int>(providerId);
+    map['thread_id'] = Variable<int>(threadId);
+    map['date'] = Variable<int>(date);
+    map['data'] = Variable<String>(data);
+    return map;
+  }
+
+  MessageCacheCompanion toCompanion(bool nullToAbsent) {
+    return MessageCacheCompanion(
+      kind: Value(kind),
+      providerId: Value(providerId),
+      threadId: Value(threadId),
+      date: Value(date),
+      data: Value(data),
+    );
+  }
+
+  factory MessageCacheRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MessageCacheRow(
+      kind: serializer.fromJson<String>(json['kind']),
+      providerId: serializer.fromJson<int>(json['providerId']),
+      threadId: serializer.fromJson<int>(json['threadId']),
+      date: serializer.fromJson<int>(json['date']),
+      data: serializer.fromJson<String>(json['data']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'kind': serializer.toJson<String>(kind),
+      'providerId': serializer.toJson<int>(providerId),
+      'threadId': serializer.toJson<int>(threadId),
+      'date': serializer.toJson<int>(date),
+      'data': serializer.toJson<String>(data),
+    };
+  }
+
+  MessageCacheRow copyWith({
+    String? kind,
+    int? providerId,
+    int? threadId,
+    int? date,
+    String? data,
+  }) => MessageCacheRow(
+    kind: kind ?? this.kind,
+    providerId: providerId ?? this.providerId,
+    threadId: threadId ?? this.threadId,
+    date: date ?? this.date,
+    data: data ?? this.data,
+  );
+  MessageCacheRow copyWithCompanion(MessageCacheCompanion data) {
+    return MessageCacheRow(
+      kind: data.kind.present ? data.kind.value : this.kind,
+      providerId: data.providerId.present
+          ? data.providerId.value
+          : this.providerId,
+      threadId: data.threadId.present ? data.threadId.value : this.threadId,
+      date: data.date.present ? data.date.value : this.date,
+      data: data.data.present ? data.data.value : this.data,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageCacheRow(')
+          ..write('kind: $kind, ')
+          ..write('providerId: $providerId, ')
+          ..write('threadId: $threadId, ')
+          ..write('date: $date, ')
+          ..write('data: $data')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(kind, providerId, threadId, date, data);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MessageCacheRow &&
+          other.kind == this.kind &&
+          other.providerId == this.providerId &&
+          other.threadId == this.threadId &&
+          other.date == this.date &&
+          other.data == this.data);
+}
+
+class MessageCacheCompanion extends UpdateCompanion<MessageCacheRow> {
+  final Value<String> kind;
+  final Value<int> providerId;
+  final Value<int> threadId;
+  final Value<int> date;
+  final Value<String> data;
+  final Value<int> rowid;
+  const MessageCacheCompanion({
+    this.kind = const Value.absent(),
+    this.providerId = const Value.absent(),
+    this.threadId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.data = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MessageCacheCompanion.insert({
+    required String kind,
+    required int providerId,
+    required int threadId,
+    required int date,
+    required String data,
+    this.rowid = const Value.absent(),
+  }) : kind = Value(kind),
+       providerId = Value(providerId),
+       threadId = Value(threadId),
+       date = Value(date),
+       data = Value(data);
+  static Insertable<MessageCacheRow> custom({
+    Expression<String>? kind,
+    Expression<int>? providerId,
+    Expression<int>? threadId,
+    Expression<int>? date,
+    Expression<String>? data,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (kind != null) 'kind': kind,
+      if (providerId != null) 'provider_id': providerId,
+      if (threadId != null) 'thread_id': threadId,
+      if (date != null) 'date': date,
+      if (data != null) 'data': data,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MessageCacheCompanion copyWith({
+    Value<String>? kind,
+    Value<int>? providerId,
+    Value<int>? threadId,
+    Value<int>? date,
+    Value<String>? data,
+    Value<int>? rowid,
+  }) {
+    return MessageCacheCompanion(
+      kind: kind ?? this.kind,
+      providerId: providerId ?? this.providerId,
+      threadId: threadId ?? this.threadId,
+      date: date ?? this.date,
+      data: data ?? this.data,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (providerId.present) {
+      map['provider_id'] = Variable<int>(providerId.value);
+    }
+    if (threadId.present) {
+      map['thread_id'] = Variable<int>(threadId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<int>(date.value);
+    }
+    if (data.present) {
+      map['data'] = Variable<String>(data.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageCacheCompanion(')
+          ..write('kind: $kind, ')
+          ..write('providerId: $providerId, ')
+          ..write('threadId: $threadId, ')
+          ..write('date: $date, ')
+          ..write('data: $data, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2659,6 +3619,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ScheduledSendsTable scheduledSends = $ScheduledSendsTable(this);
   late final $PendingMediaTable pendingMedia = $PendingMediaTable(this);
   late final $KeyValuesTable keyValues = $KeyValuesTable(this);
+  late final $ThreadCacheTable threadCache = $ThreadCacheTable(this);
+  late final $MessageCacheTable messageCache = $MessageCacheTable(this);
+  late final Index messageCacheThreadDate = Index(
+    'message_cache_thread_date',
+    'CREATE INDEX message_cache_thread_date ON message_cache (thread_id, date)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2672,6 +3638,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     scheduledSends,
     pendingMedia,
     keyValues,
+    threadCache,
+    messageCache,
+    messageCacheThreadDate,
   ];
 }
 
@@ -4251,6 +5220,517 @@ typedef $$KeyValuesTableProcessedTableManager =
       KvRow,
       PrefetchHooks Function()
     >;
+typedef $$ThreadCacheTableCreateCompanionBuilder =
+    ThreadCacheCompanion Function({
+      Value<int> threadId,
+      required String addresses,
+      required String title,
+      Value<bool> saved,
+      Value<String?> photoUri,
+      required String snippet,
+      required int date,
+      Value<int> unread,
+      Value<int> messageCount,
+      Value<bool> hasMms,
+    });
+typedef $$ThreadCacheTableUpdateCompanionBuilder =
+    ThreadCacheCompanion Function({
+      Value<int> threadId,
+      Value<String> addresses,
+      Value<String> title,
+      Value<bool> saved,
+      Value<String?> photoUri,
+      Value<String> snippet,
+      Value<int> date,
+      Value<int> unread,
+      Value<int> messageCount,
+      Value<bool> hasMms,
+    });
+
+class $$ThreadCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $ThreadCacheTable> {
+  $$ThreadCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get threadId => $composableBuilder(
+    column: $table.threadId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get addresses => $composableBuilder(
+    column: $table.addresses,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get saved => $composableBuilder(
+    column: $table.saved,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get photoUri => $composableBuilder(
+    column: $table.photoUri,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get snippet => $composableBuilder(
+    column: $table.snippet,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get unread => $composableBuilder(
+    column: $table.unread,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get messageCount => $composableBuilder(
+    column: $table.messageCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasMms => $composableBuilder(
+    column: $table.hasMms,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ThreadCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $ThreadCacheTable> {
+  $$ThreadCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get threadId => $composableBuilder(
+    column: $table.threadId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get addresses => $composableBuilder(
+    column: $table.addresses,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get saved => $composableBuilder(
+    column: $table.saved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get photoUri => $composableBuilder(
+    column: $table.photoUri,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snippet => $composableBuilder(
+    column: $table.snippet,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get unread => $composableBuilder(
+    column: $table.unread,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get messageCount => $composableBuilder(
+    column: $table.messageCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hasMms => $composableBuilder(
+    column: $table.hasMms,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ThreadCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ThreadCacheTable> {
+  $$ThreadCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get threadId =>
+      $composableBuilder(column: $table.threadId, builder: (column) => column);
+
+  GeneratedColumn<String> get addresses =>
+      $composableBuilder(column: $table.addresses, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<bool> get saved =>
+      $composableBuilder(column: $table.saved, builder: (column) => column);
+
+  GeneratedColumn<String> get photoUri =>
+      $composableBuilder(column: $table.photoUri, builder: (column) => column);
+
+  GeneratedColumn<String> get snippet =>
+      $composableBuilder(column: $table.snippet, builder: (column) => column);
+
+  GeneratedColumn<int> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get unread =>
+      $composableBuilder(column: $table.unread, builder: (column) => column);
+
+  GeneratedColumn<int> get messageCount => $composableBuilder(
+    column: $table.messageCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get hasMms =>
+      $composableBuilder(column: $table.hasMms, builder: (column) => column);
+}
+
+class $$ThreadCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ThreadCacheTable,
+          ThreadCacheRow,
+          $$ThreadCacheTableFilterComposer,
+          $$ThreadCacheTableOrderingComposer,
+          $$ThreadCacheTableAnnotationComposer,
+          $$ThreadCacheTableCreateCompanionBuilder,
+          $$ThreadCacheTableUpdateCompanionBuilder,
+          (
+            ThreadCacheRow,
+            BaseReferences<_$AppDatabase, $ThreadCacheTable, ThreadCacheRow>,
+          ),
+          ThreadCacheRow,
+          PrefetchHooks Function()
+        > {
+  $$ThreadCacheTableTableManager(_$AppDatabase db, $ThreadCacheTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ThreadCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ThreadCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ThreadCacheTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> threadId = const Value.absent(),
+                Value<String> addresses = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<bool> saved = const Value.absent(),
+                Value<String?> photoUri = const Value.absent(),
+                Value<String> snippet = const Value.absent(),
+                Value<int> date = const Value.absent(),
+                Value<int> unread = const Value.absent(),
+                Value<int> messageCount = const Value.absent(),
+                Value<bool> hasMms = const Value.absent(),
+              }) => ThreadCacheCompanion(
+                threadId: threadId,
+                addresses: addresses,
+                title: title,
+                saved: saved,
+                photoUri: photoUri,
+                snippet: snippet,
+                date: date,
+                unread: unread,
+                messageCount: messageCount,
+                hasMms: hasMms,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> threadId = const Value.absent(),
+                required String addresses,
+                required String title,
+                Value<bool> saved = const Value.absent(),
+                Value<String?> photoUri = const Value.absent(),
+                required String snippet,
+                required int date,
+                Value<int> unread = const Value.absent(),
+                Value<int> messageCount = const Value.absent(),
+                Value<bool> hasMms = const Value.absent(),
+              }) => ThreadCacheCompanion.insert(
+                threadId: threadId,
+                addresses: addresses,
+                title: title,
+                saved: saved,
+                photoUri: photoUri,
+                snippet: snippet,
+                date: date,
+                unread: unread,
+                messageCount: messageCount,
+                hasMms: hasMms,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ThreadCacheTable, ThreadCacheRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ThreadCacheTable,
+                    ThreadCacheRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ThreadCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ThreadCacheTable,
+      ThreadCacheRow,
+      $$ThreadCacheTableFilterComposer,
+      $$ThreadCacheTableOrderingComposer,
+      $$ThreadCacheTableAnnotationComposer,
+      $$ThreadCacheTableCreateCompanionBuilder,
+      $$ThreadCacheTableUpdateCompanionBuilder,
+      (
+        ThreadCacheRow,
+        BaseReferences<_$AppDatabase, $ThreadCacheTable, ThreadCacheRow>,
+      ),
+      ThreadCacheRow,
+      PrefetchHooks Function()
+    >;
+typedef $$MessageCacheTableCreateCompanionBuilder =
+    MessageCacheCompanion Function({
+      required String kind,
+      required int providerId,
+      required int threadId,
+      required int date,
+      required String data,
+      Value<int> rowid,
+    });
+typedef $$MessageCacheTableUpdateCompanionBuilder =
+    MessageCacheCompanion Function({
+      Value<String> kind,
+      Value<int> providerId,
+      Value<int> threadId,
+      Value<int> date,
+      Value<String> data,
+      Value<int> rowid,
+    });
+
+class $$MessageCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $MessageCacheTable> {
+  $$MessageCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get threadId => $composableBuilder(
+    column: $table.threadId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get data => $composableBuilder(
+    column: $table.data,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MessageCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $MessageCacheTable> {
+  $$MessageCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get threadId => $composableBuilder(
+    column: $table.threadId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get data => $composableBuilder(
+    column: $table.data,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MessageCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MessageCacheTable> {
+  $$MessageCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<int> get providerId => $composableBuilder(
+    column: $table.providerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get threadId =>
+      $composableBuilder(column: $table.threadId, builder: (column) => column);
+
+  GeneratedColumn<int> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get data =>
+      $composableBuilder(column: $table.data, builder: (column) => column);
+}
+
+class $$MessageCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MessageCacheTable,
+          MessageCacheRow,
+          $$MessageCacheTableFilterComposer,
+          $$MessageCacheTableOrderingComposer,
+          $$MessageCacheTableAnnotationComposer,
+          $$MessageCacheTableCreateCompanionBuilder,
+          $$MessageCacheTableUpdateCompanionBuilder,
+          (
+            MessageCacheRow,
+            BaseReferences<_$AppDatabase, $MessageCacheTable, MessageCacheRow>,
+          ),
+          MessageCacheRow,
+          PrefetchHooks Function()
+        > {
+  $$MessageCacheTableTableManager(_$AppDatabase db, $MessageCacheTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MessageCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MessageCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MessageCacheTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> kind = const Value.absent(),
+                Value<int> providerId = const Value.absent(),
+                Value<int> threadId = const Value.absent(),
+                Value<int> date = const Value.absent(),
+                Value<String> data = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MessageCacheCompanion(
+                kind: kind,
+                providerId: providerId,
+                threadId: threadId,
+                date: date,
+                data: data,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String kind,
+                required int providerId,
+                required int threadId,
+                required int date,
+                required String data,
+                Value<int> rowid = const Value.absent(),
+              }) => MessageCacheCompanion.insert(
+                kind: kind,
+                providerId: providerId,
+                threadId: threadId,
+                date: date,
+                data: data,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$MessageCacheTable, MessageCacheRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $MessageCacheTable,
+                    MessageCacheRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MessageCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MessageCacheTable,
+      MessageCacheRow,
+      $$MessageCacheTableFilterComposer,
+      $$MessageCacheTableOrderingComposer,
+      $$MessageCacheTableAnnotationComposer,
+      $$MessageCacheTableCreateCompanionBuilder,
+      $$MessageCacheTableUpdateCompanionBuilder,
+      (
+        MessageCacheRow,
+        BaseReferences<_$AppDatabase, $MessageCacheTable, MessageCacheRow>,
+      ),
+      MessageCacheRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4271,4 +5751,8 @@ class $AppDatabaseManager {
       $$PendingMediaTableTableManager(_db, _db.pendingMedia);
   $$KeyValuesTableTableManager get keyValues =>
       $$KeyValuesTableTableManager(_db, _db.keyValues);
+  $$ThreadCacheTableTableManager get threadCache =>
+      $$ThreadCacheTableTableManager(_db, _db.threadCache);
+  $$MessageCacheTableTableManager get messageCache =>
+      $$MessageCacheTableTableManager(_db, _db.messageCache);
 }

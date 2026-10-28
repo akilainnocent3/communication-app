@@ -1,20 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'config.dart';
 import 'core/perf.dart';
 import 'core/services.dart';
-import 'core/sync/background.dart';
 import 'l10n/app_localizations.dart';
 import 'providers.dart';
+import 'state/threads.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Perf.mark('dart_main');
   Perf.watchFrames();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   final AppServices services;
   try {
     services = await AppServices.open(AppConfig.fromEnvironment());
@@ -25,7 +27,15 @@ Future<void> main() async {
     runApp(StartupErrorApp(onRetry: main));
     return;
   }
-  runApp(ProviderScope(overrides: [servicesProvider.overrideWithValue(services)], child: const SmsApp()));
+  Perf.mark('services_open');
+  final initial = initialLocation(removed: services.startup.removed, isDefaultSmsApp: services.startup.isDefaultSmsApp, enrolled: services.session != null);
+  final container = ProviderContainer(overrides: [
+    servicesProvider.overrideWithValue(services),
+    routerProvider.overrideWithValue(buildRouter(initial)),
+  ]);
+  // Start reading the conversation cache now, in parallel with the first frame.
+  if (initial == '/conversations') container.read(threadsProvider);
+  runApp(UncontrolledProviderScope(container: container, child: const SmsApp()));
 }
 
 /// Shown instead of the app when the local services could not be opened.
@@ -60,25 +70,4 @@ class StartupErrorApp extends StatelessWidget {
       }),
     );
   }
-}
-
-/// Entry point of the headless engine started by the native foreground service (SyncService). Runs only the sync
-/// loop; no UI. Kept alive by the service even when the app's activity is gone.
-@pragma('vm:entry-point')
-Future<void> backgroundMain() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // The service outlives the UI, so a failed open (e.g. the database still locked by another engine) is retried
-  // rather than leaving the service running without a sync loop.
-  AppServices? services;
-  for (var attempt = 1; services == null; attempt++) {
-    try {
-      services = await AppServices.open(AppConfig.fromEnvironment());
-    } on Object catch (error) {
-      debugPrint('background startup failed (attempt $attempt): ${error.runtimeType}');
-      if (attempt == 5) return;
-      await Future<void>.delayed(Duration(seconds: 2 * attempt));
-    }
-  }
-  if (services.session == null) return;
-  BackgroundSync(services).start();
 }

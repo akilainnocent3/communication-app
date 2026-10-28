@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/services.dart';
@@ -12,36 +14,69 @@ final repositoryProvider = Provider<ConversationsRepository>((ref) {
   return ConversationsRepository(phone: services.phone, db: services.db);
 });
 
-final conversationsProvider = FutureProvider.family<List<ConversationItem>, (Folder, String)>((ref, args) {
-  ref.watch(refreshTickProvider);
-  return ref.watch(repositoryProvider).list(args.$1, query: args.$2);
-});
+final simsProvider = FutureProvider<List<SimInfo>>((ref) => ref.watch(repositoryProvider).phone.sims());
 
-final messagesProvider = FutureProvider.family<List<ProviderMessage>, int>((ref, threadId) {
-  ref.watch(refreshTickProvider);
-  return ref.watch(repositoryProvider).messages(threadId);
-});
+/// Quick replies synced from the admin by the native engine (cached in the encrypted database). Never a server call.
+final quickRepliesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) => ref.watch(repositoryProvider).quickReplies());
 
-final simsProvider = FutureProvider<List<SimInfo>>((ref) => ref.watch(servicesProvider).phone.sims());
-
-/// Bumped whenever the native layer reports a change (new message, send state), so lists reload.
-class RefreshTick extends Notifier<int> {
+/// Phone-side settings (`setting.*` in the encrypted database), loaded before the first frame and written through.
+class SettingsController extends Notifier<Map<String, String>> {
   @override
-  int build() => 0;
-  void bump() => state++;
+  Map<String, String> build() {
+    try {
+      return Map.of(ref.watch(servicesProvider).settings);
+    } on Object {
+      return {}; // widget tests without services
+    }
+  }
+
+  Future<void> set(String key, String value) async {
+    state = {...state, key: value};
+    await ref.read(servicesProvider).db.setValue('setting.$key', value);
+    if (key == 'secure_screen') await ref.read(servicesProvider).host.setSecureScreen(value == '1');
+  }
+
+  bool flag(String key, {bool fallback = false}) {
+    final value = state[key];
+    return value == null || value.isEmpty ? fallback : value == '1';
+  }
 }
 
-final refreshTickProvider = NotifierProvider<RefreshTick, int>(RefreshTick.new);
+final settingsProvider = NotifierProvider<SettingsController, Map<String, String>>(SettingsController.new);
 
-/// Quick replies synced from the admin (GET /device/config/), cached in the database.
-final quickRepliesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  final services = ref.watch(servicesProvider);
-  final api = services.api;
-  if (api == null) return const [];
-  try {
-    final config = await api.config();
-    return (config['quick_replies'] as List).cast<Map<String, dynamic>>();
-  } on Exception {
-    return const [];
+/// Persisted text size (0.85–1.4).
+final textScaleProvider = Provider<double>((ref) => double.tryParse(ref.watch(settingsProvider.select((s) => s['text_scale'] ?? '')) ?? '')?.clamp(0.85, 1.4) ?? 1.0);
+
+/// Small JPEGs from the native layer (MMS parts, contact photos), decoded at display size. Kept in a small LRU so
+/// scrolling back does not ask again; the bytes never leave memory.
+class ThumbnailCache {
+  ThumbnailCache(this.repository);
+  final ConversationsRepository repository;
+  static const _capacity = 120;
+  final _entries = <String, Uint8List?>{};
+  final _pending = <String, Future<Uint8List?>>{};
+
+  Uint8List? peek(String uri, int px) => _entries['$px:$uri'];
+  bool has(String uri, int px) => _entries.containsKey('$px:$uri');
+
+  Future<Uint8List?> load(String uri, int px) {
+    final key = '$px:$uri';
+    if (_entries.containsKey(key)) {
+      final value = _entries.remove(key);
+      _entries[key] = value; // most recently used last
+      return Future.value(value);
+    }
+    return _pending[key] ??= repository.phone.thumbnail(uri, px).catchError((Object _) => null).then((bytes) {
+      _pending.remove(key);
+      _entries[key] = bytes;
+      while (_entries.length > _capacity) {
+        _entries.remove(_entries.keys.first);
+      }
+      return bytes;
+    });
   }
-});
+
+  void clear() => _entries.clear();
+}
+
+final thumbnailCacheProvider = Provider<ThumbnailCache>((ref) => ThumbnailCache(ref.watch(repositoryProvider)));

@@ -109,15 +109,57 @@ class KeyValues extends Table {
   Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [SyncEvents, OutboundStates, ConversationPrefs, StarredMessages, Drafts, ScheduledSends, PendingMedia, KeyValues])
+/// Read cache of the conversation list (stale-while-revalidate): the list draws from here at once, then reconciles
+/// with the Telephony provider. As sensitive as the provider (snippets): same encrypted file, wiped with it, never logged.
+@DataClassName('ThreadCacheRow')
+class ThreadCache extends Table {
+  @override
+  String get tableName => 'thread_cache';
+  IntColumn get threadId => integer().named('thread_id')();
+  /// JSON list of addresses.
+  TextColumn get addresses => text()();
+  TextColumn get title => text()();
+  BoolColumn get saved => boolean().withDefault(const Constant(false))();
+  TextColumn get photoUri => text().named('photo_uri').nullable()();
+  TextColumn get snippet => text()();
+  IntColumn get date => integer()();
+  IntColumn get unread => integer().withDefault(const Constant(0))();
+  IntColumn get messageCount => integer().named('message_count').withDefault(const Constant(0))();
+  BoolColumn get hasMms => boolean().named('has_mms').withDefault(const Constant(false))();
+  @override
+  Set<Column> get primaryKey => {threadId};
+}
+
+/// The newest messages of each conversation (up to [AppDatabase.cachedPerThread]), so a chat opens with text on the
+/// first frame. Bodies are as sensitive as the provider's: same encrypted file, wiped with it, never logged.
+@DataClassName('MessageCacheRow')
+@TableIndex(name: 'message_cache_thread_date', columns: {#threadId, #date})
+class MessageCache extends Table {
+  @override
+  String get tableName => 'message_cache';
+  TextColumn get kind => text()();
+  IntColumn get providerId => integer().named('provider_id')();
+  IntColumn get threadId => integer().named('thread_id')();
+  IntColumn get date => integer()();
+  /// The ProviderMessage as JSON (addresses, body, status, parts…).
+  TextColumn get data => text()();
+  @override
+  Set<Column> get primaryKey => {kind, providerId};
+}
+
+@DriftDatabase(tables: [SyncEvents, OutboundStates, ConversationPrefs, StarredMessages, Drafts, ScheduledSends, PendingMedia, KeyValues, ThreadCache, MessageCache])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
-  /// Opens the SQLCipher database. The passphrase comes from the native layer (random, wrapped by the Keystore).
-  factory AppDatabase.open({required String path, required String passphrase}) {
-    final escaped = passphrase.replaceAll("'", "''");
+  static const cachedPerThread = 50;
+
+  /// Opens the SQLCipher database with the raw 256-bit key from the native layer (random, wrapped by the Keystore):
+  /// `PRAGMA key = "x'…'"` skips PBKDF2, which cost hundreds of milliseconds on every open. The native side migrated
+  /// 1.0.x databases (passphrase format) before handing the key out (DatabaseKey.ensureRawKey).
+  factory AppDatabase.open({required String path, required String hexKey}) {
+    if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(hexKey)) throw ArgumentError('not a raw key');
     return AppDatabase(NativeDatabase.createInBackground(File(path), setup: (db) {
-      db.execute("PRAGMA key = '$escaped'");
+      db.execute('PRAGMA key = "x\'$hexKey\'"');
       // busy_timeout before journal_mode: the UI engine, the sync service's engine and the native receivers open this
       // file at the same moment after an install, update or boot, and switching to WAL needs a lock. Set the other
       // way round, the switch failed at once with "database is locked" and the app could not start.
@@ -131,7 +173,18 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(threadCache);
+            await m.createTable(messageCache);
+            await m.createIndex(messageCacheThreadDate);
+          }
+        },
+      );
 
   // --- Outbox ------------------------------------------------------------------------------------------------
 
@@ -161,6 +214,8 @@ class AppDatabase extends _$AppDatabase {
 
   // --- Key/value ---------------------------------------------------------------------------------------------
 
+  Future<Map<String, String>> allValues() async => {for (final row in await select(keyValues).get()) row.key: row.value};
+
   Future<String?> getValue(String key) async => (await (select(keyValues)..where((t) => t.key.equals(key))).getSingleOrNull())?.value;
 
   Future<void> setValue(String key, String? value) async {
@@ -180,4 +235,30 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> updatePref(int threadId, ConversationPrefsCompanion change) =>
       into(conversationPrefs).insert(change.copyWith(threadId: Value(threadId)), onConflict: DoUpdate((_) => change));
+
+  Future<List<ConversationPrefRow>> allPrefs() => select(conversationPrefs).get();
+
+  // --- Read caches -------------------------------------------------------------------------------------------
+
+  Future<List<ThreadCacheRow>> cachedThreads() => (select(threadCache)..orderBy([(t) => OrderingTerm.desc(t.date)])).get();
+
+  Future<void> cacheThreads(List<ThreadCacheCompanion> rows) => batch((b) => b.insertAllOnConflictUpdate(threadCache, rows));
+
+  /// Keeps only these threads (the provider's full first pages are the truth; deleted threads leave the cache).
+  Future<void> pruneThreads(Set<int> keep, {required int olderThan}) =>
+      (delete(threadCache)..where((t) => t.threadId.isNotIn(keep) & t.date.isBiggerOrEqualValue(olderThan))).go();
+
+  Future<void> forgetThread(int threadId) async {
+    await (delete(threadCache)..where((t) => t.threadId.equals(threadId))).go();
+    await (delete(messageCache)..where((t) => t.threadId.equals(threadId))).go();
+  }
+
+  Future<List<MessageCacheRow>> cachedMessages(int threadId) =>
+      (select(messageCache)..where((t) => t.threadId.equals(threadId))..orderBy([(t) => OrderingTerm.desc(t.date)])..limit(cachedPerThread)).get();
+
+  /// Replaces the thread's cached window with its newest messages.
+  Future<void> cacheMessages(int threadId, List<MessageCacheCompanion> rows) => transaction(() async {
+        await (delete(messageCache)..where((t) => t.threadId.equals(threadId))).go();
+        await batch((b) => b.insertAll(messageCache, rows.take(cachedPerThread).toList()));
+      });
 }

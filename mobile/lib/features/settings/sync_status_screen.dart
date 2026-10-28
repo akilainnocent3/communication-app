@@ -5,8 +5,7 @@ import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 
-final _syncStatusProvider = FutureProvider<Map<String, Object?>>((ref) async {
-  ref.watch(refreshTickProvider);
+final _syncStatusProvider = FutureProvider.autoDispose<Map<String, Object?>>((ref) async {
   final services = ref.watch(servicesProvider);
   final status = await services.phone.serviceStatus();
   return {
@@ -17,9 +16,11 @@ final _syncStatusProvider = FutureProvider<Map<String, Object?>>((ref) async {
     'queue': (await services.db.unreportedOutbound()).length,
     'online': status.networkAvailable,
     'network': status.networkType,
+    'running': status.running,
   };
 });
 
+/// What the native sync engine has done (it runs in the foreground service and WorkManager, not in this screen).
 class SyncStatusScreen extends ConsumerWidget {
   const SyncStatusScreen({super.key});
 
@@ -31,26 +32,31 @@ class SyncStatusScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.syncStatus)),
       body: data == null
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(children: [
-              ListTile(title: Text(l10n.server), subtitle: Text('${data['server']}')),
-              ListTile(title: Text(l10n.deviceCode), subtitle: SelectableText('${data['code']}')),
-              ListTile(title: Text(l10n.lastSync), subtitle: Text(last == null ? l10n.never : DateFormat.yMMMd().add_Hms().format(DateTime.fromMillisecondsSinceEpoch(last)))),
-              ListTile(title: Text(l10n.pendingUploads), trailing: Text('${data['pending']}')),
-              ListTile(title: Text(l10n.queueWaiting), trailing: Text('${data['queue']}')),
-              ListTile(title: Text(l10n.connectivity), trailing: Text(data['online'] == true ? '${l10n.online} · ${data['network']}' : l10n.offline)),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: FilledButton.icon(
-                  icon: const Icon(Icons.sync),
-                  label: Text(l10n.syncNow),
-                  onPressed: () async {
-                    await ref.read(servicesProvider).host.startSyncService(); // the service runs a cycle on start
-                    ref.read(refreshTickProvider.notifier).bump();
-                  },
+          ? const SizedBox.shrink()
+          : RefreshIndicator(
+              onRefresh: () async => ref.invalidate(_syncStatusProvider),
+              child: ListView(children: [
+                ListTile(title: Text(l10n.server), subtitle: Text('${data['server']}')),
+                ListTile(title: Text(l10n.deviceCode), subtitle: SelectableText('${data['code']}')),
+                ListTile(title: Text(l10n.lastSync), subtitle: Text(last == null ? l10n.never : DateFormat.yMMMd().add_Hms().format(DateTime.fromMillisecondsSinceEpoch(last)))),
+                ListTile(title: Text(l10n.pendingUploads), trailing: Text('${data['pending']}')),
+                ListTile(title: Text(l10n.queueWaiting), trailing: Text('${data['queue']}')),
+                ListTile(title: Text(l10n.connectivity), trailing: Text(data['online'] == true ? '${l10n.online} · ${data['network']}' : l10n.offline)),
+                ListTile(title: Text(l10n.syncService), trailing: Text(data['running'] == true ? l10n.running : l10n.notRunning)),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.sync),
+                    label: Text(l10n.syncNow),
+                    onPressed: () async {
+                      await ref.read(servicesProvider).host.startSyncService();
+                      await Future<void>.delayed(const Duration(seconds: 2));
+                      ref.invalidate(_syncStatusProvider);
+                    },
+                  ),
                 ),
-              ),
-            ]),
+              ]),
+            ),
     );
   }
 }

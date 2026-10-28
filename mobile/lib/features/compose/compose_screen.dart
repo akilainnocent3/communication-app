@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,7 @@ import '../../core/text/phone_format.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/telephony_api.g.dart';
 import '../../providers.dart';
+import '../common/widgets.dart';
 import 'composer.dart';
 
 /// New conversation: one or more recipients (group MMS), contact search, then the composer.
@@ -21,6 +24,8 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
   final _to = TextEditingController();
   final List<String> _recipients = [];
   List<ContactInfo> _suggestions = const [];
+  Timer? _debounce;
+  int _generation = 0;
 
   @override
   void initState() {
@@ -30,13 +35,23 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _to.dispose();
     super.dispose();
   }
 
-  Future<void> _search(String query) async {
-    final results = query.trim().length < 2 ? const <ContactInfo>[] : await ref.read(servicesProvider).phone.searchContacts(query, 20);
-    if (mounted) setState(() => _suggestions = results);
+  /// Debounced (250 ms) and stale-safe: an answer for an older query is dropped.
+  void _search(String query) {
+    _debounce?.cancel();
+    final generation = ++_generation;
+    if (query.trim().length < 2) {
+      setState(() => _suggestions = const []);
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 250), () async {
+      final results = await ref.read(repositoryProvider).phone.searchContacts(query, 20);
+      if (mounted && generation == _generation) setState(() => _suggestions = results);
+    });
   }
 
   void _add(String address) {
@@ -69,7 +84,10 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
         Expanded(
           child: ListView(children: [
             for (final contact in _suggestions)
-              ListTile(leading: const Icon(Icons.person_outline), title: Text(contact.displayName ?? contact.address), subtitle: Text(formatNumber(contact.address)), onTap: () => _add(contact.address)),
+              ListTile(
+                leading: ContactAvatar(title: contact.displayName ?? contact.address, address: contact.address, saved: contact.displayName != null, photoUri: contact.photoUri, size: 40),
+                title: Text(contact.displayName ?? contact.address), subtitle: Text(formatNumber(contact.address)), onTap: () => _add(contact.address),
+              ),
           ]),
         ),
         Composer(
@@ -80,7 +98,6 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
           onSend: (body, sim, at) async {
             if (_to.text.trim().isNotEmpty) _add(_to.text);
             await ref.read(repositoryProvider).send(addresses: List.of(_recipients), body: body, subscriptionId: sim, at: at);
-            ref.read(refreshTickProvider.notifier).bump();
             if (context.mounted) context.go('/conversations');
           },
         ),
