@@ -75,6 +75,15 @@ class ThreadsController extends Notifier<ThreadsState> {
     }
   }
 
+  /// Search covers every conversation, not just the pages scrolled so far (300 threads are 6 native queries).
+  Future<void> loadAll() async {
+    while (state.hasMore) {
+      final before = state.items.length;
+      await loadMore();
+      if (state.items.length == before && state.hasMore) break; // nothing new: do not spin
+    }
+  }
+
   void _merge(List<ConversationItem> page, {required bool authoritative}) {
     final byId = {for (final i in state.items) i.id: i};
     if (authoritative && page.isNotEmpty) {

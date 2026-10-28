@@ -44,6 +44,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
   }
 
   void _toggleSearch() => setState(() {
+        if (!_searching) ref.read(threadsProvider.notifier).loadAll();
         _searching = !_searching;
         _query = '';
         _search.clear();

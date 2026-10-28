@@ -9,6 +9,7 @@ import '../platform/telephony_api.g.dart';
 import 'api/device_api.dart';
 import 'api/transport.dart';
 import 'db/database.dart';
+import 'perf.dart';
 
 class PlatformSigner implements DeviceSigner {
   PlatformSigner(this.api);
@@ -49,8 +50,10 @@ class AppServices {
     final host = TelephonyHostApi();
     final accentFuture = DynamicColorPlugin.getAccentColor().then<Color?>((c) => c, onError: (Object _) => null);
     final startup = await host.startup();
+    Perf.mark('startup_native');
     final db = AppDatabase.open(path: startup.databasePath, hexKey: startup.databaseKey);
     final values = await db.allValues();
+    Perf.mark('db_ready');
     final services = AppServices(
       config: config, host: host, db: db, phone: PlatformPhoneGateway(host), transport: NativeHttpTransport(host), startup: startup,
       settings: {for (final e in values.entries) if (e.key.startsWith('setting.')) e.key.substring(8): e.value}, accent: await accentFuture,
