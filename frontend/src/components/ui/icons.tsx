@@ -119,3 +119,13 @@ export const SmartphoneIcon = glyph(<><rect x="6.5" y="2.5" width="11" height="1
 export const BlockIcon = glyph(<><circle cx="12" cy="12" r="9" /><path d="m5.7 5.7 12.6 12.6" /></>, "BlockIcon");
 export const OutboxIcon = glyph(<><path d="M3 13h4.5l1.5 3h6l1.5-3H21" /><path d="M5.5 10 3 13v5a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18v-5l-2.5-3" /><path d="M12 11V3M9 6l3-3 3 3" /></>, "OutboxIcon");
 export const QrIcon = glyph(<><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" /></>, "QrIcon");
+
+// --- Calls ------------------------------------------------------------------------------------------------------
+const HANDSET = "M5 4h3.2l1.6 4-2 1.3a10.6 10.6 0 0 0 5 5l1.3-2 4 1.6V17a2 2 0 0 1-2.2 2A15.6 15.6 0 0 1 3 6.2 2 2 0 0 1 5 4z";
+export const CallIncomingIcon = glyph(<><path d={HANDSET} /><path d="M21 3l-5.5 5.5M15.5 4v4.5H20" /></>, "CallIncomingIcon");
+export const CallOutgoingIcon = glyph(<><path d={HANDSET} /><path d="M15.5 8.5L21 3M16.5 3H21v4.5" /></>, "CallOutgoingIcon");
+export const CallMissedIcon = glyph(<><path d={HANDSET} /><path d="M15 3l6 6M21 3l-6 6" /></>, "CallMissedIcon");
+export const CallbackIcon = glyph(<><path d={HANDSET} /><path d="M14.5 6.5a4 4 0 0 1 6.5 2.5M21 5v4h-4" /></>, "CallbackIcon");
+export const LiveIcon = glyph(<><circle cx="12" cy="12" r="2" /><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8" /></>, "LiveIcon");
+export const MoonClockIcon = glyph(<><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /><path d="M14 8v3l2 1" /></>, "MoonClockIcon");
+export const CoinsIcon = glyph(<><ellipse cx="9" cy="7" rx="5" ry="2.5" /><path d="M4 7v5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V7" /><path d="M10 17c.8 1.2 2.8 2 5 2 2.8 0 5-1.1 5-2.5v-5c0-1.4-2.2-2.5-5-2.5" /></>, "CoinsIcon");

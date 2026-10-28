@@ -540,5 +540,6 @@
 [data-theme="dark"] {
   --chart-received: #5b78fb;
   --chart-sent: #d95926;
+  --chart-missed: #f0609b;
   --chart-grid: #27272a;
 }

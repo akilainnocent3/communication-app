@@ -204,13 +204,16 @@ class CallSimulator:
                 info["notified"] = True
                 handled += 1
             if task["state"] in ("open", "notified") and info["dial_at"] <= now and task["due_at"] <= now * 1000 + 60_000:
-                started = timezone.now() - timedelta(seconds=90)
-                answered = started + timedelta(seconds=8)
+                # Placed after the task became due (never "before" the missed call it answers), ending now.
+                end = timezone.now()
+                started = max(end - timedelta(seconds=80), datetime.fromtimestamp(task["due_at"] / 1000, tz=dt_timezone.utc) + timedelta(seconds=1))
+                started = min(started, end - timedelta(seconds=3))
+                answered = started + (end - started) / 4
                 key = _key()
                 self.phone.push([
                     {"type": "callback.state", "payload": {"task": task["id"], "state": "dialed", "at": _ms(started)}},
                     {"type": "call.upsert", "payload": {"call_key": key, "direction": "out", "result": "answered", "number": task["number"], "started_at": _ms(started),
-                                                        "answered_at": _ms(answered), "ended_at": _ms(answered + timedelta(seconds=70)), "ended_by": "local",
+                                                        "answered_at": _ms(answered), "ended_at": _ms(end), "ended_by": "local",
                                                         "origin": "callback_task", "callback_task": task["id"], "sub_id": self._sub()}},
                 ])
                 handled += 1

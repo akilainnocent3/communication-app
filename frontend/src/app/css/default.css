@@ -553,5 +553,7 @@
 :root {
   --chart-received: #3758f9;
   --chart-sent: #eb6834;
+  /* Missed calls: drawn dashed as well, so the series never depends on hue alone. */
+  --chart-missed: #c81e5b;
   --chart-grid: #e4e4e7;
 }

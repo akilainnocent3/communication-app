@@ -3,7 +3,7 @@
  * object with the same shape and choosing it in `i18n/index.ts`.
  */
 export const en = {
-  brand: { name: "OCM", full: "Office Communication Management", short: "OCM", tagline: "Every company channel, one place." },
+  brand: { name: "OCM", full: "Office Communication", short: "OCM", tagline: "Every company channel, one place." },
   common: {
     retry: "Retry", cancel: "Cancel", save: "Save", saving: "Saving…", saved: "Saved", delete: "Delete", edit: "Edit",
     close: "Close", back: "Back", add: "Add", create: "Create", confirm: "Confirm", loading: "Loading…", search: "Search",
@@ -26,8 +26,43 @@ export const en = {
   platforms: {
     gmail: { name: "Gmail", description: "Company and office mailboxes" },
     sms: { name: "SMS", description: "Company phones' text messages" },
-    calls: { name: "Calls", description: "Call logs and recordings" },
+    calls: { name: "Calls", description: "Company phones' calls, call-backs and customers" },
     media: { name: "Media", description: "Social media inboxes" },
+  },
+  calls: {
+    allHint: (count: number, onCall: number) => `${count} phones · ${onCall} on a call`,
+    unified: "Every Calls phone",
+    direction: { in: "Incoming", out: "Outgoing" },
+    result: {
+      answered: "Answered", missed: "Missed", rejected: "Declined", blocked: "Blocked", busy: "Busy", no_answer: "No answer", failed: "Failed",
+      voicemail: "Voicemail", answered_elsewhere: "Answered elsewhere", cancelled: "Cancelled",
+    } as Record<string, string>,
+    state: { idle: "Idle", ringing: "Ringing", active: "On a call", held: "On hold", offline: "Offline" } as Record<string, string>,
+    folders: { all: "All calls", missed: "Missed", unreturned: "Unreturned", incoming: "Incoming", outgoing: "Outgoing", after_hours: "After hours" } as Record<string, string>,
+    folderHints: {
+      all: "Every call on the phones you can open.", missed: "Incoming calls nobody took: missed, declined or sent to voicemail.",
+      unreturned: "Missed calls where nobody has reached the customer since. Call them back.", incoming: "Calls to the company phones.",
+      outgoing: "Calls staff made from the company phones.", after_hours: "Calls outside each office's opening hours.",
+    } as Record<string, string>,
+    callbacks: { open: "Open call-backs", mine: "Assigned to me", done: "Done" } as Record<string, string>,
+    callbackState: { open: "Waiting", notified: "On the phone", dialed: "Called", done: "Done", cancelled: "Cancelled", expired: "Expired" } as Record<string, string>,
+    priority: { low: "Low", normal: "Normal", high: "High", urgent: "Urgent" } as Record<string, string>,
+    origin: { manual: "Dialled", callback_task: "Call-back task", from_sms: "From a message", redial: "Redial", incoming: "Incoming" } as Record<string, string>,
+    privateNumber: "Private number",
+    nameFromDirectory: "Company directory",
+    nameFromPhone: "Saved on the phone",
+    deletedOnPhone: "Deleted on phone",
+    ringing: "Ringing now",
+    createCallback: "Create call-back",
+    callbackHelp: "The phone shows a notification and adds it to its call-back list. The staff member taps Call — OCM never dials a customer by itself.",
+    noRecording: "Calls are not recorded. Android does not let any app record the call audio; see docs/calls-recording.md.",
+    empty: {
+      noDevices: { title: "No Calls phones yet", body: "Enable Calls on an enrolled company phone. It then asks to become the phone's default Phone app." },
+      calls: { title: "No calls here", body: "Calls appear a few seconds after they end on the phone." },
+      callbacks: { title: "No call-backs", body: "Create one from a missed call, the dashboard or a customer's page." },
+      customers: { title: "No customers yet", body: "Everyone who calls or texts a company phone from a real number appears here." },
+    },
+    attention: { not_default_dialer: "No longer the default phone app", call_permissions_missing: "A call permission is missing", fsi_denied: "Incoming-call screen not allowed" } as Record<string, string>,
   },
   sms: {
     allDevices: "All phones",
@@ -120,6 +155,8 @@ export const en = {
     attention: {
       offline: "Offline", not_default_sms_app: "Not the default SMS app", permission_revoked: "A permission was revoked", battery_optimised: "Battery optimisation on",
       outbox_backlog: "Upload backlog", app_outdated: "App needs an update", suspended: "Suspended", risk_signals: "Rooted or emulated phone",
+      background_restricted: "Background use is restricted", standby_restricted: "Android is holding the app back",
+      not_default_dialer: "Not the default phone app", call_permissions_missing: "A call permission is missing", fsi_denied: "Incoming-call screen not allowed",
     },
   },
 } as const;

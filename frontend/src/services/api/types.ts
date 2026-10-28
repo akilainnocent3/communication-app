@@ -6,7 +6,7 @@ import type { components } from "./schema";
 
 type S = components["schemas"];
 
-export type Me = S["Me"] & { platform_data: { gmail?: { mailboxes: MailboxSummary[] }; sms?: { devices: DeviceSummary[] } } };
+export type Me = S["Me"] & { platform_data: { gmail?: { mailboxes: MailboxSummary[] }; sms?: { devices: DeviceSummary[] }; calls?: { devices: CallsDeviceSummary[] } } };
 export type MeUser = S["MeUser"];
 export type Preferences = {
   shortcuts: boolean;
@@ -155,4 +155,75 @@ export type SmsStats = {
   failure_reasons: { status: string; code: number | null; reason: string; count: number }[];
   latest: { id: number; device: string; title: string; snippet: string; last_message_at: string; unread: number; direction: string }[];
   attention: { id: string; code: string; name: string; alerts: { code: string; label: string }[] }[];
+};
+
+// --- Calls -------------------------------------------------------------------------------------------------------
+
+export type CallSummary = S["CallSummary"];
+export type CallPage = S["CallPage"];
+export type CallDetail = S["CallDetail"];
+export type CallAnnotation = S["CallAnnotation"];
+export type CallHistoryItem = S["CallHistoryItem"];
+export type Callback = S["Callback"];
+export type CallOutcome = S["CallOutcome"];
+export type CarrierTariff = S["CarrierTariff"];
+export type OfficeHours = S["OfficeHours"];
+export type CallSettings = S["CallSettings"];
+export type CallDevice = S["CallDevice"];
+export type CallDeviceAccess = S["CallDeviceAccess"];
+export type Customer = S["Customer"];
+export type CustomerPage = S["CustomerPage"];
+export type CustomerDetail = S["CustomerDetail"];
+export type CallBadges = S["CallBadges"];
+export type CallResult = "answered" | "missed" | "rejected" | "blocked" | "busy" | "no_answer" | "failed" | "voicemail" | "answered_elsewhere" | "cancelled";
+
+/** Phone entry in GET /auth/me/ (platform_data.calls.devices) used by the Calls phone switcher. */
+export type CallsDeviceSummary = {
+  id: string;
+  code: string;
+  name: string;
+  office: { id: number; name: string; colour: string };
+  status: "active" | "suspended" | "revoked";
+  online: boolean;
+  last_seen_at: string | null;
+  attention: string[];
+  call_state: "idle" | "ringing" | "active" | "held";
+  permissions: { read: boolean; assign: boolean; annotate: boolean; export: boolean };
+  sims: { id: number; label: string; slot: number; colour: string }[];
+};
+
+type Breakdown = { calls: number; incoming: number; outgoing: number; missed: number; answered: number; answer_rate: number | null; talk_minutes: number; avg_talk_seconds: number | null };
+
+/** GET /calls/stats/ (the serializer declares its sections as free-form dicts). */
+export type CallStats = {
+  range_days: number;
+  start: string;
+  end: string;
+  unreturned_hours: number;
+  kpis: {
+    total: number; incoming: number; outgoing: number; missed: number; answered_incoming: number; answered_outgoing: number;
+    answer_rate: number | null; missed_rate: number | null; unreturned: number; unreturned_open: number; returned_in_time: number;
+    median_callback_minutes: number | null; avg_talk_seconds: number | null; median_talk_seconds: number | null; avg_ring_seconds: number | null;
+    abandoned: number; rejected: number; blocked: number; after_hours: number; after_hours_missed: number; talk_minutes: number;
+    estimated_cost: { carrier: string; minutes: number; amount: string | null; currency: string | null }[];
+  };
+  series: { date: string; incoming: number; outgoing: number; missed: number }[];
+  /** 7 rows (Monday first) × 24 hours of incoming calls. */
+  heatmap: number[][];
+  by_result: { direction: "in" | "out"; result: CallResult; count: number }[];
+  per_device: ({ id: string; code: string; name: string; office: string; colour: string; online: boolean; call_state: string } & Breakdown)[];
+  per_office: ({ id: number | null; name: string; colour: string } & Breakdown)[];
+  per_sim: ({ sim_id: number | null; label: string; carrier: string } & Breakdown)[];
+  staff: ({ user_id: number; name: string } & Breakdown)[];
+  callers: { unique: number; repeat_rate: number | null; first_time: number; returning: number; called_and_texted: number };
+  top_callers: { number: string; display: string; name: string; customer_id: number | null; incoming: number; missed: number; outgoing: number }[];
+  outcomes: { id: number; name: string; colour: string; count: number }[];
+  unreturned_list: { id: number; number: string; display: string; name: string; device: string; device_id: string; started_at: string; customer_id: number | null }[];
+};
+
+export type CallLive = {
+  server_time: string;
+  phones: { id: string; code: string; name: string; office: string; colour: string; holder: string; state: "idle" | "ringing" | "active" | "held" | "offline";
+    since: string | null; last_seen_at: string | null; today_calls: number; today_missed: number }[];
+  totals: { on_call: number; ringing: number; offline: number; calls_today: number; missed_today: number };
 };
