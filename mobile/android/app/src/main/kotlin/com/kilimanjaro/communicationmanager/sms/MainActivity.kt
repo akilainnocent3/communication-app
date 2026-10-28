@@ -9,12 +9,17 @@ import com.kilimanjaro.communicationmanager.sms.bridge.EventBus
 import com.kilimanjaro.communicationmanager.sms.bridge.HostApiImpl
 import com.kilimanjaro.communicationmanager.sms.bridge.LaunchIntent
 import com.kilimanjaro.communicationmanager.sms.bridge.TelephonyHostApi
+import com.kilimanjaro.communicationmanager.sms.telephony.Provider
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import kotlinx.coroutines.CompletableDeferred
 
 /** The only Activity. Also handles ACTION_SEND/SENDTO for sms:, smsto:, mms:, mmsto: (required for the SMS role). */
 class MainActivity : FlutterFragmentActivity(), ActivityBridge {
+    private companion object {
+        const val STALE_OUTBOX_MS = 10 * 60 * 1000L
+    }
+
     private var roleResult: CompletableDeferred<Boolean>? = null
     private var permissionResult: CompletableDeferred<Unit>? = null
 
@@ -32,6 +37,7 @@ class MainActivity : FlutterFragmentActivity(), ActivityBridge {
     override fun onCreate(savedInstanceState: Bundle?) {
         LaunchIntent.set(intent)
         super.onCreate(savedInstanceState)
+        Thread { safely("stale outbox") { Provider.failStaleOutbox(applicationContext, STALE_OUTBOX_MS) } }.start()
     }
 
     override fun onNewIntent(intent: Intent) {

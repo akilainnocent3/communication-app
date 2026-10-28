@@ -17,6 +17,7 @@ import android.provider.Settings
 import android.provider.Telephony
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
+import android.util.Log
 import android.view.WindowManager
 import androidx.core.content.ContextCompat
 import com.kilimanjaro.communicationmanager.sms.BuildConfig
@@ -82,6 +83,7 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
         @Suppress("MissingPermission")
         val list = manager.activeSubscriptionInfoList ?: emptyList()
         return list.map { info ->
+            @Suppress("MissingPermission") // READ_PHONE_NUMBERS checked; a SecurityException is caught
             val number = if (granted("READ_PHONE_NUMBERS")) runCatching {
                 if (Build.VERSION.SDK_INT >= 33) manager.getPhoneNumber(info.subscriptionId) else @Suppress("DEPRECATION") info.number
             }.getOrNull() else null
@@ -107,7 +109,15 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
     override fun lookupContacts(addresses: List<String>) = Contacts.lookup(context, addresses)
     override fun searchContacts(query: String, limit: Long) = Contacts.search(context, query, limit.toInt())
 
-    override suspend fun sendMessage(request: SendRequest): SendResult = withContext(Dispatchers.IO) { SmsSender.send(context, request) }
+    override suspend fun sendMessage(request: SendRequest): SendResult = withContext(Dispatchers.IO) {
+        try {
+            SmsSender.send(context, request)
+        } catch (e: Exception) {
+            // Admin messages already carry a durable "sending" mark, so the sync loop reports them; never resend here.
+            Log.w("CmSms", "send failed: ${e.javaClass.name}")
+            SendResult(clientUuid = request.clientUuid, state = "failed", errorCode = SmsSender.ERROR_REFUSED.toLong())
+        }
+    }
 
     override fun markThreadRead(threadId: Long) {
         Provider.markThreadRead(context, threadId)

@@ -62,6 +62,16 @@ object Provider {
         }, null, null)
     }
 
+    /**
+     * Outbox/queued SMS older than [olderThanMs] whose send never completed (the process died, or a send threw before
+     * the radio took it) are marked failed so the phone holder can tap to retry, instead of "Sending…" forever.
+     * Radio results arrive within seconds, so anything this old is not in flight. Returns the number changed.
+     */
+    fun failStaleOutbox(context: Context, olderThanMs: Long): Int =
+        context.contentResolver.update(Telephony.Sms.CONTENT_URI, ContentValues().apply { put(Telephony.Sms.TYPE, Telephony.Sms.MESSAGE_TYPE_FAILED) },
+            "${Telephony.Sms.TYPE} IN (?, ?) AND ${Telephony.Sms.DATE} < ?",
+            arrayOf(Telephony.Sms.MESSAGE_TYPE_OUTBOX.toString(), Telephony.Sms.MESSAGE_TYPE_QUEUED.toString(), (System.currentTimeMillis() - olderThanMs).toString()))
+
     fun setSmsStatus(context: Context, uri: Uri, status: Int) {
         context.contentResolver.update(uri, ContentValues().apply { put(Telephony.Sms.STATUS, status) }, null, null)
     }

@@ -2,10 +2,15 @@ package com.kilimanjaro.communicationmanager.sms.security
 
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
+import java.io.File
 import java.security.KeyStore
 import java.security.SecureRandom
+import java.security.UnrecoverableKeyException
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -28,15 +33,38 @@ object DatabaseKey {
             cached?.let { return it }
             val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             val stored = prefs.getString(ENTRY, null)
-            val value = if (stored != null) unwrap(stored) else {
-                val raw = ByteArray(32).also { SecureRandom().nextBytes(it) }
-                val hex = raw.joinToString("") { "%02x".format(it) }
-                prefs.edit().putString(ENTRY, wrap(hex)).commit()
-                hex
-            }
+            val value = stored?.let { unwrapOrLost(it) } ?: create(context)
             cached = value
             return value
         }
+    }
+
+    /**
+     * A new passphrase. A database file left without its passphrase (wrapping key lost or invalidated, or the stored
+     * entry gone) can never be opened again; it is removed so the app starts clean and asks to enroll again instead
+     * of failing on every start and every incoming SMS.
+     */
+    private fun create(context: Context): String {
+        val path = path(context)
+        if (File(path).exists()) Log.w("CmSms", "sync database key lost; resetting the sync database")
+        listOf(path, "$path-wal", "$path-shm", "$path-journal").forEach { File(it).delete() }
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val raw = ByteArray(32).also { SecureRandom().nextBytes(it) }
+        val hex = raw.joinToString("") { "%02x".format(it) }
+        prefs.edit().putString(ENTRY, wrap(hex)).commit()
+        return hex
+    }
+
+    /** null when the wrapped passphrase can never be recovered; transient Keystore errors are rethrown. */
+    private fun unwrapOrLost(stored: String): String? = try {
+        unwrap(stored)
+    } catch (e: Exception) {
+        val permanent = e is AEADBadTagException || e is KeyPermanentlyInvalidatedException || e is UnrecoverableKeyException || e is IllegalArgumentException
+        if (!permanent) throw e
+        Log.w("CmSms", "sync database key unusable: ${e.javaClass.name}")
+        val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        if (store.containsAlias(ALIAS)) store.deleteEntry(ALIAS)
+        null
     }
 
     fun path(context: Context): String = context.getDatabasePath("cm_sync.db").absolutePath

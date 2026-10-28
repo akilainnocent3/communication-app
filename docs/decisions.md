@@ -102,3 +102,12 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
     only when `SMS_ENABLE_SIMULATOR` is on; production refuses to start with it.
 38. **Admin-facing SMS serializers carry an `Sms` prefix** and the Gmail enum names are pinned in
     `ENUM_NAME_OVERRIDES`, so adding SMS changed none of Gmail's generated TypeScript types.
+39. **The phone falls back to a non-attested key instead of failing enrollment.** Key generation tries StrongBox, then
+    the TEE with attestation, then the TEE without attestation: some OEM builds advertise StrongBox or attestation and
+    then fail with errors the API does not document, which crashed enrollment. The server already records whether the
+    key is hardware-attested, and `SMS_REQUIRE_KEY_ATTESTATION=true` still refuses such phones, so the security decision
+    stays on the server.
+40. **A sync database whose key is permanently lost is reset, not retried.** If the Keystore key that wraps the SQLCipher
+    passphrase is gone or invalidated (or the stored passphrase is missing), the database can never be opened again;
+    the app deletes it and asks to enroll again instead of failing on every start and every incoming SMS. Transient
+    Keystore errors are not treated as loss. The phone's own SMS are never touched, and the server keeps its copy.

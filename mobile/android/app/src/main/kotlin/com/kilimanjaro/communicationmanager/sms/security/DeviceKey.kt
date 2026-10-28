@@ -5,8 +5,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import android.security.keystore.StrongBoxUnavailableException
 import android.util.Base64
+import android.util.Log
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
@@ -28,28 +28,47 @@ object DeviceKey {
 
     fun exists(): Boolean = keyStore().containsAlias(ALIAS)
 
+    /**
+     * Tries StrongBox, then the TEE, then the TEE without attestation. Real phones fail in ways the API does not
+     * promise: StrongBox that is advertised but busy or broken (ProviderException, not StrongBoxUnavailableException),
+     * and attestation that some OEM builds cannot produce. Without attestation the server sees an empty chain and
+     * decides (SMS_REQUIRE_KEY_ATTESTATION), instead of the app crashing during enrollment.
+     */
     fun create(context: Context, challenge: ByteArray): Created {
         delete()
         val strongBox = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
             context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
-        val usedStrongBox = try {
-            generate(challenge, strongBox)
-            strongBox
-        } catch (e: StrongBoxUnavailableException) {
-            generate(challenge, false)
-            false
+        val attempts = listOfNotNull(
+            if (strongBox) Pair(true, challenge) else null,
+            Pair(false, challenge),
+            Pair(false, null),
+        )
+        var usedStrongBox = false
+        var failure: Exception? = null
+        for ((inStrongBox, attestation) in attempts) {
+            try {
+                generate(attestation, inStrongBox)
+                usedStrongBox = inStrongBox
+                failure = null
+                break
+            } catch (e: Exception) {
+                Log.w("CmSms", "device key (strongBox=$inStrongBox, attested=${attestation != null}) failed: ${e.javaClass.name}")
+                runCatching { delete() }
+                failure = e
+            }
         }
+        failure?.let { throw it }
         val store = keyStore()
-        val chain = store.getCertificateChain(ALIAS).map { Base64.encodeToString(it.encoded, Base64.NO_WRAP) }
+        val chain = store.getCertificateChain(ALIAS).orEmpty().map { Base64.encodeToString(it.encoded, Base64.NO_WRAP) }
         val spki = Base64.encodeToString(store.getCertificate(ALIAS).publicKey.encoded, Base64.NO_WRAP)
         return Created(spki, chain, usedStrongBox)
     }
 
-    private fun generate(challenge: ByteArray, strongBox: Boolean) {
+    private fun generate(challenge: ByteArray?, strongBox: Boolean) {
         val spec = KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_SIGN)
             .setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
             .setDigests(KeyProperties.DIGEST_SHA256)
-            .setAttestationChallenge(challenge)
+            .apply { if (challenge != null) setAttestationChallenge(challenge) }
             .apply { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) setIsStrongBoxBacked(strongBox) }
             .build()
         KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, KEYSTORE).run {

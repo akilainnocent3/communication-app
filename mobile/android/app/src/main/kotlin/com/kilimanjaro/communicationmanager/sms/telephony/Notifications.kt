@@ -1,6 +1,7 @@
 package com.kilimanjaro.communicationmanager.sms.telephony
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -20,6 +21,7 @@ import com.kilimanjaro.communicationmanager.sms.R
 import com.kilimanjaro.communicationmanager.sms.bridge.ProviderMessage
 import com.kilimanjaro.communicationmanager.sms.bridge.SendRequest
 import com.kilimanjaro.communicationmanager.sms.data.SyncStore
+import com.kilimanjaro.communicationmanager.sms.safely
 import java.util.UUID
 
 /**
@@ -55,6 +57,7 @@ object Notifications {
         return id
     }
 
+    @SuppressLint("MissingPermission") // POST_NOTIFICATIONS is checked by allowed()
     fun incoming(context: Context, message: ProviderMessage) {
         if (!allowed(context)) return
         val store = SyncStore.get(context)
@@ -85,6 +88,7 @@ object Notifications {
         NotificationManagerCompat.from(context).notify(message.threadId.toInt(), builder.build())
     }
 
+    @SuppressLint("MissingPermission") // POST_NOTIFICATIONS is checked by allowed()
     fun adminReplied(context: Context, threadId: Long, address: String) {
         if (!allowed(context)) return
         val manager = context.getSystemService(NotificationManager::class.java)
@@ -94,6 +98,7 @@ object Notifications {
             .setSmallIcon(R.drawable.ic_stat_message).setContentTitle(title).setSilent(true).setAutoCancel(true).build())
     }
 
+    @SuppressLint("MissingPermission") // POST_NOTIFICATIONS is checked by allowed()
     fun sendFailed(context: Context, uri: Uri) {
         if (!allowed(context)) return
         val message = Provider.sms(context, uri) ?: return
@@ -103,6 +108,7 @@ object Notifications {
             .setSmallIcon(R.drawable.ic_stat_message).setContentTitle(context.getString(R.string.send_failed)).setAutoCancel(true).build())
     }
 
+    @SuppressLint("MissingPermission") // POST_NOTIFICATIONS is checked by allowed()
     fun mmsWaiting(context: Context, from: String?) {
         if (!allowed(context)) return
         val manager = context.getSystemService(NotificationManager::class.java)
@@ -140,6 +146,6 @@ object Notifications {
 class NotificationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
-        Thread { try { Notifications.handle(context, intent) } finally { pending.finish() } }.start()
+        Thread { try { safely("notification action") { Notifications.handle(context, intent) } } finally { pending.finish() } }.start()
     }
 }

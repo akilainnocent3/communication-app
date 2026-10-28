@@ -8,6 +8,7 @@ import android.telephony.SmsMessage
 import com.kilimanjaro.communicationmanager.sms.ClassZeroActivity
 import com.kilimanjaro.communicationmanager.sms.bridge.EventBus
 import com.kilimanjaro.communicationmanager.sms.data.SyncStore
+import com.kilimanjaro.communicationmanager.sms.safely
 
 /**
  * SMS_DELIVER (only the default SMS app receives it; protected by BROADCAST_SMS). Works without the Flutter engine:
@@ -24,20 +25,26 @@ class SmsReceiver : BroadcastReceiver() {
         val subId = intent.getIntExtra("subscription", -1).takeIf { it >= 0 }
         if (first.messageClass == SmsMessage.MessageClass.CLASS_0) {
             // Flash SMS: shown, not stored (3GPP TS 23.038).
-            context.startActivity(Intent(context, ClassZeroActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .putExtra("address", address).putExtra("body", body))
+            safely("flash sms") {
+                context.startActivity(Intent(context, ClassZeroActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .putExtra("address", address).putExtra("body", body))
+            }
             return
         }
         if (Blocking.isBlocked(context, address)) return
         val pending = goAsync()
         Thread {
+            // The provider row comes first so the SMS itself is never lost; every later step is isolated so one failure
+            // (sync database, notification, WorkManager) cannot crash the process on each incoming message.
             try {
-                val uri = Provider.insertInbox(context, address, body, System.currentTimeMillis(), first.timestampMillis, subId) ?: return@Thread
-                val message = Provider.sms(context, uri) ?: return@Thread
-                SyncStore.get(context)?.appendEvent("message.upsert", Provider.payload(message))
-                Notifications.incoming(context, message)
-                EventBus.emit("message_received", threadId = message.threadId, providerId = message.providerId)
-                SyncTrigger.now(context)
+                safely("sms receive") {
+                    val uri = Provider.insertInbox(context, address, body, System.currentTimeMillis(), first.timestampMillis, subId) ?: return@safely
+                    val message = Provider.sms(context, uri) ?: return@safely
+                    safely("sms outbox") { SyncStore.get(context)?.appendEvent("message.upsert", Provider.payload(message)) }
+                    safely("sms notify") { Notifications.incoming(context, message) }
+                    EventBus.emit("message_received", threadId = message.threadId, providerId = message.providerId)
+                    safely("sms trigger") { SyncTrigger.now(context) }
+                }
             } finally {
                 pending.finish()
             }

@@ -413,4 +413,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get flashMessage => 'Flash message';
+
+  @override
+  String get startupErrorTitle => 'Messages could not start';
+
+  @override
+  String get startupErrorBody =>
+      'Your text messages are safe on this phone. Try again; if this keeps happening, restart the phone or contact your administrator.';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get sendRefused =>
+      'Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again.';
 }

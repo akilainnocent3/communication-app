@@ -10,6 +10,15 @@ import 'phone_gateway.dart';
 
 enum Folder { inbox, archived, spam }
 
+/// The phone refused a message before writing it anywhere (not the default SMS app, no SIM), so there is no failed
+/// bubble to retry from; the composer keeps the text and says why.
+class SendRefused implements Exception {
+  const SendRefused(this.errorCode);
+  final int? errorCode;
+  @override
+  String toString() => 'SendRefused($errorCode)';
+}
+
 class ConversationItem {
   const ConversationItem({required this.thread, required this.title, required this.subtitle, required this.saved, required this.pinned, required this.archived, required this.muted, required this.spam, required this.blocked});
   final ThreadSummary thread;
@@ -90,7 +99,9 @@ class ConversationsRepository {
       ));
       return null;
     }
-    return phone.sendMessage(SendRequest(clientUuid: clientUuid, addresses: addresses, body: body, subscriptionId: subscriptionId, deliveryReport: true, attachmentUris: attachments, origin: 'phone'));
+    final result = await phone.sendMessage(SendRequest(clientUuid: clientUuid, addresses: addresses, body: body, subscriptionId: subscriptionId, deliveryReport: true, attachmentUris: attachments, origin: 'phone'));
+    if (result.state == 'failed' && result.providerId == null) throw SendRefused(result.errorCode);
+    return result;
   }
 
   Future<String?> draft(String key) async => (await (db.select(db.drafts)..where((t) => t.key.equals(key))).getSingleOrNull())?.body;

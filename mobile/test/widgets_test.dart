@@ -108,4 +108,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(await ConversationsRepository(phone: phone, db: db).draft('thread:9'), 'Habari 😊');
   });
+
+  testWidgets('composer keeps the text and explains when the phone refuses to send', (tester) async {
+    await tester.pumpWidget(harness(Scaffold(body: Composer(draftKey: 'thread:9', onSend: (body, sim, at) async => throw const SendRefused(1001))), phone: phone, db: db));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Habari');
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.send));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Message not sent'), findsOneWidget);
+    expect(find.text('Habari'), findsOneWidget);
+  });
 }

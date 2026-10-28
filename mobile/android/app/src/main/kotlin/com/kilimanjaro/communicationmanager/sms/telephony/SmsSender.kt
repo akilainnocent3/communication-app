@@ -2,10 +2,12 @@ package com.kilimanjaro.communicationmanager.sms.telephony
 
 import android.app.Activity
 import android.app.PendingIntent
+import android.app.role.RoleManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Telephony
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
@@ -14,6 +16,7 @@ import com.kilimanjaro.communicationmanager.sms.bridge.SendRequest
 import com.kilimanjaro.communicationmanager.sms.bridge.SendResult
 import com.kilimanjaro.communicationmanager.sms.data.SyncStore
 import com.kilimanjaro.communicationmanager.sms.mms.MmsSender
+import com.kilimanjaro.communicationmanager.sms.safely
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -35,12 +38,31 @@ object SmsSender {
     // App-defined error codes the server explains (see modules/sms/services/outbound.py ERROR_REASONS).
     const val ERROR_NOT_DEFAULT = 1001
     const val ERROR_NO_SIM = 1004
+    const val ERROR_REFUSED = 1005
 
+    /**
+     * SmsManager for one SIM. createForSubscriptionId and SmsManager as a system service exist only on Android 12+;
+     * on Android 10 and 11 calling them threw NoSuchMethodError, so every send failed (and crashed the process when
+     * it ran in a receiver: notification reply, reply-with-message, admin messages sent in the background).
+     */
+    @Suppress("DEPRECATION")
     fun manager(context: Context, subId: Int?): SmsManager {
-        val base = context.getSystemService(SmsManager::class.java)
         val id = subId ?: SubscriptionManager.getDefaultSmsSubscriptionId()
-        return if (id != SubscriptionManager.INVALID_SUBSCRIPTION_ID) base.createForSubscriptionId(id) else base
+        val valid = id != SubscriptionManager.INVALID_SUBSCRIPTION_ID
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val base = context.getSystemService(SmsManager::class.java)
+            return if (valid) base.createForSubscriptionId(id) else base
+        }
+        return if (valid) SmsManager.getSmsManagerForSubscriptionId(id) else SmsManager.getDefault()
     }
+
+    /**
+     * RoleManager is the source of truth for the SMS role. Telephony.Sms.getDefaultSmsPackage returned null on Android
+     * 16 while the role was held (the platform reported a lost app-op it could not repair from this process), which
+     * refused every send with "not the default SMS app".
+     */
+    fun isDefaultSmsApp(context: Context): Boolean =
+        context.getSystemService(RoleManager::class.java)?.isRoleHeld(RoleManager.ROLE_SMS) == true
 
     fun send(context: Context, request: SendRequest): SendResult {
         val admin = request.origin == "admin"
@@ -48,7 +70,7 @@ object SmsSender {
         if (admin && store != null && !store.startOutbound(request.clientUuid, request.sentBy)) {
             return SendResult(clientUuid = request.clientUuid, state = "duplicate")
         }
-        if (Telephony.Sms.getDefaultSmsPackage(context) != context.packageName) {
+        if (!isDefaultSmsApp(context)) {
             if (admin) store?.updateOutbound(request.clientUuid, "failed", errorCode = ERROR_NOT_DEFAULT)
             return SendResult(clientUuid = request.clientUuid, state = "failed", errorCode = ERROR_NOT_DEFAULT.toLong())
         }
@@ -76,8 +98,17 @@ object SmsSender {
             sent += pending(context, ACTION_SENT, uri, request.clientUuid.takeIf { admin }, parts.size, index)
             delivered += pending(context, ACTION_DELIVERED, uri, request.clientUuid.takeIf { admin }, parts.size, index)
         }
-        if (parts.size > 1) sms.sendMultipartTextMessage(address, null, parts, sent, if (request.deliveryReport) delivered else null)
-        else sms.sendTextMessage(address, null, request.body, sent.first(), if (request.deliveryReport) delivered.first() else null)
+        try {
+            if (parts.size > 1) sms.sendMultipartTextMessage(address, null, parts, sent, if (request.deliveryReport) delivered else null)
+            else sms.sendTextMessage(address, null, request.body, sent.first(), if (request.deliveryReport) delivered.first() else null)
+        } catch (e: Exception) {
+            // Refused before it reached the radio (bad address, SIM gone, OEM restriction): nothing was sent.
+            Provider.setSmsType(context, uri, Telephony.Sms.MESSAGE_TYPE_FAILED, ERROR_REFUSED)
+            if (admin) store?.updateOutbound(request.clientUuid, "failed", providerId, ERROR_REFUSED)
+            Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, if (admin) request.clientUuid else null)) }
+            EventBus.emit("send_state", clientUuid = request.clientUuid, state = "failed", providerId = providerId)
+            return SendResult(clientUuid = request.clientUuid, state = "failed", providerId = providerId, errorCode = ERROR_REFUSED.toLong())
+        }
         EventBus.emit("send_state", clientUuid = request.clientUuid, state = "sending", providerId = providerId)
         return SendResult(clientUuid = request.clientUuid, state = "sending", providerId = providerId, parts = parts.size.toLong())
     }
@@ -102,21 +133,24 @@ class SmsSentReceiver : BroadcastReceiver() {
         val uri = Uri.parse(intent.getStringExtra(SmsSender.EXTRA_URI) ?: return)
         val clientUuid = intent.getStringExtra(SmsSender.EXTRA_UUID)
         val last = intent.getIntExtra(SmsSender.EXTRA_PART, 0) == intent.getIntExtra(SmsSender.EXTRA_PARTS, 1) - 1
-        val store = SyncStore.get(context)
         val providerId = uri.lastPathSegment?.toLongOrNull()
-        if (resultCode == Activity.RESULT_OK) {
-            if (!last) return
-            Provider.setSmsType(context, uri, Telephony.Sms.MESSAGE_TYPE_SENT)
-            clientUuid?.let { store?.updateOutbound(it, "sent", providerId, parts = intent.getIntExtra(SmsSender.EXTRA_PARTS, 1)) }
-        } else {
-            val code = intent.getIntExtra("errorCode", resultCode)
-            Provider.setSmsType(context, uri, Telephony.Sms.MESSAGE_TYPE_FAILED, code)
-            clientUuid?.let { store?.updateOutbound(it, "failed", providerId, errorCode = resultCode) }
-            Notifications.sendFailed(context, uri)
+        val ok = resultCode == Activity.RESULT_OK
+        if (ok && !last) return
+        safely("sms sent") {
+            val store = SyncStore.get(context)
+            if (ok) {
+                Provider.setSmsType(context, uri, Telephony.Sms.MESSAGE_TYPE_SENT)
+                clientUuid?.let { store?.updateOutbound(it, "sent", providerId, parts = intent.getIntExtra(SmsSender.EXTRA_PARTS, 1)) }
+            } else {
+                val code = intent.getIntExtra("errorCode", resultCode)
+                Provider.setSmsType(context, uri, Telephony.Sms.MESSAGE_TYPE_FAILED, code)
+                clientUuid?.let { store?.updateOutbound(it, "failed", providerId, errorCode = resultCode) }
+                safely("sms failed notify") { Notifications.sendFailed(context, uri) }
+            }
+            Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, clientUuid)) }
         }
-        Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, clientUuid)) }
-        EventBus.emit("send_state", clientUuid = clientUuid, state = if (resultCode == Activity.RESULT_OK) "sent" else "failed", providerId = providerId)
-        SyncTrigger.now(context)
+        EventBus.emit("send_state", clientUuid = clientUuid, state = if (ok) "sent" else "failed", providerId = providerId)
+        safely("sms trigger") { SyncTrigger.now(context) }
     }
 }
 
@@ -125,15 +159,19 @@ class SmsDeliveredReceiver : BroadcastReceiver() {
         if (intent.action != SmsSender.ACTION_DELIVERED) return
         val uri = Uri.parse(intent.getStringExtra(SmsSender.EXTRA_URI) ?: return)
         val pdu = intent.getByteArrayExtra("pdu") ?: return
-        val report = android.telephony.SmsMessage.createFromPdu(pdu, intent.getStringExtra("format"))
-        val status = report?.status ?: return
-        val delivered = status == Telephony.Sms.STATUS_COMPLETE
-        Provider.setSmsStatus(context, uri, if (delivered) Telephony.Sms.STATUS_COMPLETE else Telephony.Sms.STATUS_FAILED)
         val clientUuid = intent.getStringExtra(SmsSender.EXTRA_UUID)
-        val store = SyncStore.get(context)
-        if (delivered) clientUuid?.let { store?.updateOutbound(it, "delivered", uri.lastPathSegment?.toLongOrNull()) }
-        Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, clientUuid)) }
+        var delivered = false
+        safely("sms delivered") {
+            // Some modems send malformed status reports; createFromPdu can throw on them.
+            val report = android.telephony.SmsMessage.createFromPdu(pdu, intent.getStringExtra("format"))
+            val status = report?.status ?: return
+            delivered = status == Telephony.Sms.STATUS_COMPLETE
+            Provider.setSmsStatus(context, uri, if (delivered) Telephony.Sms.STATUS_COMPLETE else Telephony.Sms.STATUS_FAILED)
+            val store = SyncStore.get(context)
+            if (delivered) clientUuid?.let { store?.updateOutbound(it, "delivered", uri.lastPathSegment?.toLongOrNull()) }
+            Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, clientUuid)) }
+        }
         EventBus.emit("send_state", clientUuid = clientUuid, state = if (delivered) "delivered" else "failed")
-        SyncTrigger.now(context)
+        safely("sms trigger") { SyncTrigger.now(context) }
     }
 }

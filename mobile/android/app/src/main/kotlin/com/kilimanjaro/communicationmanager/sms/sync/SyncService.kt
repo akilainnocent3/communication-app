@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -22,6 +23,7 @@ import com.kilimanjaro.communicationmanager.sms.R
 import com.kilimanjaro.communicationmanager.sms.bridge.EventBus
 import com.kilimanjaro.communicationmanager.sms.bridge.HostApiImpl
 import com.kilimanjaro.communicationmanager.sms.bridge.TelephonyHostApi
+import com.kilimanjaro.communicationmanager.sms.safely
 import com.kilimanjaro.communicationmanager.sms.telephony.Notifications
 import com.kilimanjaro.communicationmanager.sms.telephony.SyncTrigger
 import io.flutter.FlutterInjector
@@ -66,12 +68,20 @@ class SyncService : Service() {
             .setSmallIcon(R.drawable.ic_stat_message).setContentTitle(getString(R.string.service_title)).setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MIN).setCategory(NotificationCompat.CATEGORY_SERVICE).build()
         val type = if (Build.VERSION.SDK_INT >= 34) ServiceInfo.FOREGROUND_SERVICE_TYPE_REMOTE_MESSAGING else 0
-        ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, type)
+        try {
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, type)
+        } catch (e: Exception) {
+            // Android 12+ can refuse a foreground start from the background (ForegroundServiceStartNotAllowedException);
+            // WorkManager's periodic job keeps syncing until the app is opened again.
+            Log.w("CmSms", "sync service start refused: ${e.javaClass.name}")
+            stopSelf()
+            return
+        }
         running = true
-        startEngine()
-        watchNetwork()
-        watchProvider()
-        SyncTrigger.schedulePeriodic(this)
+        safely("sync engine") { startEngine() }
+        safely("network watch") { watchNetwork() }
+        safely("provider watch") { watchProvider() }
+        safely("periodic sync") { SyncTrigger.schedulePeriodic(this) }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

@@ -131,5 +131,9 @@
   "locked": "Messages is locked",
   "backfillProgress": "Copying message history: {done} of {total}",
   "@backfillProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
-  "flashMessage": "Flash message"
+  "flashMessage": "Flash message",
+  "startupErrorTitle": "Messages could not start",
+  "startupErrorBody": "Your text messages are safe on this phone. Try again; if this keeps happening, restart the phone or contact your administrator.",
+  "tryAgain": "Try again",
+  "sendRefused": "Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again."
 }

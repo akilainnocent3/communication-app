@@ -56,6 +56,8 @@ class _ComposerState extends ConsumerState<Composer> {
       await widget.onSend(body, _sim, at);
       _controller.clear();
       await _repository.saveDraft(widget.draftKey, '');
+    } on SendRefused {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).sendRefused)));
     } finally {
       if (mounted) setState(() => _sending = false);
     }

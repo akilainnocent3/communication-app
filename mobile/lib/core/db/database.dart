@@ -118,8 +118,11 @@ class AppDatabase extends _$AppDatabase {
     final escaped = passphrase.replaceAll("'", "''");
     return AppDatabase(NativeDatabase.createInBackground(File(path), setup: (db) {
       db.execute("PRAGMA key = '$escaped'");
-      db.execute('PRAGMA journal_mode = WAL');
+      // busy_timeout before journal_mode: the UI engine, the sync service's engine and the native receivers open this
+      // file at the same moment after an install, update or boot, and switching to WAL needs a lock. Set the other
+      // way round, the switch failed at once with "database is locked" and the app could not start.
       db.execute('PRAGMA busy_timeout = 5000');
+      db.execute('PRAGMA journal_mode = WAL');
       // Fail fast on a wrong key instead of later, mid-sync.
       db.select('SELECT count(*) FROM sqlite_master');
     }));

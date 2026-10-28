@@ -151,3 +151,17 @@ adb emu sms send +255754210331 "Habari, test"              # inbound: appears in
 
 Outbound from the admin is sent by the emulator's modem; with two emulators (`emulator-5554`, `emulator-5556`) the
 second receives what the first sends (address `5556`).
+
+## Release checks on Android 10 and 16
+
+A release build must pass this on an Android 10 (API 29) and an Android 16 (API 36) emulator before it is shipped;
+Android 10 and 11 lack several newer APIs, and R8 only runs in release builds:
+
+1. Fresh install → default SMS app → permissions → battery → enroll (the server needs HTTPS: give the emulator a
+   certificate it trusts, e.g. a throwaway build whose network security config also trusts a local test CA).
+2. Send from the chat, receive (`adb emu sms send`), queue an admin reply with the app in the background.
+3. `adb install -r` over the running app (the update starts the sync service while the UI starts), reboot, and kill
+   the process (`adb root; adb shell kill -9 <pid>`) then receive an SMS.
+4. `adb logcat | grep -E "FATAL|AndroidRuntime|CmSms|startup failed"` stays empty apart from `CmSms` warnings.
+
+`./gradlew :app:lintDebug` also flags calls that are too new for `minSdk` 29 (`NewApi`).

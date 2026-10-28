@@ -14,6 +14,7 @@ import com.kilimanjaro.communicationmanager.sms.bridge.EventBus
 import com.kilimanjaro.communicationmanager.sms.bridge.SendRequest
 import com.kilimanjaro.communicationmanager.sms.bridge.SendResult
 import com.kilimanjaro.communicationmanager.sms.data.SyncStore
+import com.kilimanjaro.communicationmanager.sms.safely
 import com.kilimanjaro.communicationmanager.sms.telephony.Blocking
 import com.kilimanjaro.communicationmanager.sms.telephony.Notifications
 import com.kilimanjaro.communicationmanager.sms.telephony.Provider
@@ -33,16 +34,19 @@ private fun fileUri(context: Context, file: File): Uri = FileProvider.getUriForF
 class MmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.WAP_PUSH_DELIVER_ACTION) return
-        val notification = Pdu.parseNotification(intent.getByteArrayExtra("data") ?: return) ?: return
-        if (notification.from != null && Blocking.isBlocked(context, notification.from)) return
-        val mode = SyncStore.get(context)?.setting("mms_download", "wifi") ?: "wifi"
-        val cm = context.getSystemService(ConnectivityManager::class.java)
-        val wifi = cm.getNetworkCapabilities(cm.activeNetwork)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
-        if (mode == "never" || (mode == "wifi" && !wifi)) {
-            Notifications.mmsWaiting(context, notification.from)
-            return
+        safely("mms notification") {
+            val notification = Pdu.parseNotification(intent.getByteArrayExtra("data") ?: return) ?: return
+            if (notification.from != null && Blocking.isBlocked(context, notification.from)) return
+            var mode = "wifi"
+            safely("mms setting") { mode = SyncStore.get(context)?.setting("mms_download", "wifi") ?: "wifi" }
+            val cm = context.getSystemService(ConnectivityManager::class.java)
+            val wifi = cm.getNetworkCapabilities(cm.activeNetwork)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+            if (mode == "never" || (mode == "wifi" && !wifi)) {
+                Notifications.mmsWaiting(context, notification.from)
+                return
+            }
+            download(context, notification.contentLocation, intent.getIntExtra("subscription", -1).takeIf { it >= 0 })
         }
-        download(context, notification.contentLocation, intent.getIntExtra("subscription", -1).takeIf { it >= 0 })
     }
 
     companion object {
@@ -61,19 +65,24 @@ class MmsDownloadedReceiver : BroadcastReceiver() {
         val file = File(intent.getStringExtra("file") ?: return)
         val pending = goAsync()
         Thread {
+            val ok = resultCode == android.app.Activity.RESULT_OK
             try {
-                if (resultCode != android.app.Activity.RESULT_OK || !file.exists()) return@Thread
-                val retrieved = Pdu.parseRetrieve(file.readBytes()) ?: return@Thread
-                val from = retrieved.from ?: return@Thread
-                val subId = intent.getIntExtra("sub", -1).takeIf { it >= 0 }
-                val id = MmsStore.insert(context, Telephony.Mms.MESSAGE_BOX_INBOX, from, retrieved.to, retrieved.subject, retrieved.parts, subId) ?: return@Thread
-                val message = Provider.mms(context, id) ?: return@Thread
-                val store = SyncStore.get(context)
-                store?.appendEvent("message.upsert", MmsStore.payloadWithHashes(context, message))
-                message.parts.forEach { part -> part.uri?.let { store?.addPendingMedia(message.providerId, message.date, part.seq.toInt(), it, part.size) } }
-                Notifications.incoming(context, message)
-                EventBus.emit("message_received", threadId = message.threadId, providerId = message.providerId)
-                SyncTrigger.now(context)
+                safely("mms downloaded") {
+                    if (!ok || !file.exists()) return@safely
+                    val retrieved = Pdu.parseRetrieve(file.readBytes()) ?: return@safely
+                    val from = retrieved.from ?: return@safely
+                    val subId = intent.getIntExtra("sub", -1).takeIf { it >= 0 }
+                    val id = MmsStore.insert(context, Telephony.Mms.MESSAGE_BOX_INBOX, from, retrieved.to, retrieved.subject, retrieved.parts, subId) ?: return@safely
+                    val message = Provider.mms(context, id) ?: return@safely
+                    safely("mms outbox") {
+                        val store = SyncStore.get(context)
+                        store?.appendEvent("message.upsert", MmsStore.payloadWithHashes(context, message))
+                        message.parts.forEach { part -> part.uri?.let { store?.addPendingMedia(message.providerId, message.date, part.seq.toInt(), it, part.size) } }
+                    }
+                    safely("mms notify") { Notifications.incoming(context, message) }
+                    EventBus.emit("message_received", threadId = message.threadId, providerId = message.providerId)
+                    safely("mms trigger") { SyncTrigger.now(context) }
+                }
             } finally {
                 file.delete()
                 pending.finish()
@@ -114,15 +123,17 @@ class MmsSentReceiver : BroadcastReceiver() {
         val id = intent.getLongExtra("id", -1).takeIf { it >= 0 } ?: return
         File(intent.getStringExtra("file") ?: "").delete()
         val ok = resultCode == android.app.Activity.RESULT_OK
-        context.contentResolver.update(Uri.withAppendedPath(Telephony.Mms.CONTENT_URI, id.toString()), ContentValues().apply {
-            put(Telephony.Mms.MESSAGE_BOX, if (ok) Telephony.Mms.MESSAGE_BOX_SENT else Telephony.Mms.MESSAGE_BOX_FAILED)
-        }, null, null)
         val clientUuid = intent.getStringExtra(SmsSender.EXTRA_UUID)
-        val store = SyncStore.get(context)
-        clientUuid?.let { store?.updateOutbound(it, if (ok) "sent" else "failed", id, errorCode = if (ok) null else resultCode) }
-        Provider.mms(context, id)?.let { store?.appendEvent("message.upsert", MmsStore.payloadWithHashes(context, it).put("client_uuid", clientUuid)) }
+        safely("mms sent") {
+            context.contentResolver.update(Uri.withAppendedPath(Telephony.Mms.CONTENT_URI, id.toString()), ContentValues().apply {
+                put(Telephony.Mms.MESSAGE_BOX, if (ok) Telephony.Mms.MESSAGE_BOX_SENT else Telephony.Mms.MESSAGE_BOX_FAILED)
+            }, null, null)
+            val store = SyncStore.get(context)
+            clientUuid?.let { store?.updateOutbound(it, if (ok) "sent" else "failed", id, errorCode = if (ok) null else resultCode) }
+            Provider.mms(context, id)?.let { store?.appendEvent("message.upsert", MmsStore.payloadWithHashes(context, it).put("client_uuid", clientUuid)) }
+        }
         EventBus.emit("send_state", clientUuid = clientUuid, state = if (ok) "sent" else "failed", providerId = id)
-        SyncTrigger.now(context)
+        safely("mms trigger") { SyncTrigger.now(context) }
     }
 }
 

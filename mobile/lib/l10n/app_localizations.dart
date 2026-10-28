@@ -837,6 +837,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Flash message'**
   String get flashMessage;
+
+  /// No description provided for @startupErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages could not start'**
+  String get startupErrorTitle;
+
+  /// No description provided for @startupErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your text messages are safe on this phone. Try again; if this keeps happening, restart the phone or contact your administrator.'**
+  String get startupErrorBody;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @sendRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again.'**
+  String get sendRefused;
 }
 
 class _AppLocalizationsDelegate
