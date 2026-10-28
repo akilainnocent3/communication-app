@@ -14,6 +14,7 @@ from django.db.models import Count, Max, Min, Q
 from django.utils import timezone
 
 from modules.devices.models import Device, SimLine
+from modules.devices.services import events
 from modules.devices.services.phone import address_key
 
 from ..models import Contact, Conversation, Message, MessagePart, MessageStatus
@@ -28,10 +29,8 @@ RANK = {
 PHONE_STATUSES = {"received", "queued", "sending", "sent", "delivered", "failed"}
 
 
-class EventRejected(Exception):
-    def __init__(self, code: str):
-        super().__init__(code)
-        self.code = code
+# Rejected and acknowledged by the shared pipeline (modules/devices/services/events.py).
+EventRejected = events.EventRejected
 
 
 def from_millis(value: int) -> datetime:

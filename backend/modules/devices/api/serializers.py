@@ -72,6 +72,9 @@ class HeartbeatSerializer(serializers.Serializer):
     network_type = serializers.ChoiceField(choices=["wifi", "cellular", "ethernet", "none", "other", ""], required=False, default="")
     signal = serializers.IntegerField(min_value=-1, max_value=4, required=False, allow_null=True, default=None)
     is_default_sms_app = serializers.BooleanField()
+    is_default_dialer = serializers.BooleanField(required=False, default=False)
+    full_screen_intent_allowed = serializers.BooleanField(required=False, allow_null=True)
+    call_state = serializers.ChoiceField(choices=["idle", "ringing", "active", "held", ""], required=False, default="")
     permissions = serializers.DictField(child=serializers.BooleanField(), required=False, default=dict)
     battery_optimised = serializers.BooleanField(required=False, default=False)
     background_restricted = serializers.BooleanField(required=False, default=False)
@@ -92,6 +95,7 @@ class HeartbeatSerializer(serializers.Serializer):
 
 class HeartbeatResponseSerializer(serializers.Serializer):
     status = serializers.CharField()
+    capabilities = serializers.DictField(child=serializers.BooleanField(), help_text="Phone platforms enabled for this phone (the app runs their onboarding).")
     attention = serializers.ListField(child=serializers.CharField())
     server_time = serializers.IntegerField()
     poll_seconds = serializers.IntegerField()

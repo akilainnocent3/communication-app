@@ -11,4 +11,5 @@ urlpatterns = [
     path("auth/token/", views.TokenView.as_view()),
     path("heartbeat/", views.HeartbeatView.as_view()),
     path("push-token/", views.PushTokenView.as_view()),
+    path("sync/events/", views.SyncEventsView.as_view()),
 ]

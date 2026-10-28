@@ -5,6 +5,13 @@ from django.db import models
 from django.utils import timezone
 
 
+PLATFORMS = ("sms", "calls")
+
+
+def default_capabilities() -> dict:
+    return {"sms": True, "calls": False}
+
+
 class DeviceStatus(models.TextChoices):
     ACTIVE = "active", "Active"
     SUSPENDED = "suspended", "Suspended"
@@ -21,6 +28,9 @@ class Device(models.Model):
     office = models.ForeignKey("identity.Office", on_delete=models.PROTECT, related_name="devices")
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="assigned_devices")
     status = models.CharField(max_length=16, choices=DeviceStatus.choices, default=DeviceStatus.ACTIVE, db_index=True)
+    # Which phone platforms run on this phone. One enrollment, one key: Calls is switched on later from the admin, and
+    # the app then runs its dialer onboarding. Data of a platform the phone is not enabled for is refused on ingest.
+    capabilities = models.JSONField(default=default_capabilities, blank=True)
 
     # Identity: SubjectPublicKeyInfo (DER, base64) of the Keystore EC P-256 key and its SHA-256.
     public_key = models.TextField()
@@ -48,6 +58,10 @@ class Device(models.Model):
     network_type = models.CharField(max_length=16, blank=True)
     signal = models.SmallIntegerField(null=True, blank=True)
     is_default_sms_app = models.BooleanField(default=False)
+    is_default_dialer = models.BooleanField(default=False)
+    full_screen_intent_allowed = models.BooleanField(null=True, blank=True, help_text="Android 14+: NotificationManager.canUseFullScreenIntent.")
+    call_state = models.CharField(max_length=8, blank=True, help_text="idle, ringing, active or held (live board).")
+    call_state_since = models.DateTimeField(null=True, blank=True)
     permissions = models.JSONField(default=dict, blank=True, help_text="Android permission → granted.")
     battery_optimised = models.BooleanField(default=False)
     background_restricted = models.BooleanField(default=False, help_text="ActivityManager.isBackgroundRestricted: background work is restricted for the app.")
@@ -78,6 +92,9 @@ class Device(models.Model):
     @property
     def is_active(self) -> bool:
         return self.status == DeviceStatus.ACTIVE
+
+    def has(self, platform: str) -> bool:
+        return bool((self.capabilities or {}).get(platform))
 
 
 class SimLine(models.Model):
@@ -110,7 +127,7 @@ class EnrollmentInvite(models.Model):
     office = models.ForeignKey("identity.Office", on_delete=models.CASCADE, related_name="+")
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     options = models.JSONField(default=dict, blank=True)
-    platform = models.CharField(max_length=20, default="sms")
+    platforms = models.JSONField(default=list, blank=True, help_text='Phone platforms the phone enrolls for, e.g. ["sms"] or ["sms", "calls"].')
     expires_at = models.DateTimeField()
     used_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)

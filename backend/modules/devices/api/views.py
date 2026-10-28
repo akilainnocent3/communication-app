@@ -2,13 +2,13 @@ import time
 
 from django.conf import settings
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from common.errors import ApiError
 from common.http import ClientIpScopedThrottle
 
-from ..services import enrollment
+from ..services import enrollment, events
 from ..services.auth import DeviceAuthError, mint
 from ..services.health import record_heartbeat
 from .base import DeviceAPIView, PublicDeviceAPIView
@@ -105,7 +105,7 @@ class HeartbeatView(DeviceAPIView):
         data = HeartbeatSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         device = record_heartbeat(self.device, data.validated_data)
-        return Response({"status": device.status, "attention": device.attention, "server_time": int(time.time()), "poll_seconds": settings.SMS_DEVICE_POLL_SECONDS})
+        return Response({"status": device.status, "capabilities": {p: device.has(p) for p in ("sms", "calls")}, "attention": device.attention, "server_time": int(time.time()), "poll_seconds": settings.SMS_DEVICE_POLL_SECONDS})
 
 
 class PushTokenView(DeviceAPIView):
@@ -117,3 +117,27 @@ class PushTokenView(DeviceAPIView):
         device.push_token = data.validated_data["token"].strip()
         device.save(update_fields=["push_token"])
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SyncResultSerializer(serializers.Serializer):
+    acked_seq = serializers.IntegerField()
+    processed = serializers.IntegerField()
+    skipped = serializers.IntegerField()
+    rejected = serializers.ListField(child=serializers.DictField())
+    disabled_platform = serializers.CharField(required=False, help_text="Set when the batch stopped at an event of a switched-off platform.")
+
+
+class SyncEventsView(DeviceAPIView):
+    """The phone's outbox, for every phone platform (events.py). Ordered, idempotent, per-event savepoints."""
+
+    @extend_schema(request=events.BatchSerializer, responses=SyncResultSerializer, operation_id="device_sync_events")
+    def post(self, request):
+        if len(request.body) > events.MAX_BATCH_BYTES:
+            raise ApiError("batch_too_large", "Send at most 1 MB per batch.", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        data = events.BatchSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        result = events.process(self.device, data.validated_data["events"])
+        if result.get("disabled_platform") and not result["processed"] and not result["rejected"] and not result["skipped"]:
+            name = {"sms": "SMS", "calls": "Calls"}.get(result["disabled_platform"], result["disabled_platform"])
+            raise ApiError("platform_disabled", f"{name} is switched off on the server. Everything stays on the phone and uploads later.", status.HTTP_403_FORBIDDEN)
+        return Response(result)

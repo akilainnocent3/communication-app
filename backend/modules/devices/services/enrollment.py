@@ -67,14 +67,21 @@ def clean_options(options: dict | None) -> dict:
 
 
 @transaction.atomic
-def create_invite(user, *, name: str, office, assigned_to=None, options: dict | None = None, platform: str = "sms", request=None) -> tuple[EnrollmentInvite, str]:
+def clean_platforms(platforms) -> list[str]:
+    from ..models import PLATFORMS
+
+    chosen = [p for p in PLATFORMS if p in set(platforms or [])]
+    return chosen or ["sms"]
+
+
+def create_invite(user, *, name: str, office, assigned_to=None, options: dict | None = None, platforms=("sms",), request=None) -> tuple[EnrollmentInvite, str]:
     token = secrets.token_urlsafe(32)
     invite = EnrollmentInvite.objects.create(
         token_hash=hash_token(token), name=name.strip()[:120], office=office, assigned_to=assigned_to, options=clean_options(options),
-        platform=platform, expires_at=timezone.now() + timedelta(hours=settings.SMS_ENROLL_TTL_HOURS), created_by=user,
+        platforms=clean_platforms(platforms), expires_at=timezone.now() + timedelta(hours=settings.SMS_ENROLL_TTL_HOURS), created_by=user,
     )
     record("device.invite_create", request=request, actor=user, target_type="enrollment", target_id=invite.pk,
-           metadata={"name": invite.name, "office": office.pk, "expires_at": invite.expires_at.isoformat()})
+           metadata={"name": invite.name, "office": office.pk, "expires_at": invite.expires_at.isoformat(), "platforms": invite.platforms})
     return invite, token
 
 
@@ -245,6 +252,7 @@ def enroll(data: dict, request=None) -> tuple[Device, str, int]:
             facts = data.get("device") or {}
             device = Device.objects.create(
                 code=_unique_code(), name=invite.name, office=invite.office, assigned_to=invite.assigned_to, status=DeviceStatus.ACTIVE,
+                capabilities={p: p in (invite.platforms or ["sms"]) for p in ("sms", "calls")},
                 public_key=data["public_key"].strip(), key_fingerprint=fp, hardware_backed=attestation.hardware_backed,
                 attestation=attestation.as_dict(), integrity=verdict,
                 manufacturer=str(facts.get("manufacturer", ""))[:80], model=str(facts.get("model", ""))[:80],

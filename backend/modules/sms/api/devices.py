@@ -227,7 +227,7 @@ class EnrollmentListView(APIView):
 
     @extend_schema(responses=EnrollmentSerializer(many=True), operation_id="sms_enrollments_list")
     def get(self, request):
-        rows = EnrollmentInvite.objects.filter(platform="sms").select_related("office", "created_by", "device", "device__office")[:30]
+        rows = EnrollmentInvite.objects.filter(platforms__contains=["sms"]).select_related("office", "created_by", "device", "device__office")[:30]
         return Response(EnrollmentSerializer(rows, many=True).data)
 
     @extend_schema(request=EnrollmentCreateSerializer, responses={201: EnrollmentCreatedSerializer}, operation_id="sms_enrollments_create")
@@ -244,7 +244,11 @@ class EnrollmentListView(APIView):
             if not assigned:
                 raise ApiError("validation_error", "Choose an active user.", errors={"assigned_to": ["Unknown user."]})
         options = {k: values[k] for k in ("signature_enabled", "signature", "mark_read_on_open", "backfill_days")}
-        invite, token = enrollment.create_invite(request.user, name=values["name"], office=office, assigned_to=assigned, options=options, request=request)
+        platforms = enrollment.clean_platforms(["sms", *values.get("platforms", [])])  # enrolled here = an SMS phone
+        if "calls" in platforms and not request.user.has_perm("calls.manage_settings"):
+            raise ApiError("permission_denied", "Only admins who manage Calls can enroll a phone for Calls.", status.HTTP_403_FORBIDDEN)
+        invite, token = enrollment.create_invite(request.user, name=values["name"], office=office, assigned_to=assigned, options=options,
+                                                 platforms=platforms, request=request)
         short_code = enrollment.issue_short_code(invite, request.user, request=request)
         return Response(_enrollment_payload(invite, token, short_code), status=status.HTTP_201_CREATED)
 
@@ -253,7 +257,7 @@ class _EnrollmentBase(APIView):
     permission_classes = [IsAuthenticated, CanManageDevices]
 
     def _invite(self, pk):
-        invite = EnrollmentInvite.objects.filter(pk=pk, platform="sms").select_related("office", "created_by", "device", "device__office").first()
+        invite = EnrollmentInvite.objects.filter(pk=pk, platforms__contains=["sms"]).select_related("office", "created_by", "device", "device__office").first()
         if not invite:
             raise ApiError("not_found", "This enrollment was not found.", status.HTTP_404_NOT_FOUND)
         return invite

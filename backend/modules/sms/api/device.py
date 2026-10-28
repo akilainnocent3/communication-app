@@ -58,23 +58,6 @@ class ConfigView(SmsDeviceAPIView):
         })
 
 
-class SyncResultSerializer(serializers.Serializer):
-    acked_seq = serializers.IntegerField()
-    processed = serializers.IntegerField()
-    skipped = serializers.IntegerField()
-    rejected = serializers.ListField(child=serializers.DictField())
-
-
-class SyncEventsView(SmsDeviceAPIView):
-    @extend_schema(request=sync.BatchSerializer, responses=SyncResultSerializer, operation_id="device_sync_events")
-    def post(self, request):
-        if len(request.body) > sync.MAX_BATCH_BYTES:
-            raise ApiError("batch_too_large", "Send at most 1 MB per batch.", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
-        data = sync.BatchSerializer(data=request.data)
-        data.is_valid(raise_exception=True)
-        return Response(sync.process(self.device, data.validated_data["events"]))
-
-
 class MediaChunkSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(choices=["mms"], default="mms")
     provider_id = serializers.IntegerField(min_value=0)

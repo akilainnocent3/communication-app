@@ -97,10 +97,20 @@ CSRF_COOKIE_HTTPONLY = False
 # REDIS_CACHE_URL: plain cache data that may be evicted (allkeys-lru). Empty = a separate DB on REDIS_URL's server
 # (fine for development only: that server's noeviction policy then also applies to the cache).
 REDIS_URL = env("REDIS_URL", default="")
+
+
+def _cache_db(url: str) -> str:
+    """DB 1 on the broker's server (development fallback when REDIS_CACHE_URL is empty)."""
+    from urllib.parse import urlsplit, urlunsplit
+
+    parts = urlsplit(url)
+    return urlunsplit(parts._replace(path="/1"))
+
+
 REDIS_CACHE_URL = env("REDIS_CACHE_URL", default="")
 if REDIS_URL:
     CACHES = {
-        "default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_CACHE_URL or REDIS_URL.rsplit("/", 1)[0] + "/1"},
+        "default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_CACHE_URL or _cache_db(REDIS_URL)},
         "security": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL, "KEY_PREFIX": "sec"},
     }
 else:

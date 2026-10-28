@@ -182,6 +182,8 @@ class DeviceDetailSerializer(DeviceSerializer):
     revoked_at = serializers.DateTimeField(allow_null=True)
     enrolled_by = serializers.SerializerMethodField()
     push_enabled = serializers.SerializerMethodField()
+    capabilities = serializers.DictField(child=serializers.BooleanField())
+    is_default_dialer = serializers.BooleanField()
 
     @extend_schema_field(AttestationSerializer)
     def get_attestation(self, obj):
@@ -258,6 +260,8 @@ class EnrollmentCreateSerializer(serializers.Serializer):
     signature_enabled = serializers.BooleanField(required=False, default=False)
     signature = serializers.CharField(max_length=40, required=False, allow_blank=True, default="")
     mark_read_on_open = serializers.BooleanField(required=False, default=True)
+    platforms = serializers.ListField(child=serializers.ChoiceField(choices=["sms", "calls"]), required=False, default=list, max_length=2,
+                                      help_text='Phone platforms to enroll for; default ["sms"]. "calls" needs calls.manage_settings.')
 
 
 class EnrollmentSerializer(serializers.Serializer):
@@ -272,6 +276,7 @@ class EnrollmentSerializer(serializers.Serializer):
     device = serializers.SerializerMethodField()
     failed_attempts = serializers.IntegerField()
     last_failure = serializers.CharField()
+    platforms = serializers.ListField(child=serializers.CharField())
     short_code_expires_at = serializers.DateTimeField(allow_null=True)
     short_code_used = serializers.SerializerMethodField()
 

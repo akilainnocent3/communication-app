@@ -1,9 +1,5 @@
-"""Phone → server sync: batches of events from the phone's durable outbox.
-
-Every event carries a monotonically increasing `seq`. The server processes events in order, each in its own
-savepoint, and answers with the highest sequence it has dealt with (`acked_seq`); the phone then deletes those
-events. Events at or below the stored high-water mark are skipped, so retries are harmless. Malformed events
-are rejected (and acknowledged, so one bad event can never block the queue) with a reason code.
+"""SMS sync events: their serializers and how each is applied. The batch pipeline (ordering, idempotency, savepoints,
+platform checks) is shared with Calls: modules/devices/services/events.py.
 
 Everything a phone sends is untrusted: strict serializers, length caps, timestamp sanity and per-device scoping.
 """
@@ -13,17 +9,17 @@ from __future__ import annotations
 import logging
 import time
 
-from django.db import transaction
 from rest_framework import serializers
 
 from modules.devices.models import Device
+from modules.devices.services import events
 
 from . import store
 
 log = logging.getLogger(__name__)
 
-MAX_EVENTS = 200
-MAX_BATCH_BYTES = 1024 * 1024
+MAX_EVENTS = events.MAX_EVENTS
+MAX_BATCH_BYTES = events.MAX_BATCH_BYTES
 EARLIEST_MS = 946684800000  # 2000-01-01
 
 
@@ -120,16 +116,6 @@ EVENT_TYPES = {
 }
 
 
-class EventSerializer(serializers.Serializer):
-    seq = serializers.IntegerField(min_value=1)
-    type = serializers.ChoiceField(choices=sorted(EVENT_TYPES))
-    payload = serializers.DictField()
-
-
-class BatchSerializer(serializers.Serializer):
-    events = EventSerializer(many=True, max_length=MAX_EVENTS, allow_empty=True)
-
-
 def _apply(device: Device, kind: str, data: dict, touched: set[int]) -> str:
     if kind == "message.upsert":
         _, created, conversation_id = store.upsert_message(device, data)
@@ -151,7 +137,7 @@ def _apply(device: Device, kind: str, data: dict, touched: set[int]) -> str:
     elif kind == "backfill.progress":
         Device.objects.filter(pk=device.pk).update(sync_progress=dict(data))
         return "updated"
-    else:  # pragma: no cover - guarded by the serializer
+    else:  # pragma: no cover - guarded by the registry
         return "ignored"
     if conversation_id:
         touched.add(conversation_id)
@@ -159,41 +145,22 @@ def _apply(device: Device, kind: str, data: dict, touched: set[int]) -> str:
     return "ignored"
 
 
-def process(device: Device, events: list[dict]) -> dict:
-    """Apply a validated batch. Returns {acked_seq, processed, skipped, rejected: [{seq, code}]}."""
-    with transaction.atomic():
-        locked = Device.objects.select_for_update().get(pk=device.pk)
-        high = int(locked.sync_state.get("last_seq", 0))
-        touched: set[int] = set()
-        rejected, processed, skipped = [], 0, 0
-        for event in sorted(events, key=lambda item: item["seq"]):
-            seq = event["seq"]
-            if seq <= high:
-                skipped += 1
-                continue
-            serializer = EVENT_TYPES[event["type"]](data=event["payload"])
-            if not serializer.is_valid():
-                code = next(iter(serializer.errors), "invalid")
-                rejected.append({"seq": seq, "code": f"invalid_{code}"})
-            else:
-                try:
-                    with transaction.atomic():
-                        _apply(locked, event["type"], dict(serializer.validated_data), touched)
-                    processed += 1
-                except store.EventRejected as exc:
-                    rejected.append({"seq": seq, "code": exc.code})
-            high = seq
-        for conversation_id in touched:
-            store.refresh_conversation(conversation_id)
-        state = dict(locked.sync_state)
-        state["last_seq"] = high
-        Device.objects.filter(pk=locked.pk).update(sync_state=state, last_sync_at=_now())
-    if rejected:
-        log.info("device %s: %d sync events rejected (%s)", device.code, len(rejected), ",".join(sorted({r["code"] for r in rejected})))
-    return {"acked_seq": high, "processed": processed, "skipped": skipped, "rejected": rejected}
+def _finish(device: Device, context: dict) -> None:
+    for conversation_id in context.get("touched", ()):
+        store.refresh_conversation(conversation_id)
 
 
-def _now():
-    from django.utils import timezone
+def _handler(kind: str):
+    return lambda device, data, context: _apply(device, kind, data, context.setdefault("touched", set()))
 
-    return timezone.now()
+
+for _kind, _serializer in EVENT_TYPES.items():
+    events.register(events.EventType(name=_kind, platform="sms", serializer=_serializer, apply=_handler(_kind)))
+events.register_finisher("sms", _finish)
+
+# The batch pipeline itself is shared by every phone platform (modules/devices/services/events.py).
+BatchSerializer = events.BatchSerializer
+
+
+def process(device: Device, batch: list[dict]) -> dict:
+    return events.process(device, batch)

@@ -17,6 +17,9 @@ HEARTBEAT_SECONDS = 300
 ONLINE_WINDOW = timedelta(seconds=HEARTBEAT_SECONDS * 2)
 BACKLOG_THRESHOLD = 50
 REQUIRED_PERMISSIONS = ("RECEIVE_SMS", "READ_SMS", "SEND_SMS", "RECEIVE_MMS", "READ_CONTACTS", "READ_PHONE_STATE", "POST_NOTIFICATIONS")
+# Calls-enabled phones (the dialer): most come with the default phone app role.
+CALL_PERMISSIONS = ("READ_CALL_LOG", "CALL_PHONE", "ANSWER_PHONE_CALLS", "READ_PHONE_STATE", "READ_CONTACTS", "POST_NOTIFICATIONS")
+CALL_STATES = ("idle", "ringing", "active", "held")
 
 ATTENTION_LABELS = {
     "offline": "Offline",
@@ -29,6 +32,9 @@ ATTENTION_LABELS = {
     "risk_signals": "Rooted or emulated phone",
     "background_restricted": "Background use is restricted",
     "standby_restricted": "Android is holding the app back",
+    "not_default_dialer": "No longer the default phone app",
+    "call_permissions_missing": "A call permission is missing",
+    "fsi_denied": "Incoming-call screen not allowed",
 }
 
 # UsageStatsManager buckets at or above "rare" delay jobs and alarms by hours.
@@ -36,13 +42,13 @@ STANDBY_RESTRICTED = 40
 
 # What to change on the phone itself, by manufacturer (the app's "Keep messages flowing" screen has the buttons).
 BACKGROUND_GUIDANCE = {
-    "samsung": ["Settings → Apps → Messages → Battery → Unrestricted.", "Settings → Battery → Background usage limits → Never sleeping apps → add Messages."],
-    "xiaomi": ["Settings → Apps → Manage apps → Messages → Autostart on.", "Battery saver → No restrictions.", "In Recents, pull the app down to lock it."],
-    "transsion": ["Phone Master → App management → Auto-start → allow Messages.", "Settings → Battery → App launch / Background → allow.", "Lock the app in Recents."],
-    "oppo": ["Settings → Apps → Messages → Battery → Allow background activity and Auto launch."],
-    "oneplus": ["Settings → Apps → Messages → Battery → Unrestricted.", "Settings → Battery → Advanced → Auto-launch → allow."],
-    "huawei": ["Settings → Battery → App launch → Messages → Manage manually, allow all three."],
-    "other": ["Settings → Apps → Messages → Battery → Unrestricted (or turn battery optimisation off)."],
+    "samsung": ["Settings → Apps → OCM → Battery → Unrestricted.", "Settings → Battery → Background usage limits → Never sleeping apps → add OCM."],
+    "xiaomi": ["Settings → Apps → Manage apps → OCM → Autostart on.", "Battery saver → No restrictions.", "In Recents, pull the app down to lock it."],
+    "transsion": ["Phone Master → App management → Auto-start → allow OCM.", "Settings → Battery → App launch / Background → allow.", "Lock the app in Recents."],
+    "oppo": ["Settings → Apps → OCM → Battery → Allow background activity and Auto launch."],
+    "oneplus": ["Settings → Apps → OCM → Battery → Unrestricted.", "Settings → Battery → Advanced → Auto-launch → allow."],
+    "huawei": ["Settings → Battery → App launch → OCM → Manage manually, allow all three."],
+    "other": ["Settings → Apps → OCM → Battery → Unrestricted (or turn battery optimisation off)."],
 }
 
 
@@ -72,10 +78,17 @@ def attention_for(device: Device, now=None) -> list[str]:
         return codes
     if not is_online(device, now):
         codes.append("offline")
-    if not device.is_default_sms_app and not device.is_simulated:
+    if device.has("sms") and not device.is_default_sms_app and not device.is_simulated:
         codes.append("not_default_sms_app")
-    if device.permissions and any(device.permissions.get(name) is False for name in REQUIRED_PERMISSIONS):
+    if device.has("sms") and device.permissions and any(device.permissions.get(name) is False for name in REQUIRED_PERMISSIONS):
         codes.append("permission_revoked")
+    if device.has("calls") and not device.is_simulated:
+        if not device.is_default_dialer:
+            codes.append("not_default_dialer")
+        if device.permissions and any(device.permissions.get(name) is False for name in CALL_PERMISSIONS):
+            codes.append("call_permissions_missing")
+        if device.full_screen_intent_allowed is False:
+            codes.append("fsi_denied")
     if device.battery_optimised:
         codes.append("battery_optimised")
     if device.background_restricted and not device.is_simulated:
@@ -100,7 +113,8 @@ def touch(device: Device) -> None:
 
 
 HEARTBEAT_FIELDS = [
-    "last_seen_at", "battery", "charging", "network_type", "signal", "is_default_sms_app", "permissions", "battery_optimised",
+    "last_seen_at", "battery", "charging", "network_type", "signal", "is_default_sms_app", "is_default_dialer", "full_screen_intent_allowed",
+    "call_state", "call_state_since", "permissions", "battery_optimised",
     "background_restricted", "standby_bucket", "manufacturer", "pending_outbox", "app_version", "android_version", "last_sync_at", "risk_signals", "attention",
 ]
 
@@ -115,6 +129,10 @@ def record_heartbeat(device: Device, data: dict) -> Device:
     device.network_type = str(data.get("network_type") or "")[:16]
     device.signal = data.get("signal")
     device.is_default_sms_app = bool(data.get("is_default_sms_app"))
+    device.is_default_dialer = bool(data.get("is_default_dialer"))
+    if "full_screen_intent_allowed" in data:
+        device.full_screen_intent_allowed = data.get("full_screen_intent_allowed")
+    set_call_state(device, data.get("call_state") or "", now, save=False)
     device.permissions = {str(k)[:64]: bool(v) for k, v in (data.get("permissions") or {}).items()}
     device.battery_optimised = bool(data.get("battery_optimised"))
     device.background_restricted = bool(data.get("background_restricted"))
@@ -140,6 +158,18 @@ def record_heartbeat(device: Device, data: dict) -> Device:
         signal=device.signal, is_default_sms_app=device.is_default_sms_app, pending_outbox=device.pending_outbox, app_version=device.app_version,
     )
     return device
+
+
+def set_call_state(device: Device, state: str, at=None, save: bool = True) -> None:
+    """Live board: what the phone is doing now (from heartbeats and from call events as they arrive)."""
+    state = state if state in CALL_STATES else ""
+    if not state or not device.has("calls"):
+        return
+    at = at or timezone.now()
+    if state != device.call_state:
+        device.call_state, device.call_state_since = state, at
+        if save:
+            Device.objects.filter(pk=device.pk).update(call_state=state, call_state_since=at)
 
 
 def refresh_all() -> int:

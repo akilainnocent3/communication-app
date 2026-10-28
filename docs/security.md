@@ -209,6 +209,20 @@ Checked and dismissed (no issue):
 Follow-ups (hardening, not vulnerabilities): check Google's attestation revocation list, and optionally require
 `verifiedBootState=Verified` / a locked bootloader when attestation is required (see decision 23).
 
+### Security review of the deployment hardening (2026-10-28)
+
+The Part A diff (security store and Redis split, Nginx templates, backup scripts, CI, standalone frontend image, OCM
+branding, Android flavors, the monitoring notice) and, again, the whole SMS + devices surface were reviewed with the
+same two-pass method. **No finding reached the bar.** Verified: every replay nonce, lockout, short-code breaker and
+throttle uses the never-evicted security store and every store error is refused (no path turns it into "allowed"); a
+full noeviction store refuses the request before a password or code guess is checked, because the throttle write runs
+first; every Nginx location still overwrites `X-Forwarded-For`; headers are server-level only; the phone-only domain
+serves nothing but `/api/v1/device/`; the backup directory is 700 and keys are never in it; CI runs on `pull_request`
+with read-only permissions and no secrets; the new launcher alias targets the already exported activity, whose launch
+handling only pre-fills; the notice's delete intent is explicit and immutable and targets a non-exported service.
+One config bug found along the way was fixed: a `REDIS_URL` without a database path produced a malformed derived cache
+URL.
+
 ## Reporting
 
 Report suspected vulnerabilities privately to the system owner. Do not open a public issue.
