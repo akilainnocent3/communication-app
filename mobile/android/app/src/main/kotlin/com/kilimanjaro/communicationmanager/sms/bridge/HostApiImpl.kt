@@ -202,14 +202,24 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
 object LaunchIntent {
     @Volatile private var target: LaunchTarget? = null
 
+    private val phoneRoutes = setOf("/phone", "/phone/keypad", "/phone/recents", "/phone/contacts", "/phone/callbacks")
+
     fun set(intent: Intent?) {
+        if (intent?.data == null && intent?.component?.className?.endsWith(".PhoneLauncher") == true) {
+            target = LaunchTarget("route", "/phone")
+            EventBus.emit("launch")
+            return
+        }
         val data = intent?.data ?: return
         target = when (data.scheme) {
+            // DIAL / VIEW tel: only pre-fill the keypad; the person still taps Call.
+            "tel" -> LaunchTarget("dial", data.schemeSpecificPart.orEmpty())
             "sms", "smsto", "mms", "mmsto" -> data.schemeSpecificPart?.substringBefore('?')?.takeIf { it.isNotBlank() }?.let { LaunchTarget("compose", it) }
             "cmsms" -> when (data.host) {
                 "chat" -> data.lastPathSegment?.toLongOrNull()?.let { LaunchTarget("chat", "$it") }
                 "enroll" -> LaunchTarget("enroll", data.toString())
                 "route" -> data.path?.takeIf { it == "/settings/sync" }?.let { LaunchTarget("route", it) }
+                "phone" -> "/phone${data.path.orEmpty()}".takeIf { it in phoneRoutes }?.let { LaunchTarget("route", it) }
                 else -> null
             }
             else -> null

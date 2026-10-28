@@ -33,6 +33,15 @@ interface Phone {
     fun unblock(address: String)
 }
 
+/**
+ * The Calls part of a cycle (CallsSync in the app; absent in SMS-only tests). Called after the heartbeat with the
+ * server's capabilities, and once per cycle when Calls is enabled.
+ */
+interface CallsHooks {
+    fun onCapabilities(capabilities: JSONObject)
+    fun cycle(api: DeviceApiClient, force: Boolean)
+}
+
 /** Exponential backoff with full jitter (Dart's Backoff). Never a tight loop: the shortest wait is [base]. */
 class Backoff(private val base: Long = 2_000, private val cap: Long = 5 * 60_000, private val random: Random = Random.Default) {
     var failures = 0
@@ -58,6 +67,7 @@ class NativeSyncEngine(
     private val api: DeviceApiClient,
     private val phone: Phone,
     private val appVersion: String,
+    private val calls: CallsHooks? = null,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     enum class Result { OK, OFFLINE, SUSPENDED, REVOKED, UPGRADE_REQUIRED, NOT_ENROLLED }
@@ -84,7 +94,7 @@ class NativeSyncEngine(
             if (callTimeoutMs == null) shared?.takeIf { sharedFor == key }?.let { return it }
             val transport = SecureHttp.transport(callTimeoutMs)
             val engine = NativeSyncEngine(store, DeviceApiClient(transport, server, deviceId, { DeviceKey.sign(it) }, BuildConfig.VERSION_NAME),
-                AndroidPhone(context.applicationContext), BuildConfig.VERSION_NAME)
+                AndroidPhone(context.applicationContext), BuildConfig.VERSION_NAME, calls = com.kilimanjaro.communicationmanager.sms.calls.CallsSync(context.applicationContext))
             if (callTimeoutMs == null) synchronized(this) { shared = engine; sharedFor = key }
             return engine
         }
@@ -137,6 +147,7 @@ class NativeSyncEngine(
         registerPushToken()
         refreshConfigIfDue()
         backfillIfNeeded()
+        calls?.let { hooks -> runCatching { hooks.cycle(api, forceHeartbeat) }.onFailure { if (it is ApiException && it !is CallsDisabled) throw it } }
         uploadEvents()
         uploadMedia()
         sendScheduled()
@@ -179,6 +190,7 @@ class NativeSyncEngine(
         val response = api.heartbeat(state)
         store.setValue("last_heartbeat_at", "${clock()}")
         response.optInt("poll_seconds").takeIf { it > 0 }?.let { store.setValue("poll_seconds", "$it") }
+        response.optJSONObject("capabilities")?.let { caps -> calls?.onCapabilities(caps) }
         return response
     }
 
@@ -422,3 +434,6 @@ class NativeSyncEngine(
         }
     }
 }
+
+/** 403 calls_not_enabled / platform_disabled on a Calls endpoint: skip Calls this cycle, never fail the SMS cycle. */
+class CallsDisabled(code: String) : ApiException(403, code)

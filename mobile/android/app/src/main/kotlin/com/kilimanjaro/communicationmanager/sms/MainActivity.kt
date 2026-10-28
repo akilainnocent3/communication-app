@@ -11,6 +11,7 @@ import com.kilimanjaro.communicationmanager.sms.bridge.EventBus
 import com.kilimanjaro.communicationmanager.sms.bridge.HostApiImpl
 import com.kilimanjaro.communicationmanager.sms.bridge.LaunchIntent
 import com.kilimanjaro.communicationmanager.sms.bridge.TelephonyHostApi
+import com.kilimanjaro.communicationmanager.sms.calls.Dialer
 import com.kilimanjaro.communicationmanager.sms.telephony.Provider
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -45,13 +46,25 @@ class MainActivity : FlutterFragmentActivity(), ActivityBridge {
     override val activity: Activity get() = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        LaunchIntent.set(intent)
+        handle(intent)
         super.onCreate(savedInstanceState)
         Thread { safely("stale outbox") { Provider.failStaleOutbox(applicationContext, STALE_OUTBOX_MS) } }.start()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        handle(intent)
+    }
+
+    /**
+     * ACTION_CALL reaches us only through the CallIntentHandler alias, which requires the caller to hold CALL_PHONE: the
+     * call is placed (as the system dialer would). Everything else pre-fills or routes.
+     */
+    private fun handle(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_CALL && intent.data?.scheme == "tel") {
+            safely("call intent") { Dialer.place(applicationContext, intent.data!!.schemeSpecificPart.orEmpty()) }
+            return
+        }
         LaunchIntent.set(intent)
     }
 

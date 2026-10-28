@@ -29,6 +29,13 @@ object Revocation {
         safely("stop work") { WorkManager.getInstance(context).cancelAllWork() }
         safely("stop service") { SyncService.stop(context) }
         safely("notifications") { NotificationManagerCompat.from(context).cancelAll() }
+        safely("calls") {
+            com.kilimanjaro.communicationmanager.sms.calls.CallerId.forget()
+            listOf(com.kilimanjaro.communicationmanager.sms.calls.CallsFeature.PHONE_ALIAS, com.kilimanjaro.communicationmanager.sms.calls.CallsFeature.CALL_ALIAS).forEach {
+                context.packageManager.setComponentEnabledSetting(android.content.ComponentName(context.packageName, it),
+                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP)
+            }
+        }
         SyncStore.close()
         DeviceKey.delete()
         val path = DatabaseKey.path(context)
