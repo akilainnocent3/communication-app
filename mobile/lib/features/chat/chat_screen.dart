@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/perf.dart';
 import '../../core/text/phone_format.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/telephony_api.g.dart';
@@ -80,6 +81,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final admin = ref.watch(_adminProvider(widget.threadId)).value ?? const {};
     final starred = ref.watch(_starredProvider).value ?? const <int>{};
     final list = messages.value ?? const <ProviderMessage>[];
+    if (list.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) => Perf.end('chat_open'));
     final addresses = list.isNotEmpty ? list.first.addresses : const <String>[];
     final title = addresses.map(formatNumber).join(', ');
     return Scaffold(

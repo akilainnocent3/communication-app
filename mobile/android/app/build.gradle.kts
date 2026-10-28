@@ -73,6 +73,11 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+    // Measurement tools (seeding) exist only in debug and profile builds, never in release.
+    sourceSets.matching { it.name == "debug" || it.name == "profile" }.configureEach {
+        java.srcDir("src/devtools/kotlin")
+    }
 }
 
 kotlin {

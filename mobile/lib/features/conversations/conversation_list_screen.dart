@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/perf.dart';
 import '../../data/conversations_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
@@ -36,6 +37,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
     final l10n = AppLocalizations.of(context);
     final list = ref.watch(conversationsProvider((widget.folder, _query)));
     final items = list.value ?? const <ConversationItem>[];
+    if (items.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) => Perf.mark('list_visible'));
     final selecting = _selected.isNotEmpty;
     final title = switch (widget.folder) { Folder.inbox => l10n.conversations, Folder.archived => l10n.archived, Folder.spam => l10n.spamBlocked };
     return Scaffold(
@@ -111,7 +113,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                           selected: _selected.contains(items[index].thread.threadId),
                           onTap: () => selecting
                               ? setState(() => _selected.contains(items[index].thread.threadId) ? _selected.remove(items[index].thread.threadId) : _selected.add(items[index].thread.threadId))
-                              : context.push('/chat/${items[index].thread.threadId}'),
+                              : () { Perf.start('chat_open'); context.push('/chat/${items[index].thread.threadId}'); }(),
                           onLongPress: () => setState(() => _selected.add(items[index].thread.threadId)),
                           onArchive: () async {
                             final repo = ref.read(repositoryProvider);

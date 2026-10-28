@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'config.dart';
+import 'core/perf.dart';
 import 'core/services.dart';
 import 'core/sync/background.dart';
 import 'l10n/app_localizations.dart';
@@ -12,6 +13,8 @@ import 'providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Perf.mark('dart_main');
+  Perf.watchFrames();
   final AppServices services;
   try {
     services = await AppServices.open(AppConfig.fromEnvironment());
