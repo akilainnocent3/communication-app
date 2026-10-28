@@ -911,7 +911,11 @@ data class ServiceStatus (
   val networkType: String,
   val battery: Long? = null,
   val charging: Boolean,
-  val signal: Long? = null
+  val signal: Long? = null,
+  /** ActivityManager.isBackgroundRestricted: the holder (or the OEM) restricted background work in system settings. */
+  val backgroundRestricted: Boolean,
+  /** UsageStatsManager.getAppStandbyBucket (10 active … 45 restricted); null when unknown. */
+  val standbyBucket: Long? = null
 )
  {
   companion object {
@@ -923,7 +927,9 @@ data class ServiceStatus (
       val battery = pigeonVar_list[4] as Long?
       val charging = pigeonVar_list[5] as Boolean
       val signal = pigeonVar_list[6] as Long?
-      return ServiceStatus(running, batteryOptimised, networkAvailable, networkType, battery, charging, signal)
+      val backgroundRestricted = pigeonVar_list[7] as Boolean
+      val standbyBucket = pigeonVar_list[8] as Long?
+      return ServiceStatus(running, batteryOptimised, networkAvailable, networkType, battery, charging, signal, backgroundRestricted, standbyBucket)
     }
   }
   fun toList(): List<Any?> {
@@ -935,6 +941,8 @@ data class ServiceStatus (
       battery,
       charging,
       signal,
+      backgroundRestricted,
+      standbyBucket,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -945,7 +953,7 @@ data class ServiceStatus (
       return true
     }
     val other = other as ServiceStatus
-    return TelephonyApiPigeonUtils.deepEquals(this.running, other.running) && TelephonyApiPigeonUtils.deepEquals(this.batteryOptimised, other.batteryOptimised) && TelephonyApiPigeonUtils.deepEquals(this.networkAvailable, other.networkAvailable) && TelephonyApiPigeonUtils.deepEquals(this.networkType, other.networkType) && TelephonyApiPigeonUtils.deepEquals(this.battery, other.battery) && TelephonyApiPigeonUtils.deepEquals(this.charging, other.charging) && TelephonyApiPigeonUtils.deepEquals(this.signal, other.signal)
+    return TelephonyApiPigeonUtils.deepEquals(this.running, other.running) && TelephonyApiPigeonUtils.deepEquals(this.batteryOptimised, other.batteryOptimised) && TelephonyApiPigeonUtils.deepEquals(this.networkAvailable, other.networkAvailable) && TelephonyApiPigeonUtils.deepEquals(this.networkType, other.networkType) && TelephonyApiPigeonUtils.deepEquals(this.battery, other.battery) && TelephonyApiPigeonUtils.deepEquals(this.charging, other.charging) && TelephonyApiPigeonUtils.deepEquals(this.signal, other.signal) && TelephonyApiPigeonUtils.deepEquals(this.backgroundRestricted, other.backgroundRestricted) && TelephonyApiPigeonUtils.deepEquals(this.standbyBucket, other.standbyBucket)
   }
 
   override fun hashCode(): Int {
@@ -957,10 +965,125 @@ data class ServiceStatus (
     result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.battery)
     result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.charging)
     result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.signal)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.backgroundRestricted)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.standbyBucket)
     return result
   }
   override fun toString(): String {
-    return "ServiceStatus(running=$running, batteryOptimised=$batteryOptimised, networkAvailable=$networkAvailable, networkType=$networkType, battery=$battery, charging=$charging, signal=$signal)"
+    return "ServiceStatus(running=$running, batteryOptimised=$batteryOptimised, networkAvailable=$networkAvailable, networkType=$networkType, battery=$battery, charging=$charging, signal=$signal, backgroundRestricted=$backgroundRestricted, standbyBucket=$standbyBucket)"
+  }
+}
+
+/**
+ * Everything the first frame needs, in one round trip (cold start).
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class StartupState (
+  val databasePath: String,
+  /** 64 hex characters: the raw 256-bit SQLCipher key (no PBKDF2 on open). */
+  val databaseKey: String,
+  val isDefaultSmsApp: Boolean,
+  val manufacturer: String,
+  val brand: String,
+  val sdkInt: Long,
+  /** The administrator revoked this phone while the app was closed (the native sync engine already wiped it). */
+  val removed: Boolean
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): StartupState {
+      val databasePath = pigeonVar_list[0] as String
+      val databaseKey = pigeonVar_list[1] as String
+      val isDefaultSmsApp = pigeonVar_list[2] as Boolean
+      val manufacturer = pigeonVar_list[3] as String
+      val brand = pigeonVar_list[4] as String
+      val sdkInt = pigeonVar_list[5] as Long
+      val removed = pigeonVar_list[6] as Boolean
+      return StartupState(databasePath, databaseKey, isDefaultSmsApp, manufacturer, brand, sdkInt, removed)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      databasePath,
+      databaseKey,
+      isDefaultSmsApp,
+      manufacturer,
+      brand,
+      sdkInt,
+      removed,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as StartupState
+    return TelephonyApiPigeonUtils.deepEquals(this.databasePath, other.databasePath) && TelephonyApiPigeonUtils.deepEquals(this.databaseKey, other.databaseKey) && TelephonyApiPigeonUtils.deepEquals(this.isDefaultSmsApp, other.isDefaultSmsApp) && TelephonyApiPigeonUtils.deepEquals(this.manufacturer, other.manufacturer) && TelephonyApiPigeonUtils.deepEquals(this.brand, other.brand) && TelephonyApiPigeonUtils.deepEquals(this.sdkInt, other.sdkInt) && TelephonyApiPigeonUtils.deepEquals(this.removed, other.removed)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.databasePath)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.databaseKey)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.isDefaultSmsApp)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.manufacturer)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.brand)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.sdkInt)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.removed)
+    return result
+  }
+  override fun toString(): String {
+    return "StartupState(databasePath=$databasePath, databaseKey=$databaseKey, isDefaultSmsApp=$isDefaultSmsApp, manufacturer=$manufacturer, brand=$brand, sdkInt=$sdkInt, removed=$removed)"
+  }
+}
+
+/**
+ * Where an intent asked the app to go: compose (sms:/smsto:), chat (notification, shortcut), enroll (cmsms://enroll
+ * link) or route (the sync notification).
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class LaunchTarget (
+  val kind: String,
+  val value: String
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): LaunchTarget {
+      val kind = pigeonVar_list[0] as String
+      val value = pigeonVar_list[1] as String
+      return LaunchTarget(kind, value)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      kind,
+      value,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as LaunchTarget
+    return TelephonyApiPigeonUtils.deepEquals(this.kind, other.kind) && TelephonyApiPigeonUtils.deepEquals(this.value, other.value)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.kind)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.value)
+    return result
+  }
+  override fun toString(): String {
+    return "LaunchTarget(kind=$kind, value=$value)"
   }
 }
 
@@ -1028,6 +1151,7 @@ data class OutboundState (
 
 /** Generated class from Pigeon that represents data sent in messages. */
 data class TelephonyEvent (
+  /** message_received | message_changed | send_state | contacts_changed | sync_state | launch */
   val type: String,
   val threadId: Long? = null,
   val providerId: Long? = null,
@@ -1153,10 +1277,20 @@ private open class TelephonyApiPigeonCodec : StandardMessageCodec() {
       }
       143.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          OutboundState.fromList(it)
+          StartupState.fromList(it)
         }
       }
       144.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          LaunchTarget.fromList(it)
+        }
+      }
+      145.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          OutboundState.fromList(it)
+        }
+      }
+      146.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           TelephonyEvent.fromList(it)
         }
@@ -1222,12 +1356,20 @@ private open class TelephonyApiPigeonCodec : StandardMessageCodec() {
         stream.write(142)
         writeValue(stream, value.toList())
       }
-      is OutboundState -> {
+      is StartupState -> {
         stream.write(143)
         writeValue(stream, value.toList())
       }
-      is TelephonyEvent -> {
+      is LaunchTarget -> {
         stream.write(144)
+        writeValue(stream, value.toList())
+      }
+      is OutboundState -> {
+        stream.write(145)
+        writeValue(stream, value.toList())
+      }
+      is TelephonyEvent -> {
+        stream.write(146)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -1240,45 +1382,60 @@ val TelephonyApiPigeonMethodCodec = StandardMethodCodec(TelephonyApiPigeonCodec(
 
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface TelephonyHostApi {
-  fun roleStatus(): RoleStatus
   suspend fun requestDefaultSmsRole(): Boolean
-  fun permissions(): List<PermissionState>
+  /** Fallback when the role dialog is dismissed or no longer shown: Settings → Default apps. */
+  fun openDefaultAppsSettings(): Boolean
   suspend fun requestPermissions(names: List<String>): List<PermissionState>
-  fun sims(): List<SimInfo>
+  fun openBatteryOptimisationSettings()
+  /** Manufacturer screens that stop background work (see Oem.kt); false when the intent does not exist here. */
+  fun openOemSetting(id: String): Boolean
+  fun openAppSettings()
+  fun setSecureScreen(secure: Boolean)
+  /** System photo picker; the chosen image is copied to the app cache and its path returned (QR from a photo). */
+  suspend fun pickImage(): String?
+  fun startup(): StartupState
+  fun roleStatus(): RoleStatus
+  fun permissions(): List<PermissionState>
   fun deviceFacts(): DeviceFacts
-  fun threads(limit: Long, offset: Long): List<ThreadSummary>
-  fun messages(threadId: Long, limit: Long, beforeDate: Long?): List<ProviderMessage>
-  /** Newest first, for the initial backfill and rescans after changes made by other apps. */
-  fun messagesSince(sinceDate: Long, limit: Long, offset: Long): List<ProviderMessage>
-  /** Bytes of one MMS part (content://mms/part/…) for upload. */
-  fun readMmsPart(uri: String): ByteArray
-  fun lookupContacts(addresses: List<String>): List<ContactInfo>
-  fun searchContacts(query: String, limit: Long): List<ContactInfo>
-  suspend fun sendMessage(request: SendRequest): SendResult
-  fun markThreadRead(threadId: Long)
-  fun deleteMessage(kind: String, providerId: Long)
-  fun deleteThread(threadId: Long)
-  fun canBlockNumbers(): Boolean
-  fun blockNumber(address: String)
-  fun unblockNumber(address: String)
-  fun blockedNumbers(): List<String>
-  /** SQLCipher key for the local sync database (random, wrapped by a Keystore key, never leaves the phone). */
-  fun databaseKey(): String
-  fun databasePath(): String
+  fun serviceStatus(): ServiceStatus
+  /** Ids of the manufacturer settings screens that exist on this phone. */
+  fun oemSettings(): List<String>
+  fun consumeLaunch(): LaunchTarget?
   fun hasDeviceKey(): Boolean
-  fun createDeviceKey(attestationChallenge: ByteArray): KeyInfo
-  fun sign(message: ByteArray): ByteArray
   fun deleteDeviceKey()
-  /** HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only. */
-  suspend fun http(request: HttpRequestData): HttpResponseData
+  /** The native sync engine runs a cycle now (in the foreground service, or as expedited work). */
+  fun syncNow()
   fun startSyncService()
   fun stopSyncService()
-  fun serviceStatus(): ServiceStatus
-  fun openBatteryOptimisationSettings()
-  fun launchAddress(): String?
-  fun setSecureScreen(secure: Boolean)
   /** Revoked by the administrator: delete the key, the sync database and stored settings. */
   fun wipe()
+  suspend fun sims(): List<SimInfo>
+  /** Newest first. Pages of [limit] (the list asks for 50 at a time). */
+  suspend fun threads(limit: Long, offset: Long): List<ThreadSummary>
+  /** One conversation row, after an event about it (null when the thread is gone). */
+  suspend fun thread(threadId: Long): ThreadSummary?
+  suspend fun messages(threadId: Long, limit: Long, beforeDate: Long?): List<ProviderMessage>
+  /** Message bodies containing [query] (SMS and MMS text), newest first. */
+  suspend fun searchMessages(query: String, limit: Long, offset: Long): List<ProviderMessage>
+  /** A small JPEG (longest side ≤ [maxPx]) of an MMS image/video part or a contact photo; null if not an image. */
+  suspend fun thumbnail(uri: String, maxPx: Long): ByteArray?
+  suspend fun lookupContacts(addresses: List<String>): List<ContactInfo>
+  suspend fun searchContacts(query: String, limit: Long): List<ContactInfo>
+  suspend fun sendMessage(request: SendRequest): SendResult
+  suspend fun markThreadRead(threadId: Long)
+  suspend fun deleteMessage(kind: String, providerId: Long)
+  suspend fun deleteThread(threadId: Long)
+  suspend fun canBlockNumbers(): Boolean
+  suspend fun blockNumber(address: String)
+  suspend fun unblockNumber(address: String)
+  suspend fun blockedNumbers(): List<String>
+  suspend fun createDeviceKey(attestationChallenge: ByteArray): KeyInfo
+  suspend fun sign(message: ByteArray): ByteArray
+  /**
+   * HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only. Enrollment only:
+   * everything after it is the native sync engine's.
+   */
+  suspend fun http(request: HttpRequestData): HttpResponseData
 
   companion object {
     /** The codec used by TelephonyHostApi. */
@@ -1289,21 +1446,7 @@ interface TelephonyHostApi {
     @JvmOverloads
     fun setUp(binaryMessenger: BinaryMessenger, api: TelephonyHostApi?, messageChannelSuffix: String = "") {
       val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.roleStatus$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.roleStatus())
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
+      val taskQueue = binaryMessenger.makeBackgroundTaskQueue()
       run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.requestDefaultSmsRole$separatedMessageChannelSuffix", codec)
         if (api != null) {
@@ -1322,11 +1465,11 @@ interface TelephonyHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.permissions$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.openDefaultAppsSettings$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
-              listOf(api.permissions())
+              listOf(api.openDefaultAppsSettings())
             } catch (exception: Throwable) {
               TelephonyApiPigeonUtils.wrapError(exception)
             }
@@ -1356,11 +1499,12 @@ interface TelephonyHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.sims$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.openBatteryOptimisationSettings$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
-              listOf(api.sims())
+              api.openBatteryOptimisationSettings()
+              listOf(null)
             } catch (exception: Throwable) {
               TelephonyApiPigeonUtils.wrapError(exception)
             }
@@ -1371,7 +1515,120 @@ interface TelephonyHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.deviceFacts$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.openOemSetting$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idArg = args[0] as String
+            val wrapped: List<Any?> = try {
+              listOf(api.openOemSetting(idArg))
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.openAppSettings$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.openAppSettings()
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.setSecureScreen$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val secureArg = args[0] as Boolean
+            val wrapped: List<Any?> = try {
+              api.setSecureScreen(secureArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.pickImage$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.pickImage())
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.startup$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.startup())
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.roleStatus$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.roleStatus())
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.permissions$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.permissions())
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.deviceFacts$separatedMessageChannelSuffix", codec, taskQueue)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
@@ -1386,18 +1643,196 @@ interface TelephonyHostApi {
         }
       }
       run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.serviceStatus$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.serviceStatus())
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.oemSettings$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.oemSettings())
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.consumeLaunch$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.consumeLaunch())
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.hasDeviceKey$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.hasDeviceKey())
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.deleteDeviceKey$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.deleteDeviceKey()
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.syncNow$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.syncNow()
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.startSyncService$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.startSyncService()
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.stopSyncService$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.stopSyncService()
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.wipe$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.wipe()
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.sims$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.sims())
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.threads$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val limitArg = args[0] as Long
             val offsetArg = args[1] as Long
-            val wrapped: List<Any?> = try {
-              listOf(api.threads(limitArg, offsetArg))
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.threads(limitArg, offsetArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.thread$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val threadIdArg = args[0] as Long
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.thread(threadIdArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
           }
         } else {
           channel.setMessageHandler(null)
@@ -1411,48 +1846,55 @@ interface TelephonyHostApi {
             val threadIdArg = args[0] as Long
             val limitArg = args[1] as Long
             val beforeDateArg = args[2] as Long?
-            val wrapped: List<Any?> = try {
-              listOf(api.messages(threadIdArg, limitArg, beforeDateArg))
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.messages(threadIdArg, limitArg, beforeDateArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.messagesSince$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.searchMessages$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val sinceDateArg = args[0] as Long
+            val queryArg = args[0] as String
             val limitArg = args[1] as Long
             val offsetArg = args[2] as Long
-            val wrapped: List<Any?> = try {
-              listOf(api.messagesSince(sinceDateArg, limitArg, offsetArg))
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.searchMessages(queryArg, limitArg, offsetArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.readMmsPart$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.thumbnail$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val uriArg = args[0] as String
-            val wrapped: List<Any?> = try {
-              listOf(api.readMmsPart(uriArg))
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            val maxPxArg = args[1] as Long
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.thumbnail(uriArg, maxPxArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1464,12 +1906,14 @@ interface TelephonyHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val addressesArg = args[0] as List<String>
-            val wrapped: List<Any?> = try {
-              listOf(api.lookupContacts(addressesArg))
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.lookupContacts(addressesArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1482,12 +1926,14 @@ interface TelephonyHostApi {
             val args = message as List<Any?>
             val queryArg = args[0] as String
             val limitArg = args[1] as Long
-            val wrapped: List<Any?> = try {
-              listOf(api.searchContacts(queryArg, limitArg))
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.searchContacts(queryArg, limitArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1518,13 +1964,15 @@ interface TelephonyHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val threadIdArg = args[0] as Long
-            val wrapped: List<Any?> = try {
-              api.markThreadRead(threadIdArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.markThreadRead(threadIdArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1537,13 +1985,15 @@ interface TelephonyHostApi {
             val args = message as List<Any?>
             val kindArg = args[0] as String
             val providerIdArg = args[1] as Long
-            val wrapped: List<Any?> = try {
-              api.deleteMessage(kindArg, providerIdArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.deleteMessage(kindArg, providerIdArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1555,13 +2005,15 @@ interface TelephonyHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val threadIdArg = args[0] as Long
-            val wrapped: List<Any?> = try {
-              api.deleteThread(threadIdArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.deleteThread(threadIdArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1571,12 +2023,14 @@ interface TelephonyHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.canBlockNumbers$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.canBlockNumbers())
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.canBlockNumbers())
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1588,13 +2042,15 @@ interface TelephonyHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val addressArg = args[0] as String
-            val wrapped: List<Any?> = try {
-              api.blockNumber(addressArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.blockNumber(addressArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1606,13 +2062,15 @@ interface TelephonyHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val addressArg = args[0] as String
-            val wrapped: List<Any?> = try {
-              api.unblockNumber(addressArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.unblockNumber(addressArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1622,57 +2080,14 @@ interface TelephonyHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.blockedNumbers$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.blockedNumbers())
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.blockedNumbers())
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.databaseKey$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.databaseKey())
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.databasePath$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.databasePath())
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.hasDeviceKey$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.hasDeviceKey())
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1684,12 +2099,14 @@ interface TelephonyHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val attestationChallengeArg = args[0] as ByteArray
-            val wrapped: List<Any?> = try {
-              listOf(api.createDeviceKey(attestationChallengeArg))
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.createDeviceKey(attestationChallengeArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1701,28 +2118,14 @@ interface TelephonyHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val messageArg = args[0] as ByteArray
-            val wrapped: List<Any?> = try {
-              listOf(api.sign(messageArg))
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.sign(messageArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
             }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.deleteDeviceKey$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              api.deleteDeviceKey()
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -1742,118 +2145,6 @@ interface TelephonyHostApi {
               }
               reply.reply(wrapped)
             }
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.startSyncService$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              api.startSyncService()
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.stopSyncService$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              api.stopSyncService()
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.serviceStatus$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.serviceStatus())
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.openBatteryOptimisationSettings$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              api.openBatteryOptimisationSettings()
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.launchAddress$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              listOf(api.launchAddress())
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.setSecureScreen$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { message, reply ->
-            val args = message as List<Any?>
-            val secureArg = args[0] as Boolean
-            val wrapped: List<Any?> = try {
-              api.setSecureScreen(secureArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.wipe$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            val wrapped: List<Any?> = try {
-              api.wipe()
-              listOf(null)
-            } catch (exception: Throwable) {
-              TelephonyApiPigeonUtils.wrapError(exception)
-            }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)

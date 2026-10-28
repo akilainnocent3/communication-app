@@ -133,7 +133,10 @@ class HttpResponseData {
 }
 
 class ServiceStatus {
-  ServiceStatus({required this.running, required this.batteryOptimised, required this.networkAvailable, required this.networkType, this.battery, required this.charging, this.signal});
+  ServiceStatus({
+    required this.running, required this.batteryOptimised, required this.networkAvailable, required this.networkType, this.battery, required this.charging,
+    this.signal, required this.backgroundRestricted, this.standbyBucket,
+  });
   bool running;
   bool batteryOptimised;
   bool networkAvailable;
@@ -141,6 +144,32 @@ class ServiceStatus {
   int? battery;
   bool charging;
   int? signal;
+  /// ActivityManager.isBackgroundRestricted: the holder (or the OEM) restricted background work in system settings.
+  bool backgroundRestricted;
+  /// UsageStatsManager.getAppStandbyBucket (10 active … 45 restricted); null when unknown.
+  int? standbyBucket;
+}
+
+/// Everything the first frame needs, in one round trip (cold start).
+class StartupState {
+  StartupState({required this.databasePath, required this.databaseKey, required this.isDefaultSmsApp, required this.manufacturer, required this.brand, required this.sdkInt, required this.removed});
+  String databasePath;
+  /// 64 hex characters: the raw 256-bit SQLCipher key (no PBKDF2 on open).
+  String databaseKey;
+  bool isDefaultSmsApp;
+  String manufacturer;
+  String brand;
+  int sdkInt;
+  /// The administrator revoked this phone while the app was closed (the native sync engine already wiped it).
+  bool removed;
+}
+
+/// Where an intent asked the app to go: compose (sms:/smsto:), chat (notification, shortcut), enroll (cmsms://enroll
+/// link) or route (the sync notification).
+class LaunchTarget {
+  LaunchTarget({required this.kind, required this.value});
+  String kind;
+  String value;
 }
 
 /// Something that happened natively: a message arrived, a send changed state, the network came back.
@@ -157,63 +186,114 @@ class OutboundState {
 
 class TelephonyEvent {
   TelephonyEvent({required this.type, this.threadId, this.providerId, this.clientUuid, this.state});
-  String type; // message_received | message_changed | send_state | network | outbox_changed
+  /// message_received | message_changed | send_state | contacts_changed | sync_state | launch
+  String type;
   int? threadId;
   int? providerId;
   String? clientUuid;
   String? state;
 }
 
+// Threading: methods marked @async run their work on Dispatchers.IO (HostApiImpl.io), so no Content Provider query,
+// Keystore operation or HTTP call ever runs on the Android main thread. Small binder getters run on a background task
+// queue. Only calls that need an Activity (role and permission requests, settings screens, FLAG_SECURE) stay on main.
 @HostApi()
 abstract class TelephonyHostApi {
-  RoleStatus roleStatus();
+  // --- Main thread: need the Activity ----------------------------------------------------------------------------
   @async
   bool requestDefaultSmsRole();
-  List<PermissionState> permissions();
+  /// Fallback when the role dialog is dismissed or no longer shown: Settings → Default apps.
+  bool openDefaultAppsSettings();
   @async
   List<PermissionState> requestPermissions(List<String> names);
-  List<SimInfo> sims();
-  DeviceFacts deviceFacts();
+  void openBatteryOptimisationSettings();
+  /// Manufacturer screens that stop background work (see Oem.kt); false when the intent does not exist here.
+  bool openOemSetting(String id);
+  void openAppSettings();
+  void setSecureScreen(bool secure);
+  /// System photo picker; the chosen image is copied to the app cache and its path returned (QR from a photo).
+  @async
+  String? pickImage();
 
+  // --- Background task queue: quick binder calls -----------------------------------------------------------------
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  StartupState startup();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  RoleStatus roleStatus();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  List<PermissionState> permissions();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  DeviceFacts deviceFacts();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  ServiceStatus serviceStatus();
+  /// Ids of the manufacturer settings screens that exist on this phone.
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  List<String> oemSettings();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  LaunchTarget? consumeLaunch();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  bool hasDeviceKey();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  void deleteDeviceKey();
+  /// The native sync engine runs a cycle now (in the foreground service, or as expedited work).
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  void syncNow();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  void startSyncService();
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  void stopSyncService();
+  /// Revoked by the administrator: delete the key, the sync database and stored settings.
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  void wipe();
+
+  // --- Dispatchers.IO: provider, contacts, Keystore, network ----------------------------------------------------
+  @async
+  List<SimInfo> sims();
+  /// Newest first. Pages of [limit] (the list asks for 50 at a time).
+  @async
   List<ThreadSummary> threads(int limit, int offset);
+  /// One conversation row, after an event about it (null when the thread is gone).
+  @async
+  ThreadSummary? thread(int threadId);
+  @async
   List<ProviderMessage> messages(int threadId, int limit, int? beforeDate);
-  /// Newest first, for the initial backfill and rescans after changes made by other apps.
-  List<ProviderMessage> messagesSince(int sinceDate, int limit, int offset);
-  /// Bytes of one MMS part (content://mms/part/…) for upload.
-  Uint8List readMmsPart(String uri);
+  /// Message bodies containing [query] (SMS and MMS text), newest first.
+  @async
+  List<ProviderMessage> searchMessages(String query, int limit, int offset);
+  /// A small JPEG (longest side ≤ [maxPx]) of an MMS image/video part or a contact photo; null if not an image.
+  @async
+  Uint8List? thumbnail(String uri, int maxPx);
+  @async
   List<ContactInfo> lookupContacts(List<String> addresses);
+  @async
   List<ContactInfo> searchContacts(String query, int limit);
 
   @async
   SendResult sendMessage(SendRequest request);
+  @async
   void markThreadRead(int threadId);
+  @async
   void deleteMessage(String kind, int providerId);
+  @async
   void deleteThread(int threadId);
+  @async
   bool canBlockNumbers();
+  @async
   void blockNumber(String address);
+  @async
   void unblockNumber(String address);
+  @async
   List<String> blockedNumbers();
 
-  /// SQLCipher key for the local sync database (random, wrapped by a Keystore key, never leaves the phone).
-  String databaseKey();
-  String databasePath();
-  bool hasDeviceKey();
+  @async
   KeyInfo createDeviceKey(Uint8List attestationChallenge);
+  @async
   Uint8List sign(Uint8List message);
-  void deleteDeviceKey();
 
-  /// HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only.
+  /// HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only. Enrollment only:
+  /// everything after it is the native sync engine's.
   @async
   HttpResponseData http(HttpRequestData request);
-
-  void startSyncService();
-  void stopSyncService();
-  ServiceStatus serviceStatus();
-  void openBatteryOptimisationSettings();
-  String? launchAddress();
-  void setSecureScreen(bool secure);
-  /// Revoked by the administrator: delete the key, the sync database and stored settings.
-  void wipe();
 }
 
 @EventChannelApi()

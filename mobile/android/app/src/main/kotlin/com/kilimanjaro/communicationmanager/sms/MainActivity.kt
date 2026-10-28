@@ -2,7 +2,9 @@ package com.kilimanjaro.communicationmanager.sms
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import com.kilimanjaro.communicationmanager.sms.bridge.ActivityBridge
 import com.kilimanjaro.communicationmanager.sms.bridge.EventBus
@@ -14,7 +16,10 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import kotlinx.coroutines.CompletableDeferred
 
-/** The only Activity. Also handles ACTION_SEND/SENDTO for sms:, smsto:, mms:, mmsto: (required for the SMS role). */
+/**
+ * The only Activity. Also handles ACTION_SEND/SENDTO for sms:, smsto:, mms:, mmsto: (required for the SMS role),
+ * cmsms://enroll links and the app's own notification/shortcut intents (see LaunchIntent).
+ */
 class MainActivity : FlutterFragmentActivity(), ActivityBridge {
     private companion object {
         const val STALE_OUTBOX_MS = 10 * 60 * 1000L
@@ -30,6 +35,11 @@ class MainActivity : FlutterFragmentActivity(), ActivityBridge {
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         permissionResult?.complete(Unit)
         permissionResult = null
+    }
+    private var pickResult: CompletableDeferred<Uri?>? = null
+    private val pickLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) {
+        pickResult?.complete(it)
+        pickResult = null
     }
 
     override val activity: Activity get() = this
@@ -48,7 +58,7 @@ class MainActivity : FlutterFragmentActivity(), ActivityBridge {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         TelephonyHostApi.setUp(flutterEngine.dartExecutor.binaryMessenger, HostApiImpl(applicationContext, this))
-        EventBus.register(flutterEngine.dartExecutor.binaryMessenger)
+        EventBus.register(flutterEngine.dartExecutor.binaryMessenger, applicationContext)
     }
 
     override fun requestRole(intent: Intent, done: CompletableDeferred<Boolean>) {
@@ -59,5 +69,10 @@ class MainActivity : FlutterFragmentActivity(), ActivityBridge {
     override fun requestPermissions(names: Array<String>, done: CompletableDeferred<Unit>) {
         permissionResult = done
         runOnUiThread { permissionLauncher.launch(names) }
+    }
+
+    override fun pickImage(done: CompletableDeferred<Uri?>) {
+        pickResult = done
+        runOnUiThread { pickLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
     }
 }

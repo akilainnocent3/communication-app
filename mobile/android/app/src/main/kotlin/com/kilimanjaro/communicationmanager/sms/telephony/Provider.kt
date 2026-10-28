@@ -31,8 +31,9 @@ object Provider {
 
     // --- Writes ---------------------------------------------------------------------------------------------
 
-    fun insertInbox(context: Context, address: String, body: String, date: Long, dateSent: Long, subId: Int?): Uri? =
-        context.contentResolver.insert(Telephony.Sms.Inbox.CONTENT_URI, ContentValues().apply {
+    fun insertInbox(context: Context, address: String, body: String, date: Long, dateSent: Long, subId: Int?): Uri? {
+        ProviderWatcher.ownWrite()
+        return context.contentResolver.insert(Telephony.Sms.Inbox.CONTENT_URI, ContentValues().apply {
             put(Telephony.Sms.ADDRESS, address)
             put(Telephony.Sms.BODY, body)
             put(Telephony.Sms.DATE, date)
@@ -42,9 +43,11 @@ object Provider {
             put(Telephony.Sms.TYPE, Telephony.Sms.MESSAGE_TYPE_INBOX)
             subId?.let { put(Telephony.Sms.SUBSCRIPTION_ID, it) }
         })
+    }
 
-    fun insertOutbox(context: Context, address: String, body: String, subId: Int?): Uri? =
-        context.contentResolver.insert(Telephony.Sms.Outbox.CONTENT_URI, ContentValues().apply {
+    fun insertOutbox(context: Context, address: String, body: String, subId: Int?): Uri? {
+        ProviderWatcher.ownWrite()
+        return context.contentResolver.insert(Telephony.Sms.Outbox.CONTENT_URI, ContentValues().apply {
             put(Telephony.Sms.ADDRESS, address)
             put(Telephony.Sms.BODY, body)
             put(Telephony.Sms.DATE, System.currentTimeMillis())
@@ -54,8 +57,10 @@ object Provider {
             put(Telephony.Sms.STATUS, Telephony.Sms.STATUS_PENDING)
             subId?.let { put(Telephony.Sms.SUBSCRIPTION_ID, it) }
         })
+    }
 
     fun setSmsType(context: Context, uri: Uri, type: Int, errorCode: Int? = null) {
+        ProviderWatcher.ownWrite()
         context.contentResolver.update(uri, ContentValues().apply {
             put(Telephony.Sms.TYPE, type)
             errorCode?.let { put(Telephony.Sms.ERROR_CODE, it) }
@@ -76,18 +81,22 @@ object Provider {
         context.contentResolver.update(uri, ContentValues().apply { put(Telephony.Sms.STATUS, status) }, null, null)
     }
 
-    fun markThreadRead(context: Context, threadId: Long) {
+    /** Returns how many messages changed (0: nothing was unread, so there is nothing to report). */
+    fun markThreadRead(context: Context, threadId: Long): Int {
+        ProviderWatcher.ownWrite()
         val values = ContentValues().apply { put("read", 1); put("seen", 1) }
-        context.contentResolver.update(Telephony.Sms.CONTENT_URI, values, "thread_id = ? AND read = 0", arrayOf(threadId.toString()))
-        context.contentResolver.update(Telephony.Mms.CONTENT_URI, values, "thread_id = ? AND read = 0", arrayOf(threadId.toString()))
+        return context.contentResolver.update(Telephony.Sms.CONTENT_URI, values, "thread_id = ? AND read = 0", arrayOf(threadId.toString())) +
+            context.contentResolver.update(Telephony.Mms.CONTENT_URI, values, "thread_id = ? AND read = 0", arrayOf(threadId.toString()))
     }
 
     fun deleteMessage(context: Context, kind: String, id: Long) {
+        ProviderWatcher.ownWrite()
         val base = if (kind == "mms") Telephony.Mms.CONTENT_URI else Telephony.Sms.CONTENT_URI
         context.contentResolver.delete(Uri.withAppendedPath(base, id.toString()), null, null)
     }
 
     fun deleteThread(context: Context, threadId: Long) {
+        ProviderWatcher.ownWrite()
         context.contentResolver.delete(Uri.withAppendedPath(Telephony.Threads.CONTENT_URI, threadId.toString()), null, null)
     }
 
@@ -107,29 +116,79 @@ object Provider {
         )
     }
 
-    fun threads(context: Context, limit: Int, offset: Int): List<ThreadSummary> {
-        val uri = Uri.parse("content://mms-sms/conversations?simple=true")
-        val result = mutableListOf<ThreadSummary>()
-        context.contentResolver.query(uri, arrayOf("_id", "date", "message_count", "recipient_ids", "snippet", "read"), null, null, "date DESC")?.use { c ->
-            if (!c.moveToPosition(offset)) return result
-            do {
-                val threadId = c.getLong(0)
-                val addresses = recipients(context, c.getString(3) ?: "")
-                result += ThreadSummary(
-                    threadId = threadId, addresses = addresses.ifEmpty { listOf("") }, snippet = c.getString(4) ?: "", date = c.getLong(1),
-                    unreadCount = unread(context, threadId), messageCount = c.getLong(2), hasMms = false,
-                )
-            } while (result.size < limit && c.moveToNext())
+    // --- Conversations ---------------------------------------------------------------------------------------
+    //
+    // One query for the page of threads, one cached map for every recipient address and one query each for unread SMS
+    // and MMS, counted here. (The old code ran an unread query and a canonical-address query per recipient for every
+    // thread: 600+ queries for 300 threads on each refresh.)
+
+    private val conversations: Uri = Uri.parse("content://mms-sms/conversations?simple=true")
+    private val canonical: Uri = Uri.parse("content://mms-sms/canonical-addresses")
+    private val threadColumns = arrayOf("_id", "date", "message_count", "recipient_ids", "snippet", "read", "has_attachment")
+    @Volatile private var addressCache: Map<Long, String> = emptyMap()
+
+    /** canonical_addresses: id → address. Reloaded only when a thread names an id the cache does not have. */
+    private fun addresses(context: Context, ids: Collection<Long>): Map<Long, String> {
+        if (ids.all { it in addressCache }) return addressCache
+        val loaded = HashMap<Long, String>()
+        context.contentResolver.query(canonical, arrayOf("_id", "address"), null, null, null)?.use { c ->
+            while (c.moveToNext()) loaded[c.getLong(0)] = c.getString(1) ?: ""
         }
-        return result
+        addressCache = loaded
+        return loaded
     }
 
-    private fun unread(context: Context, threadId: Long): Long =
-        context.contentResolver.query(Telephony.Sms.Inbox.CONTENT_URI, arrayOf("count(*)"), "thread_id = ? AND read = 0", arrayOf(threadId.toString()), null)
-            ?.use { if (it.moveToFirst()) it.getLong(0) else 0L } ?: 0L
+    fun invalidateAddresses() { addressCache = emptyMap() }
 
-    private fun recipients(context: Context, ids: String): List<String> = ids.split(" ").filter { it.isNotBlank() }.mapNotNull { id ->
-        context.contentResolver.query(Uri.parse("content://mms-sms/canonical-address/$id"), null, null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else null }
+    private fun unreadCounts(context: Context, threadIds: Set<Long>): Map<Long, Long> {
+        if (threadIds.isEmpty()) return emptyMap()
+        val counts = HashMap<Long, Long>()
+        val where = "read = 0 AND thread_id IN (${threadIds.joinToString(",")})"
+        for (uri in listOf(Telephony.Sms.Inbox.CONTENT_URI, Telephony.Mms.Inbox.CONTENT_URI)) {
+            context.contentResolver.query(uri, arrayOf("thread_id"), where, null, null)?.use { c ->
+                while (c.moveToNext()) c.getLong(0).let { counts[it] = (counts[it] ?: 0) + 1 }
+            }
+        }
+        return counts
+    }
+
+    private fun summaries(context: Context, selection: String?, args: Array<String>?, sort: String?, limit: Int, offset: Int): List<ThreadSummary> {
+        data class Row(val id: Long, val date: Long, val count: Long, val recipients: List<Long>, val snippet: String, val attachment: Boolean)
+        val rows = ArrayList<Row>(limit)
+        context.contentResolver.query(conversations, threadColumns, selection, args, sort)?.use { c ->
+            if (!c.moveToPosition(offset)) return emptyList()
+            do {
+                if (c.getLong(2) == 0L) continue // an empty thread left behind by a delete
+                val recipients = (c.getString(3) ?: "").split(" ").mapNotNull { it.toLongOrNull() }
+                rows += Row(c.getLong(0), c.getLong(1), c.getLong(2), recipients, c.getString(4) ?: "", c.getInt(6) == 1)
+            } while (rows.size < limit && c.moveToNext())
+        }
+        val map = addresses(context, rows.flatMap { it.recipients })
+        val unread = unreadCounts(context, rows.map { it.id }.toSet())
+        return rows.map { row ->
+            ThreadSummary(threadId = row.id, addresses = row.recipients.mapNotNull { map[it] }.ifEmpty { listOf("") }, snippet = row.snippet, date = row.date,
+                unreadCount = unread[row.id] ?: 0, messageCount = row.count, hasMms = row.attachment)
+        }
+    }
+
+    /** Newest first, a page at a time (the list asks for 50). */
+    fun threads(context: Context, limit: Int, offset: Int): List<ThreadSummary> = summaries(context, null, null, "date DESC", limit, offset)
+
+    /** One row, refreshed after an event about that thread. */
+    fun thread(context: Context, threadId: Long): ThreadSummary? = summaries(context, "_id = ?", arrayOf(threadId.toString()), null, 1, 0).firstOrNull()
+
+    /** SMS and MMS text containing [query], newest first (LIKE with escaped wildcards). */
+    fun search(context: Context, query: String, limit: Int, offset: Int): List<ProviderMessage> {
+        val needle = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        val window = limit + offset
+        val sms = context.contentResolver.query(Telephony.Sms.CONTENT_URI, null, "body LIKE ? ESCAPE '\\'", arrayOf(needle), "date DESC LIMIT $window")?.use { c ->
+            buildList { while (c.moveToNext()) add(smsFrom(c)) }
+        } ?: emptyList()
+        val mmsIds = context.contentResolver.query(Uri.parse("content://mms/part"), arrayOf("mid"), "ct = 'text/plain' AND text LIKE ? ESCAPE '\\'", arrayOf(needle), null)?.use { c ->
+            buildSet { while (c.moveToNext() && size < window) add(c.getLong(0)) }
+        } ?: emptySet()
+        val mms = mmsIds.mapNotNull { mms(context, it) }
+        return (sms + mms).sortedByDescending { it.date }.drop(offset).take(limit)
     }
 
     fun messages(context: Context, threadId: Long, limit: Int, beforeDate: Long?): List<ProviderMessage> {
@@ -144,6 +203,12 @@ object Provider {
         } ?: emptyList()
         return (sms + mms).sortedByDescending { it.date }.take(limit)
     }
+
+    /** The newest unread inbox SMS of a thread, oldest first (the notification's conversation). */
+    fun recentUnread(context: Context, threadId: Long, limit: Int): List<ProviderMessage> =
+        context.contentResolver.query(Telephony.Sms.Inbox.CONTENT_URI, null, "thread_id = ? AND read = 0", arrayOf(threadId.toString()), "date DESC LIMIT $limit")?.use { c ->
+            buildList { while (c.moveToNext()) add(smsFrom(c)) }.reversed()
+        } ?: emptyList()
 
     fun messagesSince(context: Context, since: Long, limit: Int, offset: Int): List<ProviderMessage> {
         val sms = context.contentResolver.query(Telephony.Sms.CONTENT_URI, null, "date >= ?", arrayOf(since.toString()), "date DESC LIMIT $limit OFFSET $offset")?.use { c ->
@@ -167,7 +232,8 @@ object Provider {
         val box = c.int(Telephony.Mms.MESSAGE_BOX)
         val parts = mutableListOf<MmsPartData>()
         var text = ""
-        context.contentResolver.query(Uri.parse("content://mms/part"), null, "mid = ?", arrayOf(id.toString()), "seq")?.use { p ->
+        val partColumns = arrayOf(Telephony.Mms.Part._ID, Telephony.Mms.Part.CONTENT_TYPE, Telephony.Mms.Part.TEXT, Telephony.Mms.Part.NAME)
+        context.contentResolver.query(Uri.parse("content://mms/part"), partColumns, "mid = ?", arrayOf(id.toString()), "seq")?.use { p ->
             var seq = 0L
             while (p.moveToNext()) {
                 val type = p.getString(p.getColumnIndexOrThrow(Telephony.Mms.Part.CONTENT_TYPE)) ?: continue
@@ -176,9 +242,9 @@ object Provider {
                     type == "text/plain" -> text += p.getString(p.getColumnIndexOrThrow(Telephony.Mms.Part.TEXT)) ?: ""
                     type == "application/smil" -> Unit
                     else -> {
-                        val uri = "content://mms/part/$partId"
-                        val size = context.contentResolver.openAssetFileDescriptor(Uri.parse(uri), "r")?.use { it.length } ?: 0L
-                        parts += MmsPartData(seq = seq++, contentType = type, filename = p.getString(p.getColumnIndexOrThrow(Telephony.Mms.Part.NAME)), size = size, uri = uri)
+                        // Size 0 = not measured: lists never open a file per part. The sync engine measures while hashing.
+                        parts += MmsPartData(seq = seq++, contentType = type, filename = p.getString(p.getColumnIndexOrThrow(Telephony.Mms.Part.NAME)), size = 0,
+                            uri = "content://mms/part/$partId")
                     }
                 }
             }

@@ -967,6 +967,8 @@ class ServiceStatus {
     this.battery,
     required this.charging,
     this.signal,
+    required this.backgroundRestricted,
+    this.standbyBucket,
   });
 
   bool running;
@@ -983,6 +985,12 @@ class ServiceStatus {
 
   int? signal;
 
+  /// ActivityManager.isBackgroundRestricted: the holder (or the OEM) restricted background work in system settings.
+  bool backgroundRestricted;
+
+  /// UsageStatsManager.getAppStandbyBucket (10 active … 45 restricted); null when unknown.
+  int? standbyBucket;
+
   List<Object?> _toList() {
     return <Object?>[
       running,
@@ -992,6 +1000,8 @@ class ServiceStatus {
       battery,
       charging,
       signal,
+      backgroundRestricted,
+      standbyBucket,
     ];
   }
 
@@ -1008,6 +1018,8 @@ class ServiceStatus {
       battery: result[4] as int?,
       charging: result[5]! as bool,
       signal: result[6] as int?,
+      backgroundRestricted: result[7]! as bool,
+      standbyBucket: result[8] as int?,
     );
   }
 
@@ -1020,7 +1032,7 @@ class ServiceStatus {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(running, other.running) && _deepEquals(batteryOptimised, other.batteryOptimised) && _deepEquals(networkAvailable, other.networkAvailable) && _deepEquals(networkType, other.networkType) && _deepEquals(battery, other.battery) && _deepEquals(charging, other.charging) && _deepEquals(signal, other.signal);
+    return _deepEquals(running, other.running) && _deepEquals(batteryOptimised, other.batteryOptimised) && _deepEquals(networkAvailable, other.networkAvailable) && _deepEquals(networkType, other.networkType) && _deepEquals(battery, other.battery) && _deepEquals(charging, other.charging) && _deepEquals(signal, other.signal) && _deepEquals(backgroundRestricted, other.backgroundRestricted) && _deepEquals(standbyBucket, other.standbyBucket);
   }
 
   @override
@@ -1029,7 +1041,137 @@ class ServiceStatus {
 
   @override
   String toString() {
-    return 'ServiceStatus(running: $running, batteryOptimised: $batteryOptimised, networkAvailable: $networkAvailable, networkType: $networkType, battery: $battery, charging: $charging, signal: $signal)';
+    return 'ServiceStatus(running: $running, batteryOptimised: $batteryOptimised, networkAvailable: $networkAvailable, networkType: $networkType, battery: $battery, charging: $charging, signal: $signal, backgroundRestricted: $backgroundRestricted, standbyBucket: $standbyBucket)';
+  }
+}
+
+/// Everything the first frame needs, in one round trip (cold start).
+class StartupState {
+  StartupState({
+    required this.databasePath,
+    required this.databaseKey,
+    required this.isDefaultSmsApp,
+    required this.manufacturer,
+    required this.brand,
+    required this.sdkInt,
+    required this.removed,
+  });
+
+  String databasePath;
+
+  /// 64 hex characters: the raw 256-bit SQLCipher key (no PBKDF2 on open).
+  String databaseKey;
+
+  bool isDefaultSmsApp;
+
+  String manufacturer;
+
+  String brand;
+
+  int sdkInt;
+
+  /// The administrator revoked this phone while the app was closed (the native sync engine already wiped it).
+  bool removed;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      databasePath,
+      databaseKey,
+      isDefaultSmsApp,
+      manufacturer,
+      brand,
+      sdkInt,
+      removed,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static StartupState decode(Object result) {
+    result as List<Object?>;
+    return StartupState(
+      databasePath: result[0]! as String,
+      databaseKey: result[1]! as String,
+      isDefaultSmsApp: result[2]! as bool,
+      manufacturer: result[3]! as String,
+      brand: result[4]! as String,
+      sdkInt: result[5]! as int,
+      removed: result[6]! as bool,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! StartupState || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(databasePath, other.databasePath) && _deepEquals(databaseKey, other.databaseKey) && _deepEquals(isDefaultSmsApp, other.isDefaultSmsApp) && _deepEquals(manufacturer, other.manufacturer) && _deepEquals(brand, other.brand) && _deepEquals(sdkInt, other.sdkInt) && _deepEquals(removed, other.removed);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'StartupState(databasePath: $databasePath, databaseKey: $databaseKey, isDefaultSmsApp: $isDefaultSmsApp, manufacturer: $manufacturer, brand: $brand, sdkInt: $sdkInt, removed: $removed)';
+  }
+}
+
+/// Where an intent asked the app to go: compose (sms:/smsto:), chat (notification, shortcut), enroll (cmsms://enroll
+/// link) or route (the sync notification).
+class LaunchTarget {
+  LaunchTarget({
+    required this.kind,
+    required this.value,
+  });
+
+  String kind;
+
+  String value;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      kind,
+      value,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static LaunchTarget decode(Object result) {
+    result as List<Object?>;
+    return LaunchTarget(
+      kind: result[0]! as String,
+      value: result[1]! as String,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! LaunchTarget || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(kind, other.kind) && _deepEquals(value, other.value);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'LaunchTarget(kind: $kind, value: $value)';
   }
 }
 
@@ -1114,6 +1256,7 @@ class TelephonyEvent {
     this.state,
   });
 
+  /// message_received | message_changed | send_state | contacts_changed | sync_state | launch
   String type;
 
   int? threadId;
@@ -1220,11 +1363,17 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is ServiceStatus) {
       buffer.putUint8(142);
       writeValue(buffer, value.encode());
-    }    else if (value is OutboundState) {
+    }    else if (value is StartupState) {
       buffer.putUint8(143);
       writeValue(buffer, value.encode());
-    }    else if (value is TelephonyEvent) {
+    }    else if (value is LaunchTarget) {
       buffer.putUint8(144);
+      writeValue(buffer, value.encode());
+    }    else if (value is OutboundState) {
+      buffer.putUint8(145);
+      writeValue(buffer, value.encode());
+    }    else if (value is TelephonyEvent) {
+      buffer.putUint8(146);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1263,8 +1412,12 @@ class _PigeonCodec extends StandardMessageCodec {
       case 142:
         return ServiceStatus.decode(readValue(buffer)!);
       case 143:
-        return OutboundState.decode(readValue(buffer)!);
+        return StartupState.decode(readValue(buffer)!);
       case 144:
+        return LaunchTarget.decode(readValue(buffer)!);
+      case 145:
+        return OutboundState.decode(readValue(buffer)!);
+      case 146:
         return TelephonyEvent.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -1291,25 +1444,6 @@ class TelephonyHostApi {
   final String pigeonVar_messageChannelSuffix;
 
 
-  Future<RoleStatus> roleStatus() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.roleStatus$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
-    return pigeonVar_replyValue! as RoleStatus;
-  }
-
   Future<bool> requestDefaultSmsRole() async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.requestDefaultSmsRole$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1329,8 +1463,9 @@ class TelephonyHostApi {
     return pigeonVar_replyValue! as bool;
   }
 
-  Future<List<PermissionState>> permissions() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.permissions$pigeonVar_messageChannelSuffix';
+  /// Fallback when the role dialog is dismissed or no longer shown: Settings → Default apps.
+  Future<bool> openDefaultAppsSettings() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.openDefaultAppsSettings$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1345,7 +1480,7 @@ class TelephonyHostApi {
         isNullValid: false,
     )
     ;
-    return (pigeonVar_replyValue! as List<Object?>).cast<PermissionState>();
+    return pigeonVar_replyValue! as bool;
   }
 
   Future<List<PermissionState>> requestPermissions(List<String> names) async {
@@ -1367,8 +1502,102 @@ class TelephonyHostApi {
     return (pigeonVar_replyValue! as List<Object?>).cast<PermissionState>();
   }
 
-  Future<List<SimInfo>> sims() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.sims$pigeonVar_messageChannelSuffix';
+  Future<void> openBatteryOptimisationSettings() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.openBatteryOptimisationSettings$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Manufacturer screens that stop background work (see Oem.kt); false when the intent does not exist here.
+  Future<bool> openOemSetting(String id) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.openOemSetting$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[id]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as bool;
+  }
+
+  Future<void> openAppSettings() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.openAppSettings$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  Future<void> setSecureScreen(bool secure) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.setSecureScreen$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[secure]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// System photo picker; the chosen image is copied to the app cache and its path returned (QR from a photo).
+  Future<String?> pickImage() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.pickImage$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as String?;
+  }
+
+  Future<StartupState> startup() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.startup$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1383,7 +1612,45 @@ class TelephonyHostApi {
         isNullValid: false,
     )
     ;
-    return (pigeonVar_replyValue! as List<Object?>).cast<SimInfo>();
+    return pigeonVar_replyValue! as StartupState;
+  }
+
+  Future<RoleStatus> roleStatus() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.roleStatus$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as RoleStatus;
+  }
+
+  Future<List<PermissionState>> permissions() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.permissions$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return (pigeonVar_replyValue! as List<Object?>).cast<PermissionState>();
   }
 
   Future<DeviceFacts> deviceFacts() async {
@@ -1405,6 +1672,195 @@ class TelephonyHostApi {
     return pigeonVar_replyValue! as DeviceFacts;
   }
 
+  Future<ServiceStatus> serviceStatus() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.serviceStatus$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as ServiceStatus;
+  }
+
+  /// Ids of the manufacturer settings screens that exist on this phone.
+  Future<List<String>> oemSettings() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.oemSettings$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
+  }
+
+  Future<LaunchTarget?> consumeLaunch() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.consumeLaunch$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as LaunchTarget?;
+  }
+
+  Future<bool> hasDeviceKey() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.hasDeviceKey$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as bool;
+  }
+
+  Future<void> deleteDeviceKey() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.deleteDeviceKey$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// The native sync engine runs a cycle now (in the foreground service, or as expedited work).
+  Future<void> syncNow() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.syncNow$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  Future<void> startSyncService() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.startSyncService$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  Future<void> stopSyncService() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.stopSyncService$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Revoked by the administrator: delete the key, the sync database and stored settings.
+  Future<void> wipe() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.wipe$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  Future<List<SimInfo>> sims() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.sims$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return (pigeonVar_replyValue! as List<Object?>).cast<SimInfo>();
+  }
+
+  /// Newest first. Pages of [limit] (the list asks for 50 at a time).
   Future<List<ThreadSummary>> threads(int limit, int offset) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.threads$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1422,6 +1878,26 @@ class TelephonyHostApi {
     )
     ;
     return (pigeonVar_replyValue! as List<Object?>).cast<ThreadSummary>();
+  }
+
+  /// One conversation row, after an event about it (null when the thread is gone).
+  Future<ThreadSummary?> thread(int threadId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.thread$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[threadId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as ThreadSummary?;
   }
 
   Future<List<ProviderMessage>> messages(int threadId, int limit, int? beforeDate) async {
@@ -1443,15 +1919,15 @@ class TelephonyHostApi {
     return (pigeonVar_replyValue! as List<Object?>).cast<ProviderMessage>();
   }
 
-  /// Newest first, for the initial backfill and rescans after changes made by other apps.
-  Future<List<ProviderMessage>> messagesSince(int sinceDate, int limit, int offset) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.messagesSince$pigeonVar_messageChannelSuffix';
+  /// Message bodies containing [query] (SMS and MMS text), newest first.
+  Future<List<ProviderMessage>> searchMessages(String query, int limit, int offset) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.searchMessages$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[sinceDate, limit, offset]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[query, limit, offset]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
@@ -1463,24 +1939,24 @@ class TelephonyHostApi {
     return (pigeonVar_replyValue! as List<Object?>).cast<ProviderMessage>();
   }
 
-  /// Bytes of one MMS part (content://mms/part/…) for upload.
-  Future<Uint8List> readMmsPart(String uri) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.readMmsPart$pigeonVar_messageChannelSuffix';
+  /// A small JPEG (longest side ≤ [maxPx]) of an MMS image/video part or a contact photo; null if not an image.
+  Future<Uint8List?> thumbnail(String uri, int maxPx) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.thumbnail$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[uri]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[uri, maxPx]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
         pigeonVar_replyList,
         pigeonVar_channelName,
-        isNullValid: false,
+        isNullValid: true,
     )
     ;
-    return pigeonVar_replyValue! as Uint8List;
+    return pigeonVar_replyValue as Uint8List?;
   }
 
   Future<List<ContactInfo>> lookupContacts(List<String> addresses) async {
@@ -1668,64 +2144,6 @@ class TelephonyHostApi {
     return (pigeonVar_replyValue! as List<Object?>).cast<String>();
   }
 
-  /// SQLCipher key for the local sync database (random, wrapped by a Keystore key, never leaves the phone).
-  Future<String> databaseKey() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.databaseKey$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
-    return pigeonVar_replyValue! as String;
-  }
-
-  Future<String> databasePath() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.databasePath$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
-    return pigeonVar_replyValue! as String;
-  }
-
-  Future<bool> hasDeviceKey() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.hasDeviceKey$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
-    return pigeonVar_replyValue! as bool;
-  }
-
   Future<KeyInfo> createDeviceKey(Uint8List attestationChallenge) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.createDeviceKey$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1764,25 +2182,8 @@ class TelephonyHostApi {
     return pigeonVar_replyValue! as Uint8List;
   }
 
-  Future<void> deleteDeviceKey() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.deleteDeviceKey$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: true,
-    )
-    ;
-  }
-
-  /// HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only.
+  /// HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only. Enrollment only:
+  /// everything after it is the native sync engine's.
   Future<HttpResponseData> http(HttpRequestData request) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.http$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1800,135 +2201,6 @@ class TelephonyHostApi {
     )
     ;
     return pigeonVar_replyValue! as HttpResponseData;
-  }
-
-  Future<void> startSyncService() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.startSyncService$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: true,
-    )
-    ;
-  }
-
-  Future<void> stopSyncService() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.stopSyncService$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: true,
-    )
-    ;
-  }
-
-  Future<ServiceStatus> serviceStatus() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.serviceStatus$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
-    return pigeonVar_replyValue! as ServiceStatus;
-  }
-
-  Future<void> openBatteryOptimisationSettings() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.openBatteryOptimisationSettings$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: true,
-    )
-    ;
-  }
-
-  Future<String?> launchAddress() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.launchAddress$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: true,
-    )
-    ;
-    return pigeonVar_replyValue as String?;
-  }
-
-  Future<void> setSecureScreen(bool secure) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.setSecureScreen$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[secure]);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: true,
-    )
-    ;
-  }
-
-  /// Revoked by the administrator: delete the key, the sync database and stored settings.
-  Future<void> wipe() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.wipe$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: true,
-    )
-    ;
   }
 }
 
