@@ -6,9 +6,29 @@ mail volume.
 
 ```
 Internet ─HTTPS─▶ Nginx :443 ─▶ frontend :3000 (127.0.0.1 only) ─▶ backend :8000 (Docker network)
-                                                                    ├─ postgres, redis
+                                                                    ├─ postgres
+                                                                    ├─ redis        (broker + security store: noeviction, AOF)
+                                                                    ├─ redis-cache  (plain cache: allkeys-lru, not persisted)
                                                                     └─ worker, beat
 ```
+
+### Two Redis roles
+
+One Redis used to be both the Celery broker and the cache, with `allkeys-lru`. Under memory pressure LRU may evict
+*any* key: a queued task (an outbound SMS dispatch, a sync) would silently vanish, and an evicted replay nonce would let
+a captured signed phone request be accepted a second time. The stack therefore runs two instances (decision 59):
+
+| Service | Holds | Policy | Persistence |
+|---|---|---|---|
+| `redis` (`REDIS_URL`) | Celery queue; the **security store**: device-auth nonces, login lockouts, the short-code breaker, rate-limit counters, throttle history, sync locks | `noeviction`, `REDIS_MAXMEMORY` (256 MB) | AOF (`appendfsync everysec`) in the `redisdata` volume |
+| `redis-cache` (`REDIS_CACHE_URL`) | evictable cache: Gmail token buckets and access-token cache, push coalescing | `allkeys-lru`, `REDIS_CACHE_MAXMEMORY` (128 MB) | none |
+
+With `noeviction`, a full `redis` refuses writes: the request that needed it fails (503 `try_later`) instead of being
+let through. Security checks **fail closed** (`backend/common/stores.py`; tests in `tests/test_stores.py`). Watch its
+memory (`docker compose exec redis redis-cli info memory`); 256 MB is far more than a queue of a few thousand tasks and
+the nonces of a few hundred phones need. `python manage.py check --deploy` verifies the policy and AOF of the live
+server (`cm.E003`, `cm.W001`) and that `REDIS_CACHE_URL` is set (`cm.W002`). Production refuses to start without
+`REDIS_URL`.
 
 ## 1. Prepare the server
 
@@ -19,7 +39,8 @@ sudo usermod -aG docker $USER   # log out and back in
 sudo timedatectl set-timezone Africa/Dar_es_Salaam
 ```
 
-Point a DNS `A` record (for example `mail.company.co.tz`) at the server, and open ports 80 and 443 only.
+Point a DNS `A` record for your admin domain (called `CM_DOMAIN` below, for example `admin.example.co.tz`) at the
+server, and open ports 80 and 443 only.
 
 ## 2. Configure
 
@@ -34,10 +55,10 @@ Edit `.env`. The minimum production values are:
 ```ini
 DJANGO_SETTINGS_MODULE=config.settings.prod
 DJANGO_SECRET_KEY=<python -c "import secrets; print(secrets.token_urlsafe(50))">
-DJANGO_ALLOWED_HOSTS=mail.company.co.tz,localhost,backend
-DJANGO_CSRF_TRUSTED_ORIGINS=https://mail.company.co.tz
+DJANGO_ALLOWED_HOSTS=admin.example.co.tz,localhost,backend
+DJANGO_CSRF_TRUSTED_ORIGINS=https://admin.example.co.tz
 POSTGRES_PASSWORD=<strong random password>
-PUBLIC_APP_URL=https://mail.company.co.tz
+PUBLIC_APP_URL=https://admin.example.co.tz
 COMPANY_NAME=Kilimanjaro Trading Ltd
 FRONTEND_PORT=127.0.0.1:3000
 SEED_DEMO=0
@@ -58,7 +79,7 @@ stored mailbox connection is unreadable (every mailbox must be reconnected) and 
 is lost for good.
 
 Set up Google first ([google-setup.md](google-setup.md)) and register
-`https://mail.company.co.tz/api/v1/mail/oauth/callback/` as an authorised redirect URI.
+`https://admin.example.co.tz/api/v1/mail/oauth/callback/` as an authorised redirect URI.
 
 ## 3. Start
 
@@ -72,15 +93,34 @@ The backend container runs migrations on every start. Sign in, then add offices,
 
 ## 4. Nginx and HTTPS
 
+`deploy/nginx.conf.template` is rendered for your domain by `deploy/render-nginx.sh` (`envsubst` of `${CM_DOMAIN}`
+only, so Nginx's own `$variables` stay intact):
+
 ```bash
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/communication-manager
-sudo sed -i 's/mail.company.co.tz/YOUR.DOMAIN/g' /etc/nginx/sites-available/communication-manager
+sudo apt install -y gettext-base                       # envsubst
+sudo CM_DOMAIN=admin.example.co.tz deploy/render-nginx.sh
 sudo ln -s /etc/nginx/sites-available/communication-manager /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 # First certificate: temporarily comment out the 443 server block, reload, then:
-sudo certbot --nginx -d YOUR.DOMAIN
+sudo certbot --nginx -d admin.example.co.tz
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+What the config adds on top of proxying:
+
+- **Rate limits:** `/api/v1/device/` 20 r/s per address (burst 40); `/api/v1/auth/login/` 10 r/min per address
+  (burst 5), under Django's own login throttle and per-email lockout.
+- **Security headers** Django sends in production (`nosniff`, `Referrer-Policy: same-origin`, `X-Frame-Options:
+  DENY`, HSTS), added only when the upstream did not send them, so Next.js pages, error pages and static files carry
+  them too and nothing is duplicated.
+- **gzip for static text assets only** (`/_next/static/`: JS, CSS, SVG). HTML and API responses are not compressed:
+  compression of responses that carry a secret (CSRF token, mail content) next to attacker-influenced text enables
+  BREACH-style attacks (decision 60).
+- `server_tokens off`.
+
+A separate phone domain (see *Separate domains* below) uses `deploy/nginx-api.conf.template`:
+`sudo CM_API_DOMAIN=api.example.co.tz deploy/render-nginx.sh api`. It serves only `/api/v1/device/` and answers 404 to
+everything else; it relies on the zones and header maps of the admin template, so install both.
 
 Certbot renews certificates automatically (`systemctl list-timers | grep certbot`).
 
@@ -95,24 +135,44 @@ reach the app without going through Nginx.
 
 ## 5. Backups
 
+`deploy/backup.sh` makes a consistent nightly backup and keeps `BACKUP_RETENTION_DAYS` (default 14) of them in
+`BACKUP_DIR` (default `/var/backups/communication-manager`, mode 700):
+
+- `db-<time>.dump`: `pg_dump -Fc` of the whole database, checked with `pg_restore --list` before it is kept;
+- `sms-media-<time>.tgz`: the `smsmedia` volume (encrypted MMS files);
+- `checksums-<time>.sha256`.
+
 ```bash
-# Nightly database dump (crontab -e)
-15 2 * * * cd /opt/communication-manager && docker compose exec -T postgres pg_dump -U cm -Fc cm > /var/backups/cm-$(date +\%F).dump && find /var/backups -name 'cm-*.dump' -mtime +14 -delete
+# crontab -e (as a user in the docker group)
+15 2 * * * /opt/communication-manager/deploy/backup.sh >> /var/log/cm-backup.log 2>&1
+# and copy the directory off the server, for example:
+45 2 * * * rsync -a --delete /var/backups/communication-manager/ backup@offsite:/srv/cm/
 ```
 
-Copy the dumps off the server. Restore with
-`docker compose exec -T postgres pg_restore -U cm -d cm --clean < cm-YYYY-MM-DD.dump`. The database holds the
-encrypted tokens, so a dump is only useful together with `MAIL_TOKEN_KEYS`. For the same reason, a dump
-alone does not expose the tokens. Treat dumps as confidential anyway: they contain mail metadata and
-cached bodies.
+**Keys are not in the backup, and must never be stored with it.** The database holds mailbox tokens encrypted with
+`MAIL_TOKEN_KEYS` and SMS/call text encrypted with `SMS_DATA_KEYS`; the media archive is encrypted with
+`SMS_DATA_KEYS`. Keep those keys (and `DJANGO_SECRET_KEY`) **offline and separately**, for example in the company
+password manager and on paper in a safe. A backup without its keys is useless — nobody, including you, can read the
+messages — and a backup stored *with* its keys is a full copy of every conversation for whoever finds it. Treat dumps as
+confidential anyway: numbers, names and timestamps are plaintext.
 
-Redis holds only queues and caches, so it does not need a backup.
+Redis holds only queues, nonces and counters; it is not backed up. Its AOF only protects queued tasks across restarts.
 
-### SMS media
+### Restore (tested procedure)
 
-Encrypted MMS files live in the `smsmedia` Docker volume (`SMS_MEDIA_ROOT=/data/sms-media`). Back it up with the
-database (`docker run --rm -v communication-manager_smsmedia:/v -v /var/backups:/b alpine tar czf /b/sms-media-$(date +%F).tgz -C /v .`).
-It is useless without `SMS_DATA_KEYS`.
+1. On the target server, check out the same version of the code and create `.env` with the **same**
+   `MAIL_TOKEN_KEYS`, `SMS_DATA_KEYS` and `DJANGO_SECRET_KEY` from the offline copy.
+2. `docker compose up -d postgres redis redis-cache`
+3. `deploy/restore.sh /path/db-<time>.dump /path/sms-media-<time>.tgz` — verifies the checksums, asks you to type
+   `restore`, stops the app containers, recreates the database, restores the dump and the media volume, and starts
+   everything (migrations run on start).
+4. Sign in; open an SMS conversation with an MMS photo (decrypts text and media) and a mailbox (decrypts its token).
+5. Phones need nothing: they keep their identity and resume uploading; events the server had not yet stored when the
+   backup was taken are uploaded again from each phone's outbox only if the phone still holds them, so take backups
+   often enough for your tolerance.
+
+Test a restore on a spare machine at least every quarter. The procedure above was run end to end on the Docker stack
+during the deployment-hardening work (docs/status.md).
 
 ## 6. Updating
 
@@ -176,7 +236,10 @@ the admin API off the internet and keeps a single proxy hop, which `X-Forwarded-
 - The Gmail **Dashboard** shows mailboxes that need reconnecting or have sync errors.
 - The SMS **Dashboard** and **Phones** page show phones that are offline, no longer the default SMS app, missing a
   permission, battery-optimised, behind on uploads or running an old app.
-- Point an uptime monitor at `https://YOUR.DOMAIN/api/v1/auth/csrf/` (it returns 200 when Django is up).
+- Point an uptime monitor at `https://YOUR.DOMAIN/api/v1/health/` (it returns `{"ok": true}` when Django is up; the
+  backend container's health check uses the same URL).
+- Container logs rotate (json-file driver, `LOG_MAX_SIZE` × `LOG_MAX_FILES` per container, default 10 MB × 5).
+- Watch the broker/security Redis memory: `docker compose exec redis redis-cli info memory | grep used_memory_human`.
 
 ## Environment variables
 
@@ -195,7 +258,11 @@ the admin API off the internet and keeps a single proxy hop, which `X-Forwarded-
 | `CELERY_CONCURRENCY` | `2` | Worker processes |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `cm` / `cm` / `cm` | **Strong password in prod** |
 | `DATABASE_URL` | built by compose | Manual setups only |
-| `REDIS_URL` | built by compose | Empty = tasks run inline (dev) |
+| `REDIS_URL` | built by compose | Celery broker + security store (noeviction, AOF). Empty = tasks run inline (dev only; prod refuses) |
+| `REDIS_CACHE_URL` | built by compose | Evictable cache (allkeys-lru). Empty = DB 1 on `REDIS_URL`'s server (dev only) |
+| `REDIS_MAXMEMORY` / `REDIS_CACHE_MAXMEMORY` | `256mb` / `128mb` | Compose: memory of the two Redis instances |
+| `LOG_MAX_SIZE` / `LOG_MAX_FILES` | `10m` / `5` | Compose: log rotation per container |
+| `BACKUP_DIR` / `BACKUP_RETENTION_DAYS` | `/var/backups/communication-manager` / `14` | `deploy/backup.sh` |
 | `COMPANY_NAME` | `Your Company` | Shown on the public connect page |
 | `PUBLIC_APP_URL` | `http://localhost:3000` | Used for connect links and the OAuth redirect |
 | `SEED_DEMO` | `1` (compose) | `0` in prod |

@@ -183,3 +183,15 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
 58. **Native libraries are compressed in the APK.** Phones get the APK file itself (link, MDM), and with stored
     libraries the arm64 split was about 28 MB (budget 25 MB). Deflated it is about 16 MB; Android extracts the
     libraries once at install (about 20 MB more on disk). Dex files stay stored so ART can map them.
+59. **Two Redis roles; security state fails closed.** The broker Redis also holds the *security store* (Django cache
+    alias `security`: device-auth nonces, login lockouts, the short-code breaker, SMS rate-limit counters, DRF throttle
+    history, the Gmail sync lock) and runs `noeviction` + AOF; plain cache data (token buckets, push coalescing, cached
+    Gmail access tokens) lives in a second, `allkeys-lru` instance (`REDIS_CACHE_URL`). With LRU on one shared instance
+    an evicted nonce would have let a replayed signed request through and an evicted task would have lost an outbound
+    SMS. `common/stores.py` wraps the store: any error raises `SecurityStoreUnavailable`, which every view turns into
+    `503 try_later` (a store outage never burns an enrollment code). Throttles that cannot read their history refuse too.
+    Production refuses to start without `REDIS_URL`; `check --deploy` reads the live policy.
+60. **Nginx compresses static assets only.** gzip is on for `/_next/static/` (JS, CSS, SVG) and off for HTML and the
+    API: compressed responses that mix a secret (CSRF token, mail text) with attacker-influenced input are the BREACH
+    pattern. Static bundles are the bulk of the bytes anyway. The config is a template (`${CM_DOMAIN}`) rendered by
+    `deploy/render-nginx.sh`, so no placeholder domain can be left in a live config.

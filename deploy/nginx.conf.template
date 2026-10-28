@@ -1,17 +1,28 @@
 # Communication Manager — Nginx in front of the Docker stack on a single VPS.
-# Rate limit for the phone-facing API (per client address; phones share carrier NAT, so keep it generous). Must be in
-# the http {} context: this file is included there by sites-enabled.
-limit_req_zone $binary_remote_addr zone=cm_device:10m rate=20r/s;
+#
+# This is a template. Render it with deploy/render-nginx.sh (envsubst of ${CM_DOMAIN} only, so Nginx's own $variables
+# are left alone):
+#   sudo CM_DOMAIN=admin.example.co.tz deploy/render-nginx.sh
+# Everything goes to Next.js (127.0.0.1:3000), which proxies /api/v1/* to Django on the Docker network, so the session
+# and CSRF cookies stay same-origin. Phones may also use this domain for /api/v1/device/ (or a separate API domain:
+# deploy/nginx-api.conf.template).
 
-# Install: copy to /etc/nginx/sites-available/communication-manager, replace mail.company.co.tz,
-# symlink into sites-enabled, then `sudo certbot --nginx -d mail.company.co.tz` adds the TLS lines.
-# Everything goes to Next.js (127.0.0.1:3000), which proxies /api/v1/* to Django on the Docker network,
-# so the session and CSRF cookies stay same-origin.
+# These zones must be in the http {} context: this file is included there by sites-enabled.
+# Phone-facing API, per client address (phones share carrier NAT, so keep it generous).
+limit_req_zone $binary_remote_addr zone=cm_device:10m rate=20r/s;
+# Sign-in, per client address: a second layer under Django's own throttle (10/min per IP) and lockout (8 per email).
+limit_req_zone $binary_remote_addr zone=cm_login:10m rate=10r/m;
+
+# Security headers Django sends (prod settings), added here when the upstream did not send one, so a response from
+# Next.js, an error page or a static file gets them too, and none is ever duplicated.
+map $upstream_http_x_content_type_options $cm_nosniff { "" "nosniff"; default ""; }
+map $upstream_http_referrer_policy $cm_referrer { "" "same-origin"; default ""; }
+map $upstream_http_x_frame_options $cm_frame { "" "DENY"; default ""; }
 
 server {
     listen 80;
     listen [::]:80;
-    server_name mail.company.co.tz;
+    server_name ${CM_DOMAIN};
 
     # Certbot rewrites this block to redirect to HTTPS once a certificate is issued.
     location / {
@@ -23,16 +34,49 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
     http2 on;
-    server_name mail.company.co.tz;
+    server_name ${CM_DOMAIN};
 
     # Managed by certbot.
-    ssl_certificate     /etc/letsencrypt/live/mail.company.co.tz/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/mail.company.co.tz/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/${CM_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${CM_DOMAIN}/privkey.pem;
 
     # Gmail's 25 MB attachment limit, plus MIME overhead.
     client_max_body_size 30m;
+    server_tokens off;
 
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options $cm_nosniff always;
+    add_header Referrer-Policy $cm_referrer always;
+    add_header X-Frame-Options $cm_frame always;
+
+    # gzip only for static text assets (JS, CSS, SVG, fonts' metadata). Not for HTML or API responses: compressing
+    # responses that carry a secret (CSRF token, mail content) next to attacker-influenced text enables BREACH.
+    location ^~ /_next/static/ {
+        gzip on;
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_min_length 1024;
+        gzip_comp_level 5;
+        gzip_types text/css application/javascript text/javascript image/svg+xml application/json text/plain;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Sign-in: its own, stricter rate limit.
+    location = /api/v1/auth/login/ {
+        limit_req zone=cm_login burst=5 nodelay;
+        limit_req_status 429;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 30s;
+    }
 
     # Phone API: straight to Django (no Next.js hop). Device-token auth only; the admin API stays behind Next.js.
     # MMS uploads arrive in chunks of at most 512 KB, sync batches are at most 1 MB.
