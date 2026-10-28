@@ -60,6 +60,13 @@ def conversation_for(device: Device, keys: list[str], *, thread_id: int | None =
         conversation.thread_id = thread_id
     if created:
         Contact.objects.bulk_create([Contact(device=device, address=key) for key in keys], ignore_conflicts=True)
+        if len(keys) == 1:
+            from modules.directory.services.customers import touch
+
+            customer = touch(keys[0], channel="sms", at=at or timezone.now(), device=device)
+            if customer:
+                Conversation.objects.filter(pk=conversation.pk).update(customer=customer)
+                conversation.customer = customer
     return conversation
 
 
@@ -122,6 +129,10 @@ def upsert_message(device: Device, data: dict) -> tuple[Message, bool, int]:
         if status == MessageStatus.SENT:
             message.sent_at = date
         message.save()
+        if conversation.customer_id and conversation.first_message_at != date:
+            from modules.directory.services.customers import seen
+
+            seen(conversation.customer, channel="sms", at=date, device=device)
         if direction == Message.IN:
             # Like Google Messages: a new incoming message brings an archived or "done" conversation back.
             Conversation.objects.filter(pk=conversation.pk).filter(Q(is_archived=True) | Q(state=Conversation.DONE)).update(is_archived=False, state=Conversation.OPEN)

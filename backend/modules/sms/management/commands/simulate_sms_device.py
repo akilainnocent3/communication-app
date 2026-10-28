@@ -45,8 +45,10 @@ class Command(BaseCommand):
         if options["run"]:
             self.stdout.write("Simulating phones. Ctrl+C to stop.")
             rng = random.Random()
+            from modules.calls.services import simulator as calls_simulator
+
             while True:
-                handled = simulator.tick_all()
+                handled = simulator.tick_all() + calls_simulator.tick_all()
                 if handled:
                     self.stdout.write(f"  {handled} status reports")
                 time.sleep(options["interval"] * rng.uniform(0.8, 1.2))

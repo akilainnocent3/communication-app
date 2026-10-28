@@ -165,6 +165,443 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calls/annotations/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["calls_annotations_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["calls_annotations_update"];
+        trace?: never;
+    };
+    "/api/v1/calls/badges/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_badges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/callbacks/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_callbacks_list"];
+        put?: never;
+        post: operations["calls_callbacks_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/callbacks/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_callbacks_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["calls_callbacks_update"];
+        trace?: never;
+    };
+    "/api/v1/calls/callbacks/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["calls_callbacks_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/callbacks/bulk/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["calls_callbacks_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/calls/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/calls/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/calls/{id}/annotations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["calls_annotations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/customers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_customers_list"];
+        put?: never;
+        post: operations["calls_customers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/customers/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_customers_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["calls_customers_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["calls_customers_update"];
+        trace?: never;
+    };
+    "/api/v1/calls/customers/{id}/timeline/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_customers_timeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/customers/merge/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["calls_customers_merge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/devices/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_devices_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/devices/{id}/access/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_device_access_list"];
+        put: operations["calls_device_access_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/devices/{id}/enable/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Switch Calls on or off for a phone. The phone learns it from its next heartbeat (and a push) and runs the dialer
+         *     onboarding; switching off keeps the history.
+         */
+        post: operations["calls_devices_enable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/devices/{id}/simulator/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Demo phones only (SMS_ENABLE_SIMULATOR, refused in production): ring an incoming call, a missed one, or run a tick. */
+        post: operations["calls_devices_simulator"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/export/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/live/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_live"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/office-hours/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_office_hours_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/office-hours/{office_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["calls_office_hours_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/outcomes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_outcomes_list"];
+        put?: never;
+        post: operations["calls_outcomes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/outcomes/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["calls_outcomes_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["calls_outcomes_update"];
+        trace?: never;
+    };
+    "/api/v1/calls/settings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_settings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["calls_settings_update"];
+        trace?: never;
+    };
+    "/api/v1/calls/stats/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/tariffs/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_tariffs_list"];
+        put?: never;
+        post: operations["calls_tariffs_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/tariffs/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["calls_tariffs_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["calls_tariffs_update"];
+        trace?: never;
+    };
     "/api/v1/device/auth/token/": {
         parameters: {
             query?: never;
@@ -176,6 +613,61 @@ export interface paths {
         put?: never;
         /** @description Enrollment and token minting: no auth, throttled per client IP. */
         post: operations["device_auth_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/calls/callbacks/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        get: operations["device_calls_callbacks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/calls/config/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        get: operations["device_calls_config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/device/calls/directory/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Caller ID from the company directory: names and numbers only, and only of customers this phone has been in
+         *     contact with (or flagged for every phone). A delta by `updated_at`; the phone keeps the result in its encrypted
+         *     database and wipes it on revoke. An entry that lost its name or was merged comes back as removed.
+         */
+        get: operations["device_calls_directory"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -327,7 +819,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Base for every authenticated phone endpoint. Never mix with session-auth views. */
+        /** @description The phone's outbox, for every phone platform (events.py). Ordered, idempotent, per-event savepoints. */
         post: operations["device_sync_events"];
         delete?: never;
         options?: never;
@@ -2048,6 +2540,372 @@ export interface components {
             device: string;
             address: string;
         };
+        CallAnnotation: {
+            id: number;
+            readonly outcome: components["schemas"]["CallOutcomeRef"] | null;
+            readonly note: string;
+            tags: string[];
+            readonly author: string;
+            from_phone: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CallAnnotationWriteRequest: {
+            outcome?: number | null;
+            /** @default  */
+            note: string;
+            tags?: string[];
+        };
+        CallBadges: {
+            unreturned: number;
+            open_callbacks: number;
+            my_callbacks: number;
+            attention: number;
+        };
+        CallDetail: {
+            id: number;
+            device: components["schemas"]["CallDeviceRef"];
+            readonly sim: components["schemas"]["CallSimRef"] | null;
+            direction: string;
+            result: string;
+            number: string;
+            readonly display_number: string;
+            readonly name: string;
+            /** @description phone (saved in the phone's contacts), directory (company directory) or "". */
+            readonly name_source: string;
+            customer_id: number | null;
+            presentation: string;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            answered_at: string | null;
+            /** Format: date-time */
+            ended_at: string | null;
+            ring_seconds: number;
+            talk_seconds: number;
+            is_after_hours: boolean;
+            is_conference: boolean;
+            is_video: boolean;
+            origin: string;
+            /** Format: date-time */
+            returned_at: string | null;
+            readonly outcome: components["schemas"]["CallOutcomeRef"] | null;
+            readonly deleted_on_device: boolean;
+            is_final: boolean;
+            disconnect_cause_label: string;
+            ended_by: string;
+            network: string;
+            conference_size: number;
+            was_on_hold_seconds: number;
+            returns_call_id: number | null;
+            returned_by_id: number | null;
+            callback_task_id: number | null;
+            events: components["schemas"]["CallEvent"][];
+            annotations: components["schemas"]["CallAnnotation"][];
+            history: components["schemas"]["CallHistoryItem"][];
+            permissions: {
+                [key: string]: boolean;
+            };
+            outcome_required: boolean;
+        };
+        CallDevice: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            office: string;
+            colour: string;
+            status: string;
+            readonly calls_enabled: boolean;
+            readonly online: boolean;
+            /** Format: date-time */
+            last_seen_at: string | null;
+            is_default_dialer: boolean;
+            full_screen_intent_allowed: boolean | null;
+            call_state: string;
+            readonly attention: {
+                [key: string]: unknown;
+            }[];
+            readonly holder: string;
+            readonly calls_backfill: {
+                [key: string]: unknown;
+            };
+        };
+        CallDeviceAccess: {
+            user: number;
+            readonly name: string;
+            readonly email: string;
+            /** @default true */
+            can_read: boolean;
+            /** @default false */
+            can_assign_callbacks: boolean;
+            /** @default false */
+            can_annotate: boolean;
+            /** @default false */
+            can_export: boolean;
+        };
+        CallDeviceAccessRequest: {
+            user: number;
+            /** @default true */
+            can_read: boolean;
+            /** @default false */
+            can_assign_callbacks: boolean;
+            /** @default false */
+            can_annotate: boolean;
+            /** @default false */
+            can_export: boolean;
+        };
+        CallDeviceRef: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            office: string;
+            colour: string;
+        };
+        CallEnableRequest: {
+            enabled: boolean;
+        };
+        CallEvent: {
+            kind: string;
+            /** Format: date-time */
+            at: string;
+            data: {
+                [key: string]: unknown;
+            };
+        };
+        CallHistoryItem: {
+            kind: components["schemas"]["CallHistoryItemKindEnum"];
+            /** Format: date-time */
+            at: string;
+            direction: string;
+            result: string;
+            talk_seconds: number | null;
+            device: string;
+            call_id: number | null;
+            conversation_id: number | null;
+            snippet: string;
+        };
+        /**
+         * @description * `call` - call
+         *     * `sms` - sms
+         * @enum {string}
+         */
+        CallHistoryItemKindEnum: "call" | "sms";
+        CallLive: {
+            /** Format: date-time */
+            server_time: string;
+            phones: {
+                [key: string]: unknown;
+            }[];
+            totals: {
+                [key: string]: unknown;
+            };
+        };
+        CallOutcome: {
+            readonly id: number;
+            name: string;
+            colour?: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        CallOutcomeRef: {
+            id: number;
+            name: string;
+            colour: string;
+        };
+        CallOutcomeRequest: {
+            name: string;
+            colour?: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        CallPage: {
+            results: components["schemas"]["CallSummary"][];
+            next_cursor: string | null;
+        };
+        CallSettings: {
+            unreturned_hours: number;
+            outcome_required_after_seconds: number;
+            post_call_card: boolean;
+            auto_sms_enabled: boolean;
+            auto_sms_template: string;
+            auto_sms_after_hours_only: boolean;
+            auto_sms_per_number_per_day: number;
+            auto_sms_cooldown_hours: number;
+            callback_expiry_hours: number;
+            retention_days: number | null;
+            readonly effective_retention_days: number;
+        };
+        CallSimRef: {
+            id: number;
+            label: string;
+            colour: string;
+        };
+        /**
+         * @description * `incoming` - incoming
+         *     * `missed` - missed
+         *     * `tick` - tick
+         * @enum {string}
+         */
+        CallSimulatorActionActionEnum: "incoming" | "missed" | "tick";
+        CallSimulatorActionRequest: {
+            action: components["schemas"]["CallSimulatorActionActionEnum"];
+        };
+        /**
+         * @description * `idle` - idle
+         *     * `ringing` - ringing
+         *     * `active` - active
+         *     * `held` - held
+         *     * `` -
+         * @enum {string}
+         */
+        CallStateEnum: "idle" | "ringing" | "active" | "held";
+        CallStats: {
+            range_days: number;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            unreturned_hours: number;
+            kpis: {
+                [key: string]: unknown;
+            };
+            series: {
+                [key: string]: unknown;
+            }[];
+            heatmap: number[][];
+            by_result: {
+                [key: string]: unknown;
+            }[];
+            per_device: {
+                [key: string]: unknown;
+            }[];
+            per_office: {
+                [key: string]: unknown;
+            }[];
+            per_sim: {
+                [key: string]: unknown;
+            }[];
+            staff: {
+                [key: string]: unknown;
+            }[];
+            callers: {
+                [key: string]: unknown;
+            };
+            top_callers: {
+                [key: string]: unknown;
+            }[];
+            outcomes: {
+                [key: string]: unknown;
+            }[];
+            unreturned_list: {
+                [key: string]: unknown;
+            }[];
+        };
+        CallSummary: {
+            id: number;
+            device: components["schemas"]["CallDeviceRef"];
+            readonly sim: components["schemas"]["CallSimRef"] | null;
+            direction: string;
+            result: string;
+            number: string;
+            readonly display_number: string;
+            readonly name: string;
+            /** @description phone (saved in the phone's contacts), directory (company directory) or "". */
+            readonly name_source: string;
+            customer_id: number | null;
+            presentation: string;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            answered_at: string | null;
+            /** Format: date-time */
+            ended_at: string | null;
+            ring_seconds: number;
+            talk_seconds: number;
+            is_after_hours: boolean;
+            is_conference: boolean;
+            is_video: boolean;
+            origin: string;
+            /** Format: date-time */
+            returned_at: string | null;
+            readonly outcome: components["schemas"]["CallOutcomeRef"] | null;
+            readonly deleted_on_device: boolean;
+            is_final: boolean;
+        };
+        Callback: {
+            id: number;
+            device: components["schemas"]["CallDeviceRef"];
+            number: string;
+            readonly display_number: string;
+            readonly name: string;
+            customer_id: number | null;
+            source_call_id: number | null;
+            call_id: number | null;
+            readonly assigned_by: string;
+            readonly assignee: string;
+            /** Format: date-time */
+            due_at: string;
+            priority: string;
+            readonly reason: string;
+            state: string;
+            attempts: number;
+            /** Format: date-time */
+            notified_at: string | null;
+            /** Format: date-time */
+            dialed_at: string | null;
+            /** Format: date-time */
+            done_at: string | null;
+            /** Format: date-time */
+            snoozed_until: string | null;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /**
+         * @description * `assign` - assign
+         *     * `cancel` - cancel
+         *     * `done` - done
+         * @enum {string}
+         */
+        CallbackBulkActionEnum: "assign" | "cancel" | "done";
+        CallbackBulkRequest: {
+            ids: number[];
+            action: components["schemas"]["CallbackBulkActionEnum"];
+            /** Format: uuid */
+            device?: string;
+            /** Format: date-time */
+            due_at?: string;
+        };
+        CallbackCreateRequest: {
+            /** Format: uuid */
+            device: string;
+            /** @default  */
+            number: string;
+            call?: number | null;
+            customer?: number | null;
+            /** Format: date-time */
+            due_at?: string | null;
+            /** @default normal */
+            priority: components["schemas"]["PriorityEnum"];
+            /** @default  */
+            reason: string;
+        };
+        CallsConfig: {
+            outcomes: {
+                [key: string]: unknown;
+            }[];
+            post_call_card: boolean;
+            outcome_required_after_seconds: number;
+            sims: {
+                [key: string]: unknown;
+            }[];
+            server_time: number;
+        };
         Capabilities: {
             labels: boolean;
             categories: boolean;
@@ -2058,6 +2916,23 @@ export interface components {
             important: boolean;
             server_search: boolean;
             revoke: boolean;
+        };
+        CarrierTariff: {
+            readonly id: number;
+            /** @description As the SIM reports it (SimLine.carrier), case-insensitive. */
+            carrier: string;
+            /** Format: decimal */
+            per_minute: string;
+            currency?: string;
+            billing_increment_seconds?: number;
+        };
+        CarrierTariffRequest: {
+            /** @description As the SIM reports it (SimLine.carrier), case-insensitive. */
+            carrier: string;
+            /** Format: decimal */
+            per_minute: string;
+            currency?: string;
+            billing_increment_seconds?: number;
         };
         ClaimRequest: {
             /** @default 10 */
@@ -2225,6 +3100,70 @@ export interface components {
         Csrf: {
             csrf_token: string;
         };
+        Customer: {
+            id: number;
+            key: string;
+            readonly display_number: string;
+            display_name: string;
+            organisation: string;
+            tags: string[];
+            readonly owner: string;
+            owner_id: number | null;
+            caller_id_all_phones: boolean;
+            auto_sms_opt_out: boolean;
+            /** Format: date-time */
+            first_seen_call: string | null;
+            /** Format: date-time */
+            last_seen_call: string | null;
+            /** Format: date-time */
+            first_seen_sms: string | null;
+            /** Format: date-time */
+            last_seen_sms: string | null;
+        };
+        CustomerDetail: {
+            id: number;
+            key: string;
+            readonly display_number: string;
+            display_name: string;
+            organisation: string;
+            tags: string[];
+            readonly owner: string;
+            owner_id: number | null;
+            caller_id_all_phones: boolean;
+            auto_sms_opt_out: boolean;
+            /** Format: date-time */
+            first_seen_call: string | null;
+            /** Format: date-time */
+            last_seen_call: string | null;
+            /** Format: date-time */
+            first_seen_sms: string | null;
+            /** Format: date-time */
+            last_seen_sms: string | null;
+            notes: string;
+            can_edit: boolean;
+            aliases: string[];
+            stats: {
+                [key: string]: unknown;
+            };
+        };
+        CustomerMergeRequest: {
+            target: number;
+            sources: number[];
+        };
+        CustomerPage: {
+            results: components["schemas"]["Customer"][];
+            next_cursor: string | null;
+        };
+        CustomerWriteRequest: {
+            number?: string;
+            display_name?: string;
+            organisation?: string;
+            tags?: string[];
+            notes?: string;
+            owner?: number | null;
+            caller_id_all_phones?: boolean;
+            auto_sms_opt_out?: boolean;
+        };
         /**
          * @description * `comfortable` - comfortable
          *     * `compact` - compact
@@ -2375,6 +3314,10 @@ export interface components {
             revoked_at: string | null;
             readonly enrolled_by: components["schemas"]["UserRef"] | null;
             readonly push_enabled: boolean;
+            capabilities: {
+                [key: string]: boolean;
+            };
+            is_default_dialer: boolean;
         };
         DeviceFactsRequest: {
             /** @default  */
@@ -2410,6 +3353,17 @@ export interface components {
             reason: string;
             /** @default  */
             confirm_code: string;
+        };
+        DirectoryEntry: {
+            number: string;
+            name: string;
+            organisation: string;
+            removed: boolean;
+        };
+        DirectoryPage: {
+            entries: components["schemas"]["DirectoryEntry"][];
+            next_cursor: string | null;
+            complete: boolean;
         };
         Draft: {
             id: number;
@@ -2502,6 +3456,7 @@ export interface components {
             readonly device: components["schemas"]["DeviceRef"] | null;
             failed_attempts: number;
             last_failure: string;
+            platforms: string[];
             /** Format: date-time */
             short_code_expires_at: string | null;
             readonly short_code_used: boolean;
@@ -2517,6 +3472,8 @@ export interface components {
             signature: string;
             /** @default true */
             mark_read_on_open: boolean;
+            /** @description Phone platforms to enroll for; default ["sms"]. "calls" needs calls.manage_settings. */
+            platforms?: components["schemas"]["PlatformsEnum"][];
         };
         EnrollmentCreated: {
             id: number;
@@ -2533,6 +3490,7 @@ export interface components {
             readonly device: components["schemas"]["DeviceRef"] | null;
             failed_attempts: number;
             last_failure: string;
+            platforms: string[];
             /** Format: date-time */
             short_code_expires_at: string | null;
             readonly short_code_used: boolean;
@@ -2549,24 +3507,12 @@ export interface components {
         };
         EventRequest: {
             seq: number;
-            type: components["schemas"]["EventTypeEnum"];
+            /** @description message.upsert, call.upsert, … (see docs/sms-mobile.md and docs/calls-mobile.md) */
+            type: string;
             payload: {
                 [key: string]: unknown;
             };
         };
-        /**
-         * @description * `backfill.progress` - backfill.progress
-         *     * `block.add` - block.add
-         *     * `block.remove` - block.remove
-         *     * `contact.upsert` - contact.upsert
-         *     * `message.delete` - message.delete
-         *     * `message.read` - message.read
-         *     * `message.upsert` - message.upsert
-         *     * `thread.delete` - thread.delete
-         *     * `thread.read` - thread.read
-         * @enum {string}
-         */
-        EventTypeEnum: "backfill.progress" | "block.add" | "block.remove" | "contact.upsert" | "message.delete" | "message.read" | "message.upsert" | "thread.delete" | "thread.read";
         Filter: {
             readonly id: string;
             criteria: components["schemas"]["FilterCriteria"];
@@ -2619,6 +3565,11 @@ export interface components {
             network_type: components["schemas"]["NetworkTypeEnum"] | components["schemas"]["BlankEnum"];
             signal?: number | null;
             is_default_sms_app: boolean;
+            /** @default false */
+            is_default_dialer: boolean;
+            full_screen_intent_allowed?: boolean | null;
+            /** @default  */
+            call_state: components["schemas"]["CallStateEnum"] | components["schemas"]["BlankEnum"];
             permissions?: {
                 [key: string]: boolean;
             };
@@ -2644,6 +3595,10 @@ export interface components {
         };
         HeartbeatResponse: {
             status: string;
+            /** @description Phone platforms enabled for this phone (the app runs their onboarding). */
+            capabilities: {
+                [key: string]: boolean;
+            };
             attention: string[];
             server_time: number;
             poll_seconds: number;
@@ -2948,6 +3903,24 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        OfficeHours: {
+            office: number;
+            readonly office_name: string;
+            timezone: string;
+            week: {
+                [key: string]: string[][];
+            };
+            holidays: string[];
+            readonly configured: boolean;
+        };
+        OfficeHoursRequest: {
+            office: number;
+            timezone: string;
+            week: {
+                [key: string]: string[][];
+            };
+            holidays: string[];
+        };
         OfficeRef: {
             id: number;
             name: string;
@@ -3012,6 +3985,57 @@ export interface components {
             name: string;
             unread?: boolean;
             is_me?: boolean;
+        };
+        PatchedCallAnnotationWriteRequest: {
+            outcome?: number | null;
+            /** @default  */
+            note: string;
+            tags?: string[];
+        };
+        PatchedCallOutcomeRequest: {
+            name?: string;
+            colour?: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        PatchedCallSettingsRequest: {
+            unreturned_hours?: number;
+            outcome_required_after_seconds?: number;
+            post_call_card?: boolean;
+            auto_sms_enabled?: boolean;
+            auto_sms_template?: string;
+            auto_sms_after_hours_only?: boolean;
+            auto_sms_per_number_per_day?: number;
+            auto_sms_cooldown_hours?: number;
+            callback_expiry_hours?: number;
+            retention_days?: number | null;
+        };
+        PatchedCallbackUpdateRequest: {
+            /** Format: uuid */
+            device?: string;
+            /** Format: date-time */
+            due_at?: string;
+            priority?: components["schemas"]["PriorityEnum"];
+            reason?: string;
+            state?: components["schemas"]["StateEnum"];
+        };
+        PatchedCarrierTariffRequest: {
+            /** @description As the SIM reports it (SimLine.carrier), case-insensitive. */
+            carrier?: string;
+            /** Format: decimal */
+            per_minute?: string;
+            currency?: string;
+            billing_increment_seconds?: number;
+        };
+        PatchedCustomerWriteRequest: {
+            number?: string;
+            display_name?: string;
+            organisation?: string;
+            tags?: string[];
+            notes?: string;
+            owner?: number | null;
+            caller_id_all_phones?: boolean;
+            auto_sms_opt_out?: boolean;
         };
         PatchedDeviceUpdateRequest: {
             name?: string;
@@ -3116,6 +4140,18 @@ export interface components {
             code: string;
             name: string;
         };
+        PhoneCallback: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            name: string;
+            reason: string;
+            requested_by: string;
+            priority: string;
+            due_at: number;
+            state: string;
+            snoozed_until: number | null;
+        };
         Platform: {
             key: string;
             name: string;
@@ -3128,6 +4164,20 @@ export interface components {
             is_enabled: boolean;
             order: number;
         };
+        /**
+         * @description * `sms` - sms
+         *     * `calls` - calls
+         * @enum {string}
+         */
+        PlatformsEnum: "sms" | "calls";
+        /**
+         * @description * `low` - low
+         *     * `normal` - normal
+         *     * `high` - high
+         *     * `urgent` - urgent
+         * @enum {string}
+         */
+        PriorityEnum: "low" | "normal" | "high" | "urgent";
         /**
          * @description * `gmail_oauth` - Google
          *     * `workspace_delegation` - Google Workspace
@@ -3456,6 +4506,11 @@ export interface components {
         StarRequest: {
             starred: boolean;
         };
+        /**
+         * @description * `done` - done
+         * @enum {string}
+         */
+        StateEnum: "done";
         StatusBatchRequest: {
             reports?: components["schemas"]["StatusReportRequest"][];
             command_acks?: components["schemas"]["CommandAckRequest"][];
@@ -3502,6 +4557,8 @@ export interface components {
             rejected: {
                 [key: string]: unknown;
             }[];
+            /** @description Set when the batch stopped at an event of a switched-off platform. */
+            disabled_platform?: string;
         };
         Template: {
             readonly id: number;
@@ -3942,6 +4999,947 @@ export interface operations {
             };
         };
     };
+    calls_annotations_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    calls_annotations_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCallAnnotationWriteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCallAnnotationWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCallAnnotationWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallAnnotation"];
+                };
+            };
+        };
+    };
+    calls_badges: {
+        parameters: {
+            query?: {
+                device?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallBadges"];
+                };
+            };
+        };
+    };
+    calls_callbacks_list: {
+        parameters: {
+            query?: {
+                device?: string;
+                view?: "all" | "closed" | "done" | "mine" | "open";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Callback"][];
+                };
+            };
+        };
+    };
+    calls_callbacks_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallbackCreateRequest"];
+                "multipart/form-data": components["schemas"]["CallbackCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CallbackCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Callback"];
+                };
+            };
+        };
+    };
+    calls_callbacks_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Callback"];
+                };
+            };
+        };
+    };
+    calls_callbacks_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCallbackUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCallbackUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCallbackUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Callback"];
+                };
+            };
+        };
+    };
+    calls_callbacks_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Callback"];
+                };
+            };
+        };
+    };
+    calls_callbacks_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallbackBulkRequest"];
+                "multipart/form-data": components["schemas"]["CallbackBulkRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CallbackBulkRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Callback"][];
+                };
+            };
+        };
+    };
+    calls_list: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM-DD */
+                after?: string;
+                after_hours?: boolean;
+                /** @description YYYY-MM-DD */
+                before?: string;
+                cursor?: string;
+                customer?: number;
+                /** @description Device id or 'all' */
+                device?: string;
+                direction?: "in" | "out";
+                folder?: "after_hours" | "all" | "incoming" | "missed" | "outgoing" | "unreturned";
+                max_duration?: number;
+                min_duration?: number;
+                outcome?: number;
+                /** @description Number or name */
+                q?: string;
+                /** @description Comma separated results */
+                result?: string;
+                sim?: number;
+                staff?: number;
+                unreturned?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPage"];
+                };
+            };
+        };
+    };
+    calls_retrieve: {
+        parameters: {
+            query?: {
+                peek?: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallDetail"];
+                };
+            };
+        };
+    };
+    calls_annotations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CallAnnotationWriteRequest"];
+                "multipart/form-data": components["schemas"]["CallAnnotationWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CallAnnotationWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallAnnotation"];
+                };
+            };
+        };
+    };
+    calls_customers_list: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                q?: string;
+                tag?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerPage"];
+                };
+            };
+        };
+    };
+    calls_customers_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CustomerWriteRequest"];
+                "multipart/form-data": components["schemas"]["CustomerWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CustomerWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerDetail"];
+                };
+            };
+        };
+    };
+    calls_customers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerDetail"];
+                };
+            };
+        };
+    };
+    calls_customers_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    calls_customers_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCustomerWriteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCustomerWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCustomerWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerDetail"];
+                };
+            };
+        };
+    };
+    calls_customers_timeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallHistoryItem"][];
+                };
+            };
+        };
+    };
+    calls_customers_merge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerMergeRequest"];
+                "multipart/form-data": components["schemas"]["CustomerMergeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CustomerMergeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerDetail"];
+                };
+            };
+        };
+    };
+    calls_devices_list: {
+        parameters: {
+            query?: {
+                /** @description SMS phones that can be enabled for Calls */
+                candidates?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallDevice"][];
+                };
+            };
+        };
+    };
+    calls_device_access_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallDeviceAccess"][];
+                };
+            };
+        };
+    };
+    calls_device_access_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallDeviceAccessRequest"][];
+                "multipart/form-data": components["schemas"]["CallDeviceAccessRequest"][];
+                "application/x-www-form-urlencoded": components["schemas"]["CallDeviceAccessRequest"][];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallDeviceAccess"][];
+                };
+            };
+        };
+    };
+    calls_devices_enable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallEnableRequest"];
+                "multipart/form-data": components["schemas"]["CallEnableRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CallEnableRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallDevice"];
+                };
+            };
+        };
+    };
+    calls_devices_simulator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallSimulatorActionRequest"];
+                "multipart/form-data": components["schemas"]["CallSimulatorActionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CallSimulatorActionRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    calls_export: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM-DD */
+                after?: string;
+                after_hours?: boolean;
+                /** @description YYYY-MM-DD */
+                before?: string;
+                cursor?: string;
+                customer?: number;
+                /** @description Device id or 'all' */
+                device?: string;
+                direction?: "in" | "out";
+                file_format?: "csv" | "xlsx";
+                folder?: "after_hours" | "all" | "incoming" | "missed" | "outgoing" | "unreturned";
+                max_duration?: number;
+                min_duration?: number;
+                outcome?: number;
+                /** @description Number or name */
+                q?: string;
+                /** @description Comma separated results */
+                result?: string;
+                sim?: number;
+                staff?: number;
+                unreturned?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+        };
+    };
+    calls_live: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallLive"];
+                };
+            };
+        };
+    };
+    calls_office_hours_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficeHours"][];
+                };
+            };
+        };
+    };
+    calls_office_hours_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                office_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfficeHoursRequest"];
+                "multipart/form-data": components["schemas"]["OfficeHoursRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["OfficeHoursRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficeHours"];
+                };
+            };
+        };
+    };
+    calls_outcomes_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallOutcome"][];
+                };
+            };
+        };
+    };
+    calls_outcomes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallOutcomeRequest"];
+                "multipart/form-data": components["schemas"]["CallOutcomeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CallOutcomeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallOutcome"];
+                };
+            };
+        };
+    };
+    calls_outcomes_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    calls_outcomes_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCallOutcomeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCallOutcomeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCallOutcomeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallOutcome"];
+                };
+            };
+        };
+    };
+    calls_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallSettings"];
+                };
+            };
+        };
+    };
+    calls_settings_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCallSettingsRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCallSettingsRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCallSettingsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallSettings"];
+                };
+            };
+        };
+    };
+    calls_stats: {
+        parameters: {
+            query?: {
+                device?: string;
+                range?: 1 | 30 | 365 | 7 | 90;
+                sim?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallStats"];
+                };
+            };
+        };
+    };
+    calls_tariffs_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierTariff"][];
+                };
+            };
+        };
+    };
+    calls_tariffs_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CarrierTariffRequest"];
+                "multipart/form-data": components["schemas"]["CarrierTariffRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CarrierTariffRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierTariff"];
+                };
+            };
+        };
+    };
+    calls_tariffs_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    calls_tariffs_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCarrierTariffRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCarrierTariffRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCarrierTariffRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierTariff"];
+                };
+            };
+        };
+    };
     device_auth_token: {
         parameters: {
             query?: never;
@@ -3963,6 +5961,65 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    device_calls_callbacks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhoneCallback"][];
+                };
+            };
+        };
+    };
+    device_calls_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallsConfig"];
+                };
+            };
+        };
+    };
+    device_calls_directory: {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryPage"];
                 };
             };
         };

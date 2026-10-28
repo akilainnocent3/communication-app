@@ -1,6 +1,8 @@
 """Settings shared by every environment. Secrets come only from the environment (see .env.example)."""
 
 from datetime import timedelta
+
+from celery.schedules import crontab
 from pathlib import Path
 
 import environ
@@ -29,7 +31,9 @@ INSTALLED_APPS = [
     "modules.platforms",
     "modules.mail",
     "modules.devices",
+    "modules.directory",
     "modules.sms",
+    "modules.calls",
 ]
 
 MIDDLEWARE = [
@@ -184,6 +188,10 @@ CELERY_BEAT_SCHEDULE = {
     "sms-retention-purge": {"task": "sms.retention_purge", "schedule": timedelta(hours=6)},
     "sms-media-cleanup": {"task": "sms.media_cleanup", "schedule": timedelta(hours=1)},
     "sms-simulator-tick": {"task": "sms.simulator_tick", "schedule": timedelta(seconds=5)},
+    "calls-retention-purge": {"task": "calls.retention_purge", "schedule": timedelta(hours=6)},
+    "calls-repair-rollups": {"task": "calls.repair_rollups", "schedule": crontab(hour=2, minute=40)},
+    "calls-expire-callbacks": {"task": "calls.expire_callbacks", "schedule": timedelta(minutes=10)},
+    "calls-simulator-tick": {"task": "calls.simulator_tick", "schedule": timedelta(seconds=10)},
 }
 
 # --- Company / product ----------------------------------------------------------------------------------
@@ -257,6 +265,9 @@ SMS_SHOW_ADMIN_NAME_ON_PHONE = env.bool("SMS_SHOW_ADMIN_NAME_ON_PHONE", default=
 SMS_DEVICE_POLL_SECONDS = env.int("SMS_DEVICE_POLL_SECONDS", default=20)
 # Simulated phones for demos and E2E tests. Production refuses to start with it on.
 SMS_ENABLE_SIMULATOR = env.bool("SMS_ENABLE_SIMULATOR", default=MAIL_ENABLE_FAKE_PROVIDER)
+# --- Calls platform -----------------------------------------------------------------------------------------------------
+# Server copy of calls (and their notes) is deleted after this many days; 0 = keep forever. Calls → Settings may override.
+CALLS_RETENTION_DAYS = env.int("CALLS_RETENTION_DAYS", default=365)
 # Firebase Cloud Messaging (optional): data-only wake-ups. The service-account file is a mounted secret.
 FCM_PROJECT_ID = env("FCM_PROJECT_ID", default="")
 FCM_SERVICE_ACCOUNT_FILE = env("FCM_SERVICE_ACCOUNT_FILE", default="")

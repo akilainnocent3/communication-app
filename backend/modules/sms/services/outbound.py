@@ -44,6 +44,9 @@ from .text import MAX_BODY, segment_info
 log = logging.getLogger(__name__)
 
 LEASE_SECONDS = 120
+# Messages the server asks the phone to send: written by an admin, or automatic (Calls' missed-call SMS). One queue,
+# one daily cap, one at-most-once lifecycle.
+SERVER_ORIGINS = (Message.ORIGIN_ADMIN, Message.ORIGIN_AUTO)
 CLAIM_LIMIT = 10
 MAX_RECIPIENTS = 20
 MAX_SCHEDULE_DAYS = 30
@@ -106,7 +109,7 @@ def check_limits(user, device: Device) -> None:
     if not _bump(f"sms:rate:device:{device.pk}", settings.SMS_DEVICE_RATE_PER_MINUTE):
         raise ApiError("rate_limited", "This phone is sending too fast. Wait a minute so the carrier does not block the SIM.", status.HTTP_429_TOO_MANY_REQUESTS)
     start = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
-    today = Message.objects.filter(device=device, origin=Message.ORIGIN_ADMIN, created_at__gte=start).exclude(status=MessageStatus.CANCELLED).count()
+    today = Message.objects.filter(device=device, origin__in=SERVER_ORIGINS, created_at__gte=start).exclude(status=MessageStatus.CANCELLED).count()
     if today >= settings.SMS_DEVICE_DAILY_CAP:
         raise ApiError("daily_cap", f"This phone reached today's limit of {settings.SMS_DEVICE_DAILY_CAP} messages from the admin. This protects the SIM from carrier spam blocks.", status.HTTP_429_TOO_MANY_REQUESTS)
 
@@ -207,6 +210,46 @@ def compose(user, data: dict, request=None) -> Message:
     return message
 
 
+def queue_automatic(device: Device, raw_number: str, body: str, *, reason: str) -> Message:
+    """A message the server sends on its own (Calls: the missed-call SMS). Same path and rules as an admin message —
+    recipient checks (no sender IDs, short codes or premium numbers), blocks, the per-phone rate and the daily cap —
+    but no user: origin "auto", sent at once. Raises ApiError when a rule refuses it."""
+    from modules.platforms.services import is_platform_enabled
+
+    if not (device.has("sms") and is_platform_enabled("sms")):
+        raise ApiError("sms_unavailable", "This phone does not send SMS through OCM.", status.HTTP_409_CONFLICT)
+    access.require_sendable(device)
+    key = check_recipient(raw_number, settings.SMS_DEFAULT_REGION)
+    if Contact.objects.filter(device=device, address=key, is_blocked=True).exists():
+        raise ApiError("recipient_blocked", "This number is blocked on the phone.")
+    body = with_signature(device, (body or "").strip())[:MAX_BODY]
+    if not body:
+        raise ApiError("validation_error", "The message is empty.")
+    if not _bump(f"sms:rate:device:{device.pk}", settings.SMS_DEVICE_RATE_PER_MINUTE):
+        raise ApiError("rate_limited", "This phone is sending too fast.", status.HTTP_429_TOO_MANY_REQUESTS)
+    start = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+    if Message.objects.filter(device=device, origin__in=SERVER_ORIGINS, created_at__gte=start).exclude(status=MessageStatus.CANCELLED).count() >= settings.SMS_DEVICE_DAILY_CAP:
+        raise ApiError("daily_cap", "This phone reached today's message limit.", status.HTTP_429_TOO_MANY_REQUESTS)
+    now = timezone.now()
+    with transaction.atomic():
+        conversation = store.conversation_for(device, [key], at=now)
+        sim = _sim_for(device, None, conversation)
+        info = segment_info(body)
+        message = Message(
+            device=device, conversation=conversation, sim_line=sim, kind=Message.SMS, direction=Message.OUT, address=key, addresses=[key],
+            encrypted_body=encrypt_text(body), body_length=len(body), segments=info.segments, encoding=info.encoding, provider_date=now,
+            is_read=True, origin=Message.ORIGIN_AUTO, client_uuid=uuid.uuid4(), send_at=now,
+        )
+        message.set_status(MessageStatus.QUEUED, now)
+        message.save()
+        store.refresh_conversation(conversation.pk)
+        record("sms.auto_send", target_type="sms_message", target_id=message.pk, metadata={"device": device.code, "recipient": mask(key), "reason": reason})
+        from modules.devices.tasks import push_task
+
+        transaction.on_commit(lambda: push_task.delay(str(device.pk), "outbox"))
+    return message
+
+
 @transaction.atomic
 def cancel(user, message_id, request=None) -> Message:
     message = access.get_message(user, message_id, access.SEND)
@@ -243,7 +286,7 @@ def claim(device: Device, limit: int = CLAIM_LIMIT) -> dict:
     with transaction.atomic():
         due = list(
             Message.objects.select_for_update(skip_locked=True)
-            .filter(device=device, origin=Message.ORIGIN_ADMIN, direction=Message.OUT, send_at__lte=now, send_at__gt=now - ttl)
+            .filter(device=device, origin__in=SERVER_ORIGINS, direction=Message.OUT, send_at__lte=now, send_at__gt=now - ttl)
             .filter(Q(status=MessageStatus.QUEUED) | Q(status=MessageStatus.DISPATCHED, lease_expires_at__lt=now))
             .order_by("send_at", "id")[:limit]
         )
@@ -290,7 +333,7 @@ def report(device: Device, reports: list[dict]) -> dict:
     for item in reports:
         new = item["status"]
         with transaction.atomic():
-            message = Message.objects.select_for_update().filter(device=device, client_uuid=item["client_uuid"], origin=Message.ORIGIN_ADMIN).first()
+            message = Message.objects.select_for_update().filter(device=device, client_uuid=item["client_uuid"], origin__in=SERVER_ORIGINS).first()
             if not message:
                 results.append({"client_uuid": str(item["client_uuid"]), "result": "unknown_message"})
                 continue
@@ -336,10 +379,10 @@ def expire_stale(now=None) -> dict:
     now = now or timezone.now()
     cutoff = now - timedelta(hours=settings.SMS_OUTBOUND_TTL_HOURS)
     counts = {"expired": 0, "unknown": 0}
-    stale = Message.objects.filter(origin=Message.ORIGIN_ADMIN, send_at__lt=cutoff).filter(
+    stale = Message.objects.filter(origin__in=SERVER_ORIGINS, send_at__lt=cutoff).filter(
         Q(status=MessageStatus.QUEUED) | Q(status=MessageStatus.DISPATCHED, lease_expires_at__lt=now)
     )
-    stuck = Message.objects.filter(origin=Message.ORIGIN_ADMIN, status=MessageStatus.SENDING, dispatched_at__lt=cutoff)
+    stuck = Message.objects.filter(origin__in=SERVER_ORIGINS, status=MessageStatus.SENDING, dispatched_at__lt=cutoff)
     touched = set()
     for qs, new, key in ((stale, MessageStatus.EXPIRED, "expired"), (stuck, MessageStatus.UNKNOWN, "unknown")):
         for message in qs.select_related("device")[:500]:
@@ -363,7 +406,7 @@ def dispatch_due(now=None) -> int:
     from modules.devices.tasks import push_task
 
     now = now or timezone.now()
-    device_ids = set(Message.objects.filter(origin=Message.ORIGIN_ADMIN, status=MessageStatus.QUEUED, send_at__lte=now, send_at__gt=now - timedelta(minutes=10)).values_list("device_id", flat=True).distinct())
+    device_ids = set(Message.objects.filter(origin__in=SERVER_ORIGINS, status=MessageStatus.QUEUED, send_at__lte=now, send_at__gt=now - timedelta(minutes=10)).values_list("device_id", flat=True).distinct())
     woken = 0
     for device_id in device_ids:
         if cache.add(f"sms:dispatch-woken:{device_id}", 1, 60):

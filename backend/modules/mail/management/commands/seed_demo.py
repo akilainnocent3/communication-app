@@ -123,3 +123,24 @@ class Command(BaseCommand):
             DeviceAccess.objects.update_or_create(user=viewer, device=hq, defaults={"can_read": True, "can_send": False, "can_manage": False, "can_reveal_sensitive": False})
         for title, body in QUICK_REPLIES:
             QuickReply.objects.get_or_create(title=title, device=None, defaults={"body": body, "created_by": admin})
+        self._seed_calls(admin, manager, viewer, arusha, hq)
+
+    def _seed_calls(self, admin, manager, viewer, arusha, hq):
+        """Both demo phones are Calls phones too: 45 days of call history, demo access rows, a tariff and a callback."""
+        from modules.calls.models import CallRecord, CarrierTariff, DeviceAccess as CallsAccess
+        from modules.calls.services import callbacks, simulator as calls_simulator
+
+        for index, device in enumerate(d for d in (arusha, hq) if d):
+            if CallRecord.objects.filter(device=device).exists():
+                continue
+            count = calls_simulator.seed(device, days=45, seed_value=21 + index)
+            self.stdout.write(f"  {device.code} {device.name}: {count} calls")
+        if arusha:
+            CallsAccess.objects.update_or_create(user=manager, device=arusha, defaults={"can_read": True, "can_assign_callbacks": True, "can_annotate": True, "can_export": False})
+        if hq:
+            CallsAccess.objects.update_or_create(user=viewer, device=hq, defaults={"can_read": True})
+        for carrier, price in (("Vodacom", "35.00"), ("Airtel", "30.00")):
+            CarrierTariff.objects.get_or_create(carrier=carrier, defaults={"per_minute": price, "currency": "TZS", "billing_increment_seconds": 60})
+        missed = CallRecord.objects.filter(device=arusha, direction="in", result="missed", returned_at__isnull=True).order_by("-started_at").first() if arusha else None
+        if missed and not missed.callback_requests.exists():
+            callbacks.create(admin, device_id=arusha.pk, call_id=missed.pk, reason_text="Asked about the cement order — please call back today.")

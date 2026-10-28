@@ -159,3 +159,32 @@ def device_grant():
         return DeviceAccess.objects.update_or_create(user=user, device_id=device_id, defaults=values)[0]
 
     return build
+
+
+# --- Calls ---------------------------------------------------------------------------------------------------
+
+
+@pytest.fixture
+def calls_phone(admin, office):
+    """An enrolled phone with SMS and Calls (tests.phone.Phone)."""
+    from modules.devices.services.enrollment import create_invite
+    from tests.phone import Phone
+
+    def build(name="Front desk", target_office=None):
+        _, token = create_invite(admin, name=name, office=target_office or office, platforms=["sms", "calls"])
+        phone = Phone()
+        assert phone.enroll(token).status_code == 201
+        return phone
+
+    return build
+
+
+@pytest.fixture
+def calls_grant():
+    from modules.calls.models import DeviceAccess
+
+    def build(user, device_id, **flags):
+        values = {"can_read": True, "can_assign_callbacks": False, "can_annotate": False, "can_export": False, **flags}
+        return DeviceAccess.objects.update_or_create(user=user, device_id=device_id, defaults=values)[0]
+
+    return build

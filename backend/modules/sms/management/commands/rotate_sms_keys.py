@@ -1,4 +1,5 @@
-"""Re-encrypt SMS bodies, snippets and MMS files with the newest key in SMS_DATA_KEYS (put the new key first)."""
+"""Re-encrypt everything under SMS_DATA_KEYS with its newest key (put the new key first): SMS bodies, snippets and MMS
+files, call notes and callback reasons, directory notes, simulator keys."""
 
 from pathlib import Path
 
@@ -10,10 +11,10 @@ from modules.sms.services.crypto import rotate_bytes, rotate_text
 
 
 class Command(BaseCommand):
-    help = "Rotate encrypted SMS data to the newest SMS_DATA_KEYS key. Safe to re-run."
+    help = "Rotate device data (SMS, Calls, directory) to the newest SMS_DATA_KEYS key. Safe to re-run."
 
     def handle(self, *args, **options):
-        counts = {"messages": 0, "conversations": 0, "media": 0, "simulators": 0}
+        counts = {"messages": 0, "conversations": 0, "media": 0, "simulators": 0, "call_notes": 0, "callbacks": 0, "customers": 0}
         for row in Message.objects.exclude(encrypted_body="").only("pk", "encrypted_body").iterator(chunk_size=1000):
             Message.objects.filter(pk=row.pk).update(encrypted_body=rotate_text(row.encrypted_body))
             counts["messages"] += 1
@@ -31,4 +32,11 @@ class Command(BaseCommand):
         for row in SimulatedDevice.objects.all():
             SimulatedDevice.objects.filter(pk=row.pk).update(encrypted_private_key=rotate_text(row.encrypted_private_key))
             counts["simulators"] += 1
+        from modules.calls.models import CallAnnotation, CallbackTask
+        from modules.directory.models import Customer
+
+        for model, field, key in ((CallAnnotation, "encrypted_note", "call_notes"), (CallbackTask, "encrypted_reason", "callbacks"), (Customer, "encrypted_notes", "customers")):
+            for row in model.objects.exclude(**{field: ""}).only("pk", field).iterator(chunk_size=1000):
+                model.objects.filter(pk=row.pk).update(**{field: rotate_text(getattr(row, field))})
+                counts[key] += 1
         self.stdout.write(self.style.SUCCESS(f"Rotated: {counts}"))

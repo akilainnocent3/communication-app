@@ -214,3 +214,33 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
 65. **Two flavors, `play` and `private`.** Play restricts `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`; only `private` (MDM)
     declares it, through a flavor manifest, and `BuildConfig.DIRECT_BATTERY_REQUEST` decides whether the direct dialog is
     offered or the battery-optimisation list is opened.
+66. **One sync pipeline for every phone platform.** `sync/events` moved from SMS to `modules/devices`: a registry of event
+    types per platform (SMS registers its nine, Calls its five), one ordered, idempotent, savepointed batch. An event of
+    a platform switched off on the server stops the batch *before* it (kept on the phone, 403 if nothing could be done);
+    an event of a platform the phone is not enrolled for is rejected and acknowledged (`platform_not_enabled`), so a
+    phone that is not a Calls phone can never get call data stored. The SMS response shape is unchanged.
+67. **"Returned" means the customer was reached.** A missed incoming call (missed, declined, voicemail) is returned by the
+    next *answered* call with that number, in either direction, from **any** company phone: customers call the office,
+    not a person, and a call-back from a colleague's phone counts. An unanswered call-back attempt does not. The link is
+    made both ways because the call-log backfill arrives newest first. "Unreturned" (the management metric) = not
+    reached within `CallSettings.unreturned_hours` (default 4); still inside the window = "open".
+68. **Rollups are UTC hours; the dashboard buckets them in the viewer's zone.** `CallStatHourly` (hour × phone × SIM ×
+    office × direction × result × after-hours) and `CallerDaily` are maintained in the call's transaction under the
+    phone's row lock (subtract the old contribution, add the new one when a late call-log row refines a call), and the
+    nightly task rebuilds the last 3 days. Converting UTC hours to a zone with a non-whole-hour offset would shift by
+    the remainder; Tanzania (+3) and every zone the company uses are whole hours. Only the unreturned metrics and the
+    medians read call rows, through indexes and for missed/answered calls only.
+69. **XLSX without a spreadsheet library.** The export writes a minimal Office Open XML workbook (one sheet, inline strings)
+    with `zipfile`; adding openpyxl for one sheet was not worth a dependency. CSV cells that start with = + - @ are
+    prefixed with ' (formula injection). The query parameter is `file_format`: DRF reserves `format`.
+70. **The directory creates customers only for real phone numbers.** Short codes and sender IDs (M-PESA, 15300) are
+    services; an admin can add one, after which traffic links to it. A directory name is the company's own and is never
+    taken from a phone's address book. Phones receive names only for customers they have been in contact with
+    (`CustomerDevice`) or that an admin flagged for every phone.
+71. **USSD and emergency calls are refused server-side too.** The dialer never sends them; the server rejects any
+    `call.upsert` whose number contains `*`/`#` or is an emergency number for the SIM's region (libphonenumber short-number
+    data plus 112/911), acknowledging it so it is never retried, storing nothing and logging only the reason code.
+72. **The automatic missed-call SMS uses the SMS queue.** It is a `Message` with origin `auto`, claimed and sent by the phone
+    like an admin message, sharing the phone's rate limit and daily cap, refusing short codes, premium numbers and
+    blocked numbers. On top: only for calls that ended in the last 30 minutes (never history), one per number per day
+    and a cool-down by default, never to an opted-out customer, never once the call was returned.

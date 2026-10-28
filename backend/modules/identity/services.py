@@ -18,12 +18,17 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         "sms.access",
         "sms.access_all_devices",
         "sms.manage_devices",
+        "calls.access",
+        "calls.access_all_devices",
+        "calls.manage_settings",
+        "calls.export",
+        "directory.manage_customers",
         "audit.view_auditevent",
         "identity.manage_users",
     ],
-    # Office managers and viewers reach phones only through DeviceAccess rows.
-    Role.OFFICE_MANAGER: ["mail.access", "sms.access"],
-    Role.VIEWER: ["mail.access", "sms.access"],
+    # Office managers and viewers reach phones only through DeviceAccess rows (sms and calls).
+    Role.OFFICE_MANAGER: ["mail.access", "sms.access", "calls.access"],
+    Role.VIEWER: ["mail.access", "sms.access", "calls.access"],
 }
 
 SEEDED_ROLES = [

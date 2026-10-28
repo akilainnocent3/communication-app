@@ -81,6 +81,8 @@ class Conversation(models.Model):
     # Set while the newest message is inbound and unanswered: "Awaiting reply" is a plain indexed filter.
     awaiting_since = models.DateTimeField(null=True, blank=True, db_index=True)
     sim_line = models.ForeignKey("devices.SimLine", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    # The company directory entry of a one-to-one conversation (set when the conversation is created).
+    customer = models.ForeignKey("directory.Customer", null=True, blank=True, on_delete=models.SET_NULL, related_name="sms_conversations")
     deleted_on_device_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

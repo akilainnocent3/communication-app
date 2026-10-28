@@ -15,6 +15,7 @@ api = [
     path("", include("modules.audit.api.urls")),
     path("", include("modules.mail.api.urls")),
     path("", include("modules.sms.api.urls")),
+    path("", include("modules.calls.api.urls")),
     path("health/", health),
 ]
 
@@ -22,6 +23,7 @@ api = [
 device_api = [
     path("", include("modules.devices.api.urls")),
     path("", include("modules.sms.api.device_urls")),
+    path("", include("modules.calls.api.device_urls")),
 ]
 
 urlpatterns = [path("api/v1/device/", include(device_api)), path("api/v1/", include(api))]

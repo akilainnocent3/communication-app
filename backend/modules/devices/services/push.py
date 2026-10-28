@@ -18,7 +18,7 @@ from ..models import Device
 log = logging.getLogger(__name__)
 
 SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
-KINDS = ("sync", "outbox", "command")
+KINDS = ("sync", "outbox", "command", "callbacks", "config")
 
 
 def configured() -> bool:

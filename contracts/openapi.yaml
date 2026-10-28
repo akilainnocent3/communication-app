@@ -241,6 +241,1099 @@ paths:
               schema:
                 $ref: '#/components/schemas/TotpSetup'
           description: ''
+  /api/v1/calls/annotations/{id}/:
+    patch:
+      operationId: calls_annotations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCallAnnotationWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCallAnnotationWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCallAnnotationWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallAnnotation'
+          description: ''
+    delete:
+      operationId: calls_annotations_delete
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/calls/badges/:
+    get:
+      operationId: calls_badges
+      parameters:
+      - in: query
+        name: device
+        schema:
+          type: string
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallBadges'
+          description: ''
+  /api/v1/calls/callbacks/:
+    get:
+      operationId: calls_callbacks_list
+      parameters:
+      - in: query
+        name: device
+        schema:
+          type: string
+      - in: query
+        name: view
+        schema:
+          type: string
+          enum:
+          - all
+          - closed
+          - done
+          - mine
+          - open
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Callback'
+          description: ''
+    post:
+      operationId: calls_callbacks_create
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallbackCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallbackCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallbackCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Callback'
+          description: ''
+  /api/v1/calls/callbacks/{id}/:
+    get:
+      operationId: calls_callbacks_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Callback'
+          description: ''
+    patch:
+      operationId: calls_callbacks_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCallbackUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCallbackUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCallbackUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Callback'
+          description: ''
+  /api/v1/calls/callbacks/{id}/cancel/:
+    post:
+      operationId: calls_callbacks_cancel
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Callback'
+          description: ''
+  /api/v1/calls/callbacks/bulk/:
+    post:
+      operationId: calls_callbacks_bulk
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallbackBulkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallbackBulkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallbackBulkRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Callback'
+          description: ''
+  /api/v1/calls/calls/:
+    get:
+      operationId: calls_list
+      parameters:
+      - in: query
+        name: after
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: after_hours
+        schema:
+          type: boolean
+      - in: query
+        name: before
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - in: query
+        name: device
+        schema:
+          type: string
+        description: Device id or 'all'
+      - in: query
+        name: direction
+        schema:
+          type: string
+          enum:
+          - in
+          - out
+      - in: query
+        name: folder
+        schema:
+          type: string
+          enum:
+          - after_hours
+          - all
+          - incoming
+          - missed
+          - outgoing
+          - unreturned
+      - in: query
+        name: max_duration
+        schema:
+          type: integer
+      - in: query
+        name: min_duration
+        schema:
+          type: integer
+      - in: query
+        name: outcome
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Number or name
+      - in: query
+        name: result
+        schema:
+          type: string
+        description: Comma separated results
+      - in: query
+        name: sim
+        schema:
+          type: integer
+      - in: query
+        name: staff
+        schema:
+          type: integer
+      - in: query
+        name: unreturned
+        schema:
+          type: boolean
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallPage'
+          description: ''
+  /api/v1/calls/calls/{id}/:
+    get:
+      operationId: calls_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: peek
+        schema:
+          type: boolean
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallDetail'
+          description: ''
+  /api/v1/calls/calls/{id}/annotations/:
+    post:
+      operationId: calls_annotations_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallAnnotationWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallAnnotationWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallAnnotationWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallAnnotation'
+          description: ''
+  /api/v1/calls/customers/:
+    get:
+      operationId: calls_customers_list
+      parameters:
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: q
+        schema:
+          type: string
+      - in: query
+        name: tag
+        schema:
+          type: string
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPage'
+          description: ''
+    post:
+      operationId: calls_customers_create
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomerWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomerWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetail'
+          description: ''
+  /api/v1/calls/customers/{id}/:
+    get:
+      operationId: calls_customers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetail'
+          description: ''
+    patch:
+      operationId: calls_customers_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomerWriteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomerWriteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomerWriteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetail'
+          description: ''
+    delete:
+      operationId: calls_customers_delete
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/calls/customers/{id}/timeline/:
+    get:
+      operationId: calls_customers_timeline
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CallHistoryItem'
+          description: ''
+  /api/v1/calls/customers/merge/:
+    post:
+      operationId: calls_customers_merge
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerMergeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomerMergeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomerMergeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetail'
+          description: ''
+  /api/v1/calls/devices/:
+    get:
+      operationId: calls_devices_list
+      parameters:
+      - in: query
+        name: candidates
+        schema:
+          type: boolean
+        description: SMS phones that can be enabled for Calls
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CallDevice'
+          description: ''
+  /api/v1/calls/devices/{id}/access/:
+    get:
+      operationId: calls_device_access_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CallDeviceAccess'
+          description: ''
+    put:
+      operationId: calls_device_access_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CallDeviceAccessRequest'
+          multipart/form-data:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CallDeviceAccessRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CallDeviceAccessRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CallDeviceAccess'
+          description: ''
+  /api/v1/calls/devices/{id}/enable/:
+    post:
+      operationId: calls_devices_enable
+      description: |-
+        Switch Calls on or off for a phone. The phone learns it from its next heartbeat (and a push) and runs the dialer
+        onboarding; switching off keeps the history.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallEnableRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallEnableRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallEnableRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallDevice'
+          description: ''
+  /api/v1/calls/devices/{id}/simulator/:
+    post:
+      operationId: calls_devices_simulator
+      description: 'Demo phones only (SMS_ENABLE_SIMULATOR, refused in production):
+        ring an incoming call, a missed one, or run a tick.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallSimulatorActionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallSimulatorActionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallSimulatorActionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/calls/export/:
+    get:
+      operationId: calls_export
+      parameters:
+      - in: query
+        name: after
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: after_hours
+        schema:
+          type: boolean
+      - in: query
+        name: before
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - in: query
+        name: device
+        schema:
+          type: string
+        description: Device id or 'all'
+      - in: query
+        name: direction
+        schema:
+          type: string
+          enum:
+          - in
+          - out
+      - in: query
+        name: file_format
+        schema:
+          type: string
+          enum:
+          - csv
+          - xlsx
+      - in: query
+        name: folder
+        schema:
+          type: string
+          enum:
+          - after_hours
+          - all
+          - incoming
+          - missed
+          - outgoing
+          - unreturned
+      - in: query
+        name: max_duration
+        schema:
+          type: integer
+      - in: query
+        name: min_duration
+        schema:
+          type: integer
+      - in: query
+        name: outcome
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Number or name
+      - in: query
+        name: result
+        schema:
+          type: string
+        description: Comma separated results
+      - in: query
+        name: sim
+        schema:
+          type: integer
+      - in: query
+        name: staff
+        schema:
+          type: integer
+      - in: query
+        name: unreturned
+        schema:
+          type: boolean
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/calls/live/:
+    get:
+      operationId: calls_live
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallLive'
+          description: ''
+  /api/v1/calls/office-hours/:
+    get:
+      operationId: calls_office_hours_list
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OfficeHours'
+          description: ''
+  /api/v1/calls/office-hours/{office_id}/:
+    put:
+      operationId: calls_office_hours_update
+      parameters:
+      - in: path
+        name: office_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfficeHoursRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OfficeHoursRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OfficeHoursRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfficeHours'
+          description: ''
+  /api/v1/calls/outcomes/:
+    get:
+      operationId: calls_outcomes_list
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CallOutcome'
+          description: ''
+    post:
+      operationId: calls_outcomes_create
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallOutcomeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallOutcomeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallOutcomeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallOutcome'
+          description: ''
+  /api/v1/calls/outcomes/{id}/:
+    patch:
+      operationId: calls_outcomes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCallOutcomeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCallOutcomeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCallOutcomeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallOutcome'
+          description: ''
+    delete:
+      operationId: calls_outcomes_delete
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/calls/settings/:
+    get:
+      operationId: calls_settings_retrieve
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallSettings'
+          description: ''
+    patch:
+      operationId: calls_settings_update
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCallSettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCallSettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCallSettingsRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallSettings'
+          description: ''
+  /api/v1/calls/stats/:
+    get:
+      operationId: calls_stats
+      parameters:
+      - in: query
+        name: device
+        schema:
+          type: string
+      - in: query
+        name: range
+        schema:
+          type: integer
+          enum:
+          - 1
+          - 30
+          - 365
+          - 7
+          - 90
+      - in: query
+        name: sim
+        schema:
+          type: integer
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallStats'
+          description: ''
+  /api/v1/calls/tariffs/:
+    get:
+      operationId: calls_tariffs_list
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CarrierTariff'
+          description: ''
+    post:
+      operationId: calls_tariffs_create
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarrierTariffRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CarrierTariffRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CarrierTariffRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarrierTariff'
+          description: ''
+  /api/v1/calls/tariffs/{id}/:
+    patch:
+      operationId: calls_tariffs_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCarrierTariffRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCarrierTariffRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCarrierTariffRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarrierTariff'
+          description: ''
+    delete:
+      operationId: calls_tariffs_delete
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/device/auth/token/:
     post:
       operationId: device_auth_token
@@ -267,6 +1360,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenResponse'
+          description: ''
+  /api/v1/device/calls/callbacks/:
+    get:
+      operationId: device_calls_callbacks
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhoneCallback'
+          description: ''
+  /api/v1/device/calls/config/:
+    get:
+      operationId: device_calls_config
+      description: Base for every authenticated phone endpoint. Never mix with session-auth
+        views.
+      tags:
+      - device
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallsConfig'
+          description: ''
+  /api/v1/device/calls/directory/:
+    get:
+      operationId: device_calls_directory
+      description: |-
+        Caller ID from the company directory: names and numbers only, and only of customers this phone has been in
+        contact with (or flagged for every phone). A delta by `updated_at`; the phone keeps the result in its encrypted
+        database and wipes it on revoke. An entry that lost its name or was merged comes back as removed.
+      parameters:
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      tags:
+      - device
+      security:
+      - deviceToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryPage'
           description: ''
   /api/v1/device/config/:
     get:
@@ -470,8 +1620,8 @@ paths:
   /api/v1/device/sync/events/:
     post:
       operationId: device_sync_events
-      description: Base for every authenticated phone endpoint. Never mix with session-auth
-        views.
+      description: The phone's outbox, for every phone platform (events.py). Ordered,
+        idempotent, per-event savepoints.
       tags:
       - device
       requestBody:
@@ -4061,6 +5211,944 @@ components:
       required:
       - address
       - device
+    CallAnnotation:
+      type: object
+      properties:
+        id:
+          type: integer
+        outcome:
+          allOf:
+          - $ref: '#/components/schemas/CallOutcomeRef'
+          nullable: true
+          readOnly: true
+        note:
+          type: string
+          readOnly: true
+        tags:
+          type: array
+          items:
+            type: string
+        author:
+          type: string
+          readOnly: true
+        from_phone:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - author
+      - created_at
+      - from_phone
+      - id
+      - note
+      - outcome
+      - tags
+      - updated_at
+    CallAnnotationWriteRequest:
+      type: object
+      properties:
+        outcome:
+          type: integer
+          nullable: true
+        note:
+          type: string
+          default: ''
+          maxLength: 2000
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+          maxItems: 10
+    CallBadges:
+      type: object
+      properties:
+        unreturned:
+          type: integer
+        open_callbacks:
+          type: integer
+        my_callbacks:
+          type: integer
+        attention:
+          type: integer
+      required:
+      - attention
+      - my_callbacks
+      - open_callbacks
+      - unreturned
+    CallDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        device:
+          $ref: '#/components/schemas/CallDeviceRef'
+        sim:
+          allOf:
+          - $ref: '#/components/schemas/CallSimRef'
+          nullable: true
+          readOnly: true
+        direction:
+          type: string
+        result:
+          type: string
+        number:
+          type: string
+        display_number:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        name_source:
+          type: string
+          description: phone (saved in the phone's contacts), directory (company directory)
+            or "".
+          readOnly: true
+        customer_id:
+          type: integer
+          nullable: true
+        presentation:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        answered_at:
+          type: string
+          format: date-time
+          nullable: true
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        ring_seconds:
+          type: integer
+        talk_seconds:
+          type: integer
+        is_after_hours:
+          type: boolean
+        is_conference:
+          type: boolean
+        is_video:
+          type: boolean
+        origin:
+          type: string
+        returned_at:
+          type: string
+          format: date-time
+          nullable: true
+        outcome:
+          allOf:
+          - $ref: '#/components/schemas/CallOutcomeRef'
+          nullable: true
+          readOnly: true
+        deleted_on_device:
+          type: boolean
+          readOnly: true
+        is_final:
+          type: boolean
+        disconnect_cause_label:
+          type: string
+        ended_by:
+          type: string
+        network:
+          type: string
+        conference_size:
+          type: integer
+        was_on_hold_seconds:
+          type: integer
+        returns_call_id:
+          type: integer
+          nullable: true
+        returned_by_id:
+          type: integer
+          nullable: true
+        callback_task_id:
+          type: integer
+          nullable: true
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallEvent'
+        annotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallAnnotation'
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallHistoryItem'
+        permissions:
+          type: object
+          additionalProperties:
+            type: boolean
+        outcome_required:
+          type: boolean
+      required:
+      - annotations
+      - answered_at
+      - callback_task_id
+      - conference_size
+      - customer_id
+      - deleted_on_device
+      - device
+      - direction
+      - disconnect_cause_label
+      - display_number
+      - ended_at
+      - ended_by
+      - events
+      - history
+      - id
+      - is_after_hours
+      - is_conference
+      - is_final
+      - is_video
+      - name
+      - name_source
+      - network
+      - number
+      - origin
+      - outcome
+      - outcome_required
+      - permissions
+      - presentation
+      - result
+      - returned_at
+      - returned_by_id
+      - returns_call_id
+      - ring_seconds
+      - sim
+      - started_at
+      - talk_seconds
+      - was_on_hold_seconds
+    CallDevice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        office:
+          type: string
+        colour:
+          type: string
+        status:
+          type: string
+        calls_enabled:
+          type: boolean
+          readOnly: true
+        online:
+          type: boolean
+          readOnly: true
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_default_dialer:
+          type: boolean
+        full_screen_intent_allowed:
+          type: boolean
+          nullable: true
+        call_state:
+          type: string
+        attention:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        holder:
+          type: string
+          readOnly: true
+        calls_backfill:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - attention
+      - call_state
+      - calls_backfill
+      - calls_enabled
+      - code
+      - colour
+      - full_screen_intent_allowed
+      - holder
+      - id
+      - is_default_dialer
+      - last_seen_at
+      - name
+      - office
+      - online
+      - status
+    CallDeviceAccess:
+      type: object
+      properties:
+        user:
+          type: integer
+        name:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          readOnly: true
+        can_read:
+          type: boolean
+          default: true
+        can_assign_callbacks:
+          type: boolean
+          default: false
+        can_annotate:
+          type: boolean
+          default: false
+        can_export:
+          type: boolean
+          default: false
+      required:
+      - email
+      - name
+      - user
+    CallDeviceAccessRequest:
+      type: object
+      properties:
+        user:
+          type: integer
+        can_read:
+          type: boolean
+          default: true
+        can_assign_callbacks:
+          type: boolean
+          default: false
+        can_annotate:
+          type: boolean
+          default: false
+        can_export:
+          type: boolean
+          default: false
+      required:
+      - user
+    CallDeviceRef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        office:
+          type: string
+        colour:
+          type: string
+      required:
+      - code
+      - colour
+      - id
+      - name
+      - office
+    CallEnableRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+      required:
+      - enabled
+    CallEvent:
+      type: object
+      properties:
+        kind:
+          type: string
+        at:
+          type: string
+          format: date-time
+        data:
+          type: object
+          additionalProperties: {}
+      required:
+      - at
+      - data
+      - kind
+    CallHistoryItem:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/CallHistoryItemKindEnum'
+        at:
+          type: string
+          format: date-time
+        direction:
+          type: string
+        result:
+          type: string
+        talk_seconds:
+          type: integer
+          nullable: true
+        device:
+          type: string
+        call_id:
+          type: integer
+          nullable: true
+        conversation_id:
+          type: integer
+          nullable: true
+        snippet:
+          type: string
+      required:
+      - at
+      - call_id
+      - conversation_id
+      - device
+      - direction
+      - kind
+      - result
+      - snippet
+      - talk_seconds
+    CallHistoryItemKindEnum:
+      enum:
+      - call
+      - sms
+      type: string
+      description: |-
+        * `call` - call
+        * `sms` - sms
+    CallLive:
+      type: object
+      properties:
+        server_time:
+          type: string
+          format: date-time
+        phones:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        totals:
+          type: object
+          additionalProperties: {}
+      required:
+      - phones
+      - server_time
+      - totals
+    CallOutcome:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 60
+        colour:
+          type: string
+          maxLength: 9
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+    CallOutcomeRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        colour:
+          type: string
+      required:
+      - colour
+      - id
+      - name
+    CallOutcomeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        colour:
+          type: string
+          minLength: 1
+          maxLength: 9
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - name
+    CallPage:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallSummary'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - next_cursor
+      - results
+    CallSettings:
+      type: object
+      properties:
+        unreturned_hours:
+          type: integer
+          maximum: 168
+          minimum: 1
+        outcome_required_after_seconds:
+          type: integer
+          maximum: 36000
+          minimum: 0
+        post_call_card:
+          type: boolean
+        auto_sms_enabled:
+          type: boolean
+        auto_sms_template:
+          type: string
+          maxLength: 300
+        auto_sms_after_hours_only:
+          type: boolean
+        auto_sms_per_number_per_day:
+          type: integer
+          maximum: 5
+          minimum: 1
+        auto_sms_cooldown_hours:
+          type: integer
+          maximum: 168
+          minimum: 0
+        callback_expiry_hours:
+          type: integer
+          maximum: 720
+          minimum: 1
+        retention_days:
+          type: integer
+          maximum: 3650
+          minimum: 0
+          nullable: true
+        effective_retention_days:
+          type: integer
+          readOnly: true
+      required:
+      - auto_sms_after_hours_only
+      - auto_sms_cooldown_hours
+      - auto_sms_enabled
+      - auto_sms_per_number_per_day
+      - auto_sms_template
+      - callback_expiry_hours
+      - effective_retention_days
+      - outcome_required_after_seconds
+      - post_call_card
+      - retention_days
+      - unreturned_hours
+    CallSimRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        colour:
+          type: string
+      required:
+      - colour
+      - id
+      - label
+    CallSimulatorActionActionEnum:
+      enum:
+      - incoming
+      - missed
+      - tick
+      type: string
+      description: |-
+        * `incoming` - incoming
+        * `missed` - missed
+        * `tick` - tick
+    CallSimulatorActionRequest:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/CallSimulatorActionActionEnum'
+      required:
+      - action
+    CallStateEnum:
+      enum:
+      - idle
+      - ringing
+      - active
+      - held
+      type: string
+      description: "* `idle` - idle\n* `ringing` - ringing\n* `active` - active\n*
+        `held` - held\n* `` - "
+    CallStats:
+      type: object
+      properties:
+        range_days:
+          type: integer
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        unreturned_hours:
+          type: integer
+        kpis:
+          type: object
+          additionalProperties: {}
+        series:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        heatmap:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+        by_result:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        per_device:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        per_office:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        per_sim:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        staff:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        callers:
+          type: object
+          additionalProperties: {}
+        top_callers:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        outcomes:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        unreturned_list:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - by_result
+      - callers
+      - end
+      - heatmap
+      - kpis
+      - outcomes
+      - per_device
+      - per_office
+      - per_sim
+      - range_days
+      - series
+      - staff
+      - start
+      - top_callers
+      - unreturned_hours
+      - unreturned_list
+    CallSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        device:
+          $ref: '#/components/schemas/CallDeviceRef'
+        sim:
+          allOf:
+          - $ref: '#/components/schemas/CallSimRef'
+          nullable: true
+          readOnly: true
+        direction:
+          type: string
+        result:
+          type: string
+        number:
+          type: string
+        display_number:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        name_source:
+          type: string
+          description: phone (saved in the phone's contacts), directory (company directory)
+            or "".
+          readOnly: true
+        customer_id:
+          type: integer
+          nullable: true
+        presentation:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        answered_at:
+          type: string
+          format: date-time
+          nullable: true
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        ring_seconds:
+          type: integer
+        talk_seconds:
+          type: integer
+        is_after_hours:
+          type: boolean
+        is_conference:
+          type: boolean
+        is_video:
+          type: boolean
+        origin:
+          type: string
+        returned_at:
+          type: string
+          format: date-time
+          nullable: true
+        outcome:
+          allOf:
+          - $ref: '#/components/schemas/CallOutcomeRef'
+          nullable: true
+          readOnly: true
+        deleted_on_device:
+          type: boolean
+          readOnly: true
+        is_final:
+          type: boolean
+      required:
+      - answered_at
+      - customer_id
+      - deleted_on_device
+      - device
+      - direction
+      - display_number
+      - ended_at
+      - id
+      - is_after_hours
+      - is_conference
+      - is_final
+      - is_video
+      - name
+      - name_source
+      - number
+      - origin
+      - outcome
+      - presentation
+      - result
+      - returned_at
+      - ring_seconds
+      - sim
+      - started_at
+      - talk_seconds
+    Callback:
+      type: object
+      properties:
+        id:
+          type: integer
+        device:
+          $ref: '#/components/schemas/CallDeviceRef'
+        number:
+          type: string
+        display_number:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        customer_id:
+          type: integer
+          nullable: true
+        source_call_id:
+          type: integer
+          nullable: true
+        call_id:
+          type: integer
+          nullable: true
+        assigned_by:
+          type: string
+          readOnly: true
+        assignee:
+          type: string
+          readOnly: true
+        due_at:
+          type: string
+          format: date-time
+        priority:
+          type: string
+        reason:
+          type: string
+          readOnly: true
+        state:
+          type: string
+        attempts:
+          type: integer
+        notified_at:
+          type: string
+          format: date-time
+          nullable: true
+        dialed_at:
+          type: string
+          format: date-time
+          nullable: true
+        done_at:
+          type: string
+          format: date-time
+          nullable: true
+        snoozed_until:
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - assigned_by
+      - assignee
+      - attempts
+      - call_id
+      - created_at
+      - customer_id
+      - device
+      - dialed_at
+      - display_number
+      - done_at
+      - due_at
+      - expires_at
+      - id
+      - name
+      - notified_at
+      - number
+      - priority
+      - reason
+      - snoozed_until
+      - source_call_id
+      - state
+    CallbackBulkActionEnum:
+      enum:
+      - assign
+      - cancel
+      - done
+      type: string
+      description: |-
+        * `assign` - assign
+        * `cancel` - cancel
+        * `done` - done
+    CallbackBulkRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          maxItems: 200
+          minItems: 1
+        action:
+          $ref: '#/components/schemas/CallbackBulkActionEnum'
+        device:
+          type: string
+          format: uuid
+        due_at:
+          type: string
+          format: date-time
+      required:
+      - action
+      - ids
+    CallbackCreateRequest:
+      type: object
+      properties:
+        device:
+          type: string
+          format: uuid
+        number:
+          type: string
+          default: ''
+          maxLength: 64
+        call:
+          type: integer
+          nullable: true
+        customer:
+          type: integer
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/PriorityEnum'
+          default: normal
+        reason:
+          type: string
+          default: ''
+          maxLength: 500
+      required:
+      - device
+    CallsConfig:
+      type: object
+      properties:
+        outcomes:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        post_call_card:
+          type: boolean
+        outcome_required_after_seconds:
+          type: integer
+        sims:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        server_time:
+          type: integer
+      required:
+      - outcome_required_after_seconds
+      - outcomes
+      - post_call_card
+      - server_time
+      - sims
     Capabilities:
       type: object
       properties:
@@ -4092,6 +6180,54 @@ components:
       - server_search
       - signatures
       - vacation
+    CarrierTariff:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        carrier:
+          type: string
+          description: As the SIM reports it (SimLine.carrier), case-insensitive.
+          maxLength: 80
+        per_minute:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          maxLength: 3
+        billing_increment_seconds:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - carrier
+      - id
+      - per_minute
+    CarrierTariffRequest:
+      type: object
+      properties:
+        carrier:
+          type: string
+          minLength: 1
+          description: As the SIM reports it (SimLine.carrier), case-insensitive.
+          maxLength: 80
+        per_minute:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        billing_increment_seconds:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - carrier
+      - per_minute
     ClaimRequest:
       type: object
       properties:
@@ -4554,6 +6690,196 @@ components:
           type: string
       required:
       - csrf_token
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        key:
+          type: string
+        display_number:
+          type: string
+          readOnly: true
+        display_name:
+          type: string
+        organisation:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        owner:
+          type: string
+          readOnly: true
+        owner_id:
+          type: integer
+          nullable: true
+        caller_id_all_phones:
+          type: boolean
+        auto_sms_opt_out:
+          type: boolean
+        first_seen_call:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_call:
+          type: string
+          format: date-time
+          nullable: true
+        first_seen_sms:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_sms:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - auto_sms_opt_out
+      - caller_id_all_phones
+      - display_name
+      - display_number
+      - first_seen_call
+      - first_seen_sms
+      - id
+      - key
+      - last_seen_call
+      - last_seen_sms
+      - organisation
+      - owner
+      - owner_id
+      - tags
+    CustomerDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        key:
+          type: string
+        display_number:
+          type: string
+          readOnly: true
+        display_name:
+          type: string
+        organisation:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        owner:
+          type: string
+          readOnly: true
+        owner_id:
+          type: integer
+          nullable: true
+        caller_id_all_phones:
+          type: boolean
+        auto_sms_opt_out:
+          type: boolean
+        first_seen_call:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_call:
+          type: string
+          format: date-time
+          nullable: true
+        first_seen_sms:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_sms:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+        can_edit:
+          type: boolean
+        aliases:
+          type: array
+          items:
+            type: string
+        stats:
+          type: object
+          additionalProperties: {}
+      required:
+      - aliases
+      - auto_sms_opt_out
+      - caller_id_all_phones
+      - can_edit
+      - display_name
+      - display_number
+      - first_seen_call
+      - first_seen_sms
+      - id
+      - key
+      - last_seen_call
+      - last_seen_sms
+      - notes
+      - organisation
+      - owner
+      - owner_id
+      - stats
+      - tags
+    CustomerMergeRequest:
+      type: object
+      properties:
+        target:
+          type: integer
+        sources:
+          type: array
+          items:
+            type: integer
+          maxItems: 20
+          minItems: 1
+      required:
+      - sources
+      - target
+    CustomerPage:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - next_cursor
+      - results
+    CustomerWriteRequest:
+      type: object
+      properties:
+        number:
+          type: string
+          minLength: 1
+          maxLength: 64
+        display_name:
+          type: string
+          maxLength: 120
+        organisation:
+          type: string
+          maxLength: 120
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+          maxItems: 20
+        notes:
+          type: string
+          maxLength: 4000
+        owner:
+          type: integer
+          nullable: true
+        caller_id_all_phones:
+          type: boolean
+        auto_sms_opt_out:
+          type: boolean
     DensityEnum:
       enum:
       - comfortable
@@ -4914,6 +7240,12 @@ components:
         push_enabled:
           type: boolean
           readOnly: true
+        capabilities:
+          type: object
+          additionalProperties:
+            type: boolean
+        is_default_dialer:
+          type: boolean
       required:
       - android_version
       - app_version
@@ -4924,12 +7256,14 @@ components:
       - background_restricted
       - battery
       - battery_optimised
+      - capabilities
       - charging
       - code
       - enrolled_at
       - enrolled_by
       - hardware_backed
       - id
+      - is_default_dialer
       - is_default_sms_app
       - is_simulated
       - last_seen_at
@@ -5036,6 +7370,38 @@ components:
           type: string
           default: ''
           maxLength: 16
+    DirectoryEntry:
+      type: object
+      properties:
+        number:
+          type: string
+        name:
+          type: string
+        organisation:
+          type: string
+        removed:
+          type: boolean
+      required:
+      - name
+      - number
+      - organisation
+      - removed
+    DirectoryPage:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectoryEntry'
+        next_cursor:
+          type: string
+          nullable: true
+        complete:
+          type: boolean
+      required:
+      - complete
+      - entries
+      - next_cursor
     Draft:
       type: object
       properties:
@@ -5299,6 +7665,10 @@ components:
           type: integer
         last_failure:
           type: string
+        platforms:
+          type: array
+          items:
+            type: string
         short_code_expires_at:
           type: string
           format: date-time
@@ -5316,6 +7686,7 @@ components:
       - last_failure
       - name
       - office
+      - platforms
       - short_code_expires_at
       - short_code_used
       - state
@@ -5347,6 +7718,13 @@ components:
         mark_read_on_open:
           type: boolean
           default: true
+        platforms:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlatformsEnum'
+          description: Phone platforms to enroll for; default ["sms"]. "calls" needs
+            calls.manage_settings.
+          maxItems: 2
       required:
       - name
       - office
@@ -5386,6 +7764,10 @@ components:
           type: integer
         last_failure:
           type: string
+        platforms:
+          type: array
+          items:
+            type: string
         short_code_expires_at:
           type: string
           format: date-time
@@ -5413,6 +7795,7 @@ components:
       - last_failure
       - name
       - office
+      - platforms
       - qr_svg
       - short_code
       - short_code_expires_at
@@ -5438,7 +7821,11 @@ components:
           type: integer
           minimum: 1
         type:
-          $ref: '#/components/schemas/EventTypeEnum'
+          type: string
+          minLength: 1
+          description: message.upsert, call.upsert, … (see docs/sms-mobile.md and
+            docs/calls-mobile.md)
+          maxLength: 40
         payload:
           type: object
           additionalProperties: {}
@@ -5446,28 +7833,6 @@ components:
       - payload
       - seq
       - type
-    EventTypeEnum:
-      enum:
-      - backfill.progress
-      - block.add
-      - block.remove
-      - contact.upsert
-      - message.delete
-      - message.read
-      - message.upsert
-      - thread.delete
-      - thread.read
-      type: string
-      description: |-
-        * `backfill.progress` - backfill.progress
-        * `block.add` - block.add
-        * `block.remove` - block.remove
-        * `contact.upsert` - contact.upsert
-        * `message.delete` - message.delete
-        * `message.read` - message.read
-        * `message.upsert` - message.upsert
-        * `thread.delete` - thread.delete
-        * `thread.read` - thread.read
     Filter:
       type: object
       properties:
@@ -5608,6 +7973,17 @@ components:
           nullable: true
         is_default_sms_app:
           type: boolean
+        is_default_dialer:
+          type: boolean
+          default: false
+        full_screen_intent_allowed:
+          type: boolean
+          nullable: true
+        call_state:
+          default: ''
+          oneOf:
+          - $ref: '#/components/schemas/CallStateEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         permissions:
           type: object
           additionalProperties:
@@ -5660,6 +8036,12 @@ components:
       properties:
         status:
           type: string
+        capabilities:
+          type: object
+          additionalProperties:
+            type: boolean
+          description: Phone platforms enabled for this phone (the app runs their
+            onboarding).
         attention:
           type: array
           items:
@@ -5670,6 +8052,7 @@ components:
           type: integer
       required:
       - attention
+      - capabilities
       - poll_seconds
       - server_time
       - status
@@ -6433,6 +8816,73 @@ components:
       - created_at
       - id
       - name
+    OfficeHours:
+      type: object
+      properties:
+        office:
+          type: integer
+        office_name:
+          type: string
+          readOnly: true
+        timezone:
+          type: string
+          maxLength: 64
+        week:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: array
+              items:
+                type: string
+                maxLength: 5
+        holidays:
+          type: array
+          items:
+            type: string
+            maxLength: 10
+          maxItems: 200
+        configured:
+          type: boolean
+          readOnly: true
+      required:
+      - configured
+      - holidays
+      - office
+      - office_name
+      - timezone
+      - week
+    OfficeHoursRequest:
+      type: object
+      properties:
+        office:
+          type: integer
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+        week:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                maxLength: 5
+        holidays:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 10
+          maxItems: 200
+      required:
+      - holidays
+      - office
+      - timezone
+      - week
     OfficeRef:
       type: object
       properties:
@@ -6633,6 +9083,144 @@ components:
       required:
       - email
       - name
+    PatchedCallAnnotationWriteRequest:
+      type: object
+      properties:
+        outcome:
+          type: integer
+          nullable: true
+        note:
+          type: string
+          default: ''
+          maxLength: 2000
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+          maxItems: 10
+    PatchedCallOutcomeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        colour:
+          type: string
+          minLength: 1
+          maxLength: 9
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+    PatchedCallSettingsRequest:
+      type: object
+      properties:
+        unreturned_hours:
+          type: integer
+          maximum: 168
+          minimum: 1
+        outcome_required_after_seconds:
+          type: integer
+          maximum: 36000
+          minimum: 0
+        post_call_card:
+          type: boolean
+        auto_sms_enabled:
+          type: boolean
+        auto_sms_template:
+          type: string
+          minLength: 1
+          maxLength: 300
+        auto_sms_after_hours_only:
+          type: boolean
+        auto_sms_per_number_per_day:
+          type: integer
+          maximum: 5
+          minimum: 1
+        auto_sms_cooldown_hours:
+          type: integer
+          maximum: 168
+          minimum: 0
+        callback_expiry_hours:
+          type: integer
+          maximum: 720
+          minimum: 1
+        retention_days:
+          type: integer
+          maximum: 3650
+          minimum: 0
+          nullable: true
+    PatchedCallbackUpdateRequest:
+      type: object
+      properties:
+        device:
+          type: string
+          format: uuid
+        due_at:
+          type: string
+          format: date-time
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        reason:
+          type: string
+          maxLength: 500
+        state:
+          $ref: '#/components/schemas/StateEnum'
+    PatchedCarrierTariffRequest:
+      type: object
+      properties:
+        carrier:
+          type: string
+          minLength: 1
+          description: As the SIM reports it (SimLine.carrier), case-insensitive.
+          maxLength: 80
+        per_minute:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        billing_increment_seconds:
+          type: integer
+          maximum: 32767
+          minimum: 0
+    PatchedCustomerWriteRequest:
+      type: object
+      properties:
+        number:
+          type: string
+          minLength: 1
+          maxLength: 64
+        display_name:
+          type: string
+          maxLength: 120
+        organisation:
+          type: string
+          maxLength: 120
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+          maxItems: 20
+        notes:
+          type: string
+          maxLength: 4000
+        owner:
+          type: integer
+          nullable: true
+        caller_id_all_phones:
+          type: boolean
+        auto_sms_opt_out:
+          type: boolean
     PatchedDeviceUpdateRequest:
       type: object
       properties:
@@ -6885,6 +9473,39 @@ components:
       required:
       - code
       - name
+    PhoneCallback:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: string
+        name:
+          type: string
+        reason:
+          type: string
+        requested_by:
+          type: string
+        priority:
+          type: string
+        due_at:
+          type: integer
+        state:
+          type: string
+        snoozed_until:
+          type: integer
+          nullable: true
+      required:
+      - due_at
+      - id
+      - name
+      - number
+      - priority
+      - reason
+      - requested_by
+      - snoozed_until
+      - state
     Platform:
       type: object
       properties:
@@ -6920,6 +9541,26 @@ components:
       - is_enabled
       - key
       - order
+    PlatformsEnum:
+      enum:
+      - sms
+      - calls
+      type: string
+      description: |-
+        * `sms` - sms
+        * `calls` - calls
+    PriorityEnum:
+      enum:
+      - low
+      - normal
+      - high
+      - urgent
+      type: string
+      description: |-
+        * `low` - low
+        * `normal` - normal
+        * `high` - high
+        * `urgent` - urgent
     ProviderEnum:
       enum:
       - gmail_oauth
@@ -7773,6 +10414,11 @@ components:
           type: boolean
       required:
       - starred
+    StateEnum:
+      enum:
+      - done
+      type: string
+      description: '* `done` - done'
     StatusBatchRequest:
       type: object
       properties:
@@ -7867,6 +10513,9 @@ components:
           items:
             type: object
             additionalProperties: {}
+        disabled_platform:
+          type: string
+          description: Set when the batch stopped at an event of a switched-off platform.
       required:
       - acked_seq
       - processed
