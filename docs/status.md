@@ -3,7 +3,33 @@
 **All six milestones are built and verified** (2026-10-10). Gmail is a working platform. SMS, Calls and
 Media show as "Coming soon". With no Google credentials, the whole product runs on the fake provider.
 
-## What was built
+## SMS platform — status (2026-10-28)
+
+Backend (`modules/devices`, `modules/sms`), the admin under `/sms`, and the Flutter + Kotlin default-SMS app in
+`mobile/` are built. The 1.1.0 performance, background, skins and onboarding work is described in
+[sms-mobile.md](sms-mobile.md) and decisions 41–58; measurements are in
+[sms-mobile-performance.md](sms-mobile-performance.md).
+
+| Check | Result (2026-10-28) |
+|---|---|
+| `pytest` (backend, Gmail + SMS + devices) | **242 passed** |
+| `makemigrations --check`, `spectacular --validate` | clean; `contracts/openapi.yaml` and TS types current |
+| `tsc --noEmit`, ESLint | 0 errors |
+| Playwright, 4 projects, full suite (Gmail + SMS) in one run | 29 passed, 1 failed, 2 skipped. The failure was the SMS journey on mobile-dark: the list re-sorted while a row was being tapped. It passed 3 of 3 times when re-run alone |
+| Admin API with 100 000 messages on one phone | every admin endpoint ≤ 300 ms p95 (in-thread search fixed: 659 → 28 ms) |
+| Security review of the 1.1.0 diff | no findings at high confidence. One hardening applied: a copied one-time code is marked sensitive on Android 13+ |
+| `flutter analyze`, `flutter test` (incl. skin goldens), Kotlin Robolectric tests, `flutter build apk --release --split-per-abi` | **not re-run after the codespace restart**: the Flutter SDK and Android SDK lived in `/tmp` and are gone. Last green in the session that wrote the code |
+| Phone budgets (cold start, chat open, frames, memory, SMS → admin ≤ 5 s) and the background matrix | **not measured**: they need the Android SDK and an emulator; method in sms-mobile-performance.md |
+
+Open items, in order:
+1. Reinstall Flutter (stable ≥ 3.47) and the Android SDK, then run `flutter analyze`, `flutter test`,
+   `./gradlew :app:testDebugUnitTest` and `flutter build apk --release --split-per-abi`. Confirm the arm64 APK is
+   ≤ 25 MB (estimate ~15.5 MB) and that `libbarhopper_v3.so` is gone.
+2. Fill in the phone budgets and the background matrix (API 29, 31, 33, 34, 35/36) in sms-mobile-performance.md.
+3. Put screenshots of each original Messages app in `docs/design/references/` and tune the skin tokens.
+4. Emulator walkthrough screenshots (`docs/screenshots/sms-mobile-*`).
+
+## Gmail platform — what was built
 
 | Milestone | Delivered |
 |---|---|
