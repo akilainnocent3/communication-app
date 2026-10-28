@@ -3,6 +3,7 @@ package com.kilimanjaro.communicationmanager.sms.telephony
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.SystemClock
 import android.provider.Telephony
 import android.telephony.SmsMessage
 import com.kilimanjaro.communicationmanager.sms.ClassZeroActivity
@@ -12,7 +13,7 @@ import com.kilimanjaro.communicationmanager.sms.safely
 
 /**
  * SMS_DELIVER (only the default SMS app receives it; protected by BROADCAST_SMS). Works without the Flutter engine:
- * write the provider, append the outbox event, notify, then wake the sync service.
+ * write the provider, append the outbox event, notify, then upload (directly, or through the running service).
  */
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -32,6 +33,7 @@ class SmsReceiver : BroadcastReceiver() {
             return
         }
         if (Blocking.isBlocked(context, address)) return
+        val startedAt = SystemClock.elapsedRealtime()
         val pending = goAsync()
         Thread {
             // The provider row comes first so the SMS itself is never lost; every later step is isolated so one failure
@@ -43,7 +45,8 @@ class SmsReceiver : BroadcastReceiver() {
                     safely("sms outbox") { SyncStore.get(context)?.appendEvent("message.upsert", Provider.payload(message)) }
                     safely("sms notify") { Notifications.incoming(context, message) }
                     EventBus.emit("message_received", threadId = message.threadId, providerId = message.providerId)
-                    safely("sms trigger") { SyncTrigger.now(context) }
+                    // Upload right here when the service is down (≤ 8 s), then hand the rest to WorkManager.
+                    safely("sms trigger") { SyncTrigger.afterIncoming(context, startedAt) }
                 }
             } finally {
                 pending.finish()

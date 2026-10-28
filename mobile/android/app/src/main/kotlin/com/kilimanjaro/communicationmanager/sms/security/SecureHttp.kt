@@ -1,6 +1,7 @@
 package com.kilimanjaro.communicationmanager.sms.security
 
 import com.kilimanjaro.communicationmanager.sms.BuildConfig
+import com.kilimanjaro.communicationmanager.sms.sync.HttpTransport
 import okhttp3.CertificatePinner
 import okhttp3.ConnectionSpec
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -38,7 +39,25 @@ object SecureHttp {
         builder.build()
     }
 
-    fun execute(method: String, url: String, headers: Map<String, String>, body: ByteArray?): Response {
+    /**
+     * The sync engine's transport. Every failure (offline, TLS, pin mismatch, a host outside the allow-list) is status 0,
+     * which the engine backs off from: an exception escaping here once stopped the old Dart sync loop for good.
+     * [callTimeoutMs] bounds a whole call (receivers upload inside their short goAsync window).
+     */
+    fun transport(callTimeoutMs: Long? = null): HttpTransport {
+        val http = if (callTimeoutMs == null) client else client.newBuilder().callTimeout(callTimeoutMs, TimeUnit.MILLISECONDS).build()
+        return HttpTransport { method, url, headers, body ->
+            try {
+                execute(method, url, headers, body, http)
+            } catch (e: java.io.IOException) {
+                Response(0, ByteArray(0))
+            } catch (e: IllegalArgumentException) {
+                Response(0, ByteArray(0))
+            }
+        }
+    }
+
+    fun execute(method: String, url: String, headers: Map<String, String>, body: ByteArray?, http: OkHttpClient = client): Response {
         require(url.startsWith("https://")) { "Only HTTPS is allowed" }
         val host = url.toHttpUrl().host
         val allowed = BuildConfig.ALLOWED_SERVER_HOSTS.split(",").map { it.trim().lowercase() }.filter { it.isNotEmpty() }
@@ -50,7 +69,7 @@ object SecureHttp {
             else -> null
         }
         val request = Request.Builder().url(url).method(method, requestBody).apply { headers.forEach { (k, v) -> header(k, v) } }.build()
-        client.newCall(request).execute().use { response ->
+        http.newCall(request).execute().use { response ->
             return Response(response.code, response.body.bytes())
         }
     }

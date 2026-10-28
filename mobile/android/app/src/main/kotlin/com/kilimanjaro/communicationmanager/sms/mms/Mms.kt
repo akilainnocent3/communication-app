@@ -63,6 +63,7 @@ class MmsReceiver : BroadcastReceiver() {
 class MmsDownloadedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val file = File(intent.getStringExtra("file") ?: return)
+        val startedAt = android.os.SystemClock.elapsedRealtime()
         val pending = goAsync()
         Thread {
             val ok = resultCode == android.app.Activity.RESULT_OK
@@ -81,7 +82,7 @@ class MmsDownloadedReceiver : BroadcastReceiver() {
                     }
                     safely("mms notify") { Notifications.incoming(context, message) }
                     EventBus.emit("message_received", threadId = message.threadId, providerId = message.providerId)
-                    safely("mms trigger") { SyncTrigger.now(context) }
+                    safely("mms trigger") { SyncTrigger.afterIncoming(context, startedAt) }
                 }
             } finally {
                 file.delete()
@@ -132,7 +133,7 @@ class MmsSentReceiver : BroadcastReceiver() {
             clientUuid?.let { store?.updateOutbound(it, if (ok) "sent" else "failed", id, errorCode = if (ok) null else resultCode) }
             Provider.mms(context, id)?.let { store?.appendEvent("message.upsert", MmsStore.payloadWithHashes(context, it).put("client_uuid", clientUuid)) }
         }
-        EventBus.emit("send_state", clientUuid = clientUuid, state = if (ok) "sent" else "failed", providerId = id)
+        EventBus.emit("send_state", clientUuid = clientUuid, state = if (ok) "sent" else "failed", providerId = id, threadId = Provider.mms(context, id)?.threadId)
         safely("mms trigger") { SyncTrigger.now(context) }
     }
 }
@@ -171,17 +172,18 @@ object MmsStore {
         })
     }
 
-    /** The upsert payload with each part's SHA-256 (the server verifies uploads against it). */
+    /** The upsert payload with each part's SHA-256 and size, streamed (the server verifies uploads against them). */
     fun payloadWithHashes(context: Context, message: com.kilimanjaro.communicationmanager.sms.bridge.ProviderMessage) = Provider.payload(message).apply {
         val parts = optJSONArray("parts") ?: return@apply
         for (i in 0 until parts.length()) {
             val uri = message.parts[i].uri ?: continue
             val digest = java.security.MessageDigest.getInstance("SHA-256")
+            var size = 0L
             context.contentResolver.openInputStream(Uri.parse(uri))?.use { input ->
                 val buffer = ByteArray(16 * 1024)
-                while (true) { val n = input.read(buffer); if (n < 0) break; digest.update(buffer, 0, n) }
+                while (true) { val n = input.read(buffer); if (n < 0) break; digest.update(buffer, 0, n); size += n }
             }
-            parts.getJSONObject(i).put("sha256", digest.digest().joinToString("") { "%02x".format(it) })
+            parts.getJSONObject(i).put("sha256", digest.digest().joinToString("") { "%02x".format(it) }).put("size", size)
         }
     }
 }

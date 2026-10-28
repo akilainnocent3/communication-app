@@ -91,7 +91,9 @@ object SmsSender {
         val parts = sms.divideMessage(request.body)
         if (admin) store?.updateOutbound(request.clientUuid, "sending", providerId, parts = parts.size)
         // The provider row exists now: report it (linked to the admin message by client_uuid).
-        Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, if (admin) request.clientUuid else null)) }
+        val written = Provider.sms(context, uri)
+        written?.let { store?.appendEvent("message.upsert", Provider.payload(it, if (admin) request.clientUuid else null)) }
+        val threadId = written?.threadId
         val sent = ArrayList<PendingIntent>()
         val delivered = ArrayList<PendingIntent>()
         parts.indices.forEach { index ->
@@ -106,10 +108,10 @@ object SmsSender {
             Provider.setSmsType(context, uri, Telephony.Sms.MESSAGE_TYPE_FAILED, ERROR_REFUSED)
             if (admin) store?.updateOutbound(request.clientUuid, "failed", providerId, ERROR_REFUSED)
             Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, if (admin) request.clientUuid else null)) }
-            EventBus.emit("send_state", clientUuid = request.clientUuid, state = "failed", providerId = providerId)
+            EventBus.emit("send_state", clientUuid = request.clientUuid, state = "failed", providerId = providerId, threadId = threadId)
             return SendResult(clientUuid = request.clientUuid, state = "failed", providerId = providerId, errorCode = ERROR_REFUSED.toLong())
         }
-        EventBus.emit("send_state", clientUuid = request.clientUuid, state = "sending", providerId = providerId)
+        EventBus.emit("send_state", clientUuid = request.clientUuid, state = "sending", providerId = providerId, threadId = threadId)
         return SendResult(clientUuid = request.clientUuid, state = "sending", providerId = providerId, parts = parts.size.toLong())
     }
 
@@ -136,6 +138,7 @@ class SmsSentReceiver : BroadcastReceiver() {
         val providerId = uri.lastPathSegment?.toLongOrNull()
         val ok = resultCode == Activity.RESULT_OK
         if (ok && !last) return
+        var threadId: Long? = null
         safely("sms sent") {
             val store = SyncStore.get(context)
             if (ok) {
@@ -147,9 +150,12 @@ class SmsSentReceiver : BroadcastReceiver() {
                 clientUuid?.let { store?.updateOutbound(it, "failed", providerId, errorCode = resultCode) }
                 safely("sms failed notify") { Notifications.sendFailed(context, uri) }
             }
-            Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, clientUuid)) }
+            Provider.sms(context, uri)?.let {
+                threadId = it.threadId
+                store?.appendEvent("message.upsert", Provider.payload(it, clientUuid))
+            }
         }
-        EventBus.emit("send_state", clientUuid = clientUuid, state = if (ok) "sent" else "failed", providerId = providerId)
+        EventBus.emit("send_state", clientUuid = clientUuid, state = if (ok) "sent" else "failed", providerId = providerId, threadId = threadId)
         safely("sms trigger") { SyncTrigger.now(context) }
     }
 }
@@ -161,6 +167,7 @@ class SmsDeliveredReceiver : BroadcastReceiver() {
         val pdu = intent.getByteArrayExtra("pdu") ?: return
         val clientUuid = intent.getStringExtra(SmsSender.EXTRA_UUID)
         var delivered = false
+        var threadId: Long? = null
         safely("sms delivered") {
             // Some modems send malformed status reports; createFromPdu can throw on them.
             val report = android.telephony.SmsMessage.createFromPdu(pdu, intent.getStringExtra("format"))
@@ -169,9 +176,12 @@ class SmsDeliveredReceiver : BroadcastReceiver() {
             Provider.setSmsStatus(context, uri, if (delivered) Telephony.Sms.STATUS_COMPLETE else Telephony.Sms.STATUS_FAILED)
             val store = SyncStore.get(context)
             if (delivered) clientUuid?.let { store?.updateOutbound(it, "delivered", uri.lastPathSegment?.toLongOrNull()) }
-            Provider.sms(context, uri)?.let { store?.appendEvent("message.upsert", Provider.payload(it, clientUuid)) }
+            Provider.sms(context, uri)?.let {
+                threadId = it.threadId
+                store?.appendEvent("message.upsert", Provider.payload(it, clientUuid))
+            }
         }
-        EventBus.emit("send_state", clientUuid = clientUuid, state = if (delivered) "delivered" else "failed")
+        EventBus.emit("send_state", clientUuid = clientUuid, state = if (delivered) "delivered" else "failed", providerId = uri.lastPathSegment?.toLongOrNull(), threadId = threadId)
         safely("sms trigger") { SyncTrigger.now(context) }
     }
 }

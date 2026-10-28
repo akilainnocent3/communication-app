@@ -1,0 +1,11 @@
+CREATE TABLE "conversation_prefs" ("thread_id" INTEGER NOT NULL, "pinned" INTEGER NOT NULL DEFAULT 0 CHECK ("pinned" IN (0, 1)), "archived" INTEGER NOT NULL DEFAULT 0 CHECK ("archived" IN (0, 1)), "muted" INTEGER NOT NULL DEFAULT 0 CHECK ("muted" IN (0, 1)), "spam" INTEGER NOT NULL DEFAULT 0 CHECK ("spam" IN (0, 1)), PRIMARY KEY ("thread_id"));
+CREATE TABLE "drafts" ("key" TEXT NOT NULL, "body" TEXT NOT NULL, "updated_at" INTEGER NOT NULL, PRIMARY KEY ("key"));
+CREATE TABLE "kv" ("key" TEXT NOT NULL, "value" TEXT NOT NULL, PRIMARY KEY ("key"));
+CREATE TABLE "message_cache" ("kind" TEXT NOT NULL, "provider_id" INTEGER NOT NULL, "thread_id" INTEGER NOT NULL, "date" INTEGER NOT NULL, "data" TEXT NOT NULL, PRIMARY KEY ("kind", "provider_id"));
+CREATE TABLE "outbound_states" ("client_uuid" TEXT NOT NULL, "state" TEXT NOT NULL, "provider_id" INTEGER NULL, "error_code" INTEGER NULL, "parts" INTEGER NULL, "updated_at" INTEGER NOT NULL, "reported_state" TEXT NULL, "sent_by" TEXT NULL, PRIMARY KEY ("client_uuid"));
+CREATE TABLE "pending_media" ("provider_id" INTEGER NOT NULL, "date" INTEGER NOT NULL, "seq" INTEGER NOT NULL, "uri" TEXT NOT NULL, "size" INTEGER NOT NULL, "offset" INTEGER NOT NULL DEFAULT 0, PRIMARY KEY ("provider_id", "date", "seq"));
+CREATE TABLE "scheduled_sends" ("client_uuid" TEXT NOT NULL, "addresses" TEXT NOT NULL, "body" TEXT NOT NULL, "subscription_id" INTEGER NULL, "send_at" INTEGER NOT NULL, PRIMARY KEY ("client_uuid"));
+CREATE TABLE "starred_messages" ("kind" TEXT NOT NULL, "provider_id" INTEGER NOT NULL, PRIMARY KEY ("kind", "provider_id"));
+CREATE TABLE "sync_events" ("seq" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "type" TEXT NOT NULL, "payload" TEXT NOT NULL, "created_at" INTEGER NOT NULL);
+CREATE TABLE "thread_cache" ("thread_id" INTEGER NOT NULL, "addresses" TEXT NOT NULL, "title" TEXT NOT NULL, "saved" INTEGER NOT NULL DEFAULT 0 CHECK ("saved" IN (0, 1)), "photo_uri" TEXT NULL, "snippet" TEXT NOT NULL, "date" INTEGER NOT NULL, "unread" INTEGER NOT NULL DEFAULT 0, "message_count" INTEGER NOT NULL DEFAULT 0, "has_mms" INTEGER NOT NULL DEFAULT 0 CHECK ("has_mms" IN (0, 1)), PRIMARY KEY ("thread_id"));
+CREATE INDEX message_cache_thread_date ON message_cache (thread_id, date);

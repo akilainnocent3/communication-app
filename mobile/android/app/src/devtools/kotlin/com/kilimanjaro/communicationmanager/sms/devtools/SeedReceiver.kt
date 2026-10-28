@@ -24,14 +24,8 @@ class SeedReceiver : BroadcastReceiver() {
         val threads = intent.getIntExtra("threads", 300)
         val messages = intent.getIntExtra("messages", 20000)
         val big = intent.getIntExtra("big", 2000).coerceAtMost(messages)
-        val pending = goAsync()
-        Thread {
-            try {
-                seed(context, threads, messages, big)
-            } finally {
-                pending.finish()
-            }
-        }.start()
+        // Not inside goAsync(): 20 000 inserts take longer than a broadcast may (the app's service keeps the process up).
+        Thread { seed(context.applicationContext, threads, messages, big) }.start()
     }
 
     private fun seed(context: Context, threads: Int, messages: Int, big: Int) {
