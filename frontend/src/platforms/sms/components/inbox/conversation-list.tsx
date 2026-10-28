@@ -4,6 +4,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
 import { Skeleton } from "@/components/tailgrids/core/skeleton";
 import { ActivityIndicator } from "@/components/ui/activity-indicator";
+import { useHeldOrder } from "@/hooks/use-held-order";
 import type { ConversationSummary } from "@/services/api/types";
 import { ConversationRow, type RowAction } from "./conversation-row";
 
@@ -37,9 +38,13 @@ type Props = {
   onAction: (row: ConversationSummary, action: RowAction) => void;
 };
 
-/** Virtualised conversation list with infinite scroll; keeps the focused row in view for j/k. */
+/**
+ * Virtualised conversation list with infinite scroll; keeps the focused row in view for j/k. Rows keep their positions
+ * while the pointer is on them (useHeldOrder), so a poll that re-sorts the list can never move a row mid-tap.
+ */
 export function ConversationList(props: Props) {
-  const { rows, hasMore, loadingMore, onLoadMore, focusedId } = props;
+  const { hasMore, loadingMore, onLoadMore, focusedId } = props;
+  const { rows, handlers } = useHeldOrder(props.rows);
   const parent = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual returns fresh functions each render
   const virtualizer = useVirtualizer({
@@ -60,7 +65,7 @@ export function ConversationList(props: Props) {
   }, [focusedIndex, virtualizer]);
 
   return (
-    <div ref={parent} role="grid" aria-label="Conversations" aria-rowcount={rows.length} className="@container scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain">
+    <div ref={parent} {...handlers} role="grid" aria-label="Conversations" aria-rowcount={rows.length} className="@container scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain">
       <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
         {items.map((item) => {
           const row = rows[item.index];

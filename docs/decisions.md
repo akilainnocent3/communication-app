@@ -195,3 +195,8 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
     API: compressed responses that mix a secret (CSRF token, mail text) with attacker-influenced input are the BREACH
     pattern. Static bundles are the bulk of the bytes anyway. The config is a template (`${CM_DOMAIN}`) rendered by
     `deploy/render-nginx.sh`, so no placeholder domain can be left in a live config.
+61. **Polled lists hold their order under the pointer.** The flaky SMS journey (mobile-dark) was a re-sort between
+    pointerdown and pointerup: the row moved, the click landed on the list itself and nothing opened. `useHeldOrder`
+    (frontend/src/hooks) freezes the on-screen order while the pointer moves over the list, is pressed, or was released
+    within 600 ms; row data still updates in place, new rows wait, the next page is appended. A resting mouse releases
+    the hold after 1.5 s, so a hovering admin still sees new conversations rise. No retries were added to the test.
