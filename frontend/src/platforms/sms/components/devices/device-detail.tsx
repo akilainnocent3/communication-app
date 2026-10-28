@@ -59,6 +59,7 @@ function Detail({ data }: { data: DeviceDetail }) {
   };
   const progress = data.sync_progress as { phase?: string; done?: number; total?: number };
 
+  const restricted = data.battery_optimised || data.background_restricted || (data.standby_bucket ?? 0) >= 40;
   return (
     <Page className="max-w-5xl">
       <ButtonLink href="/sms/devices" appearance="ghost" size="sm" className="mb-3 -ml-2"><ArrowLeftIcon size={16} />All phones</ButtonLink>
@@ -81,7 +82,16 @@ function Detail({ data }: { data: DeviceDetail }) {
       {data.attention.length > 0 && (
         <div role="status" className="mb-4 flex items-start gap-3 rounded-xl border border-warning-500/40 bg-warning-500/10 p-4 text-sm">
           <WarningIcon className="shrink-0 text-warning-500" />
-          <ul className="space-y-0.5">{data.attention.map((alert) => <li key={alert.code} className="text-text-primary">{alert.label}</li>)}</ul>
+          <div className="min-w-0 space-y-2">
+            <ul className="space-y-0.5">{data.attention.map((alert) => <li key={alert.code} className="text-text-primary">{alert.label}</li>)}</ul>
+            {restricted && (
+              <div data-background-help="">
+                <p className="font-medium text-text-primary">How to fix on this phone{data.manufacturer ? ` (${data.manufacturer})` : ""}</p>
+                <ol className="list-decimal space-y-0.5 pl-5 text-text-secondary">{data.background_help.map((step) => <li key={step}>{step}</li>)}</ol>
+                <p className="text-text-tertiary">Or open the app on the phone: Settings → Keep messages flowing.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -105,6 +115,8 @@ function Detail({ data }: { data: DeviceDetail }) {
             <Row label="Battery">{data.battery === null ? "—" : `${data.battery}%${data.charging ? " · charging" : ""}`}</Row>
             <Row label="Network">{data.network_type || "—"}{data.signal !== null ? ` · signal ${data.signal}/4` : ""}</Row>
             <Row label="Battery optimisation">{data.battery_optimised ? <span className="text-warning-600 dark:text-warning-400">On (may delay messages)</span> : "Off"}</Row>
+            <Row label="Background use">{data.background_restricted ? <span className="text-warning-600 dark:text-warning-400">Restricted</span> : "Allowed"}</Row>
+            <Row label="Android standby">{standbyLabel(data.standby_bucket)}</Row>
             <Row label="Waiting to upload">{data.pending_outbox}</Row>
             <Row label="Last sync">{data.last_sync_at ? dateTime(data.last_sync_at) : "—"}</Row>
           </dl>
@@ -224,4 +236,11 @@ function SimulatorControls({ data, onChange }: { data: DeviceDetail; onChange: (
       </div>
     </SectionCard>
   );
+}
+
+/** UsageStatsManager buckets: from 40 ("rare") Android delays the app's background work by hours. */
+function standbyLabel(bucket: number | null) {
+  if (bucket === null) return "—";
+  const name = bucket <= 10 ? "Active" : bucket <= 20 ? "Working set" : bucket <= 30 ? "Frequent" : bucket < 45 ? "Rare" : "Restricted";
+  return bucket >= 40 ? <span className="text-warning-600 dark:text-warning-400">{name} (background work delayed)</span> : name;
 }
