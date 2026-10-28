@@ -6,6 +6,10 @@ import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
+import com.kilimanjaro.communicationmanager.sms.data.CipherSql
+import com.kilimanjaro.communicationmanager.sms.data.Sql
+import com.kilimanjaro.communicationmanager.sms.data.pragma
+import net.zetetic.database.sqlcipher.SQLiteDatabase
 import java.io.File
 import java.security.KeyStore
 import java.security.SecureRandom
@@ -17,13 +21,19 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
- * Passphrase of the SQLCipher sync database: 32 random bytes, stored wrapped (AES-256-GCM) by a non-exportable
- * Keystore key. Both the native writers and Dart (drift) open the same file with it. Excluded from backups.
+ * Key of the SQLCipher sync database: 32 random bytes (64 hex characters), stored wrapped (AES-256-GCM) by a
+ * non-exportable Keystore key. Both the native writers and Dart (drift) open the same file with it. Excluded from
+ * backups.
+ *
+ * The key is used as a RAW key (`PRAGMA key = "x'<hex>'"`), not a passphrase: it is already uniformly random, so
+ * SQLCipher's PBKDF2 (256 000 iterations, run on every open by every opener) added startup time and no security.
+ * Databases created by 1.0.x used the hex string as a passphrase; [open] rekeys them once (see [ensureRawKey]).
  */
 object DatabaseKey {
     private const val ALIAS = "cm_db_wrap"
     private const val PREFS = "cm_secure"
     private const val ENTRY = "db_key"
+    private const val RAW = "db_key_raw"
 
     @Volatile private var cached: String? = null
 
@@ -51,7 +61,8 @@ object DatabaseKey {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val raw = ByteArray(32).also { SecureRandom().nextBytes(it) }
         val hex = raw.joinToString("") { "%02x".format(it) }
-        prefs.edit().putString(ENTRY, wrap(hex)).commit()
+        // A brand-new database is created with the raw key, so there is nothing to migrate.
+        prefs.edit().putString(ENTRY, wrap(hex)).putBoolean(RAW, true).commit()
         return hex
     }
 
@@ -68,6 +79,63 @@ object DatabaseKey {
     }
 
     fun path(context: Context): String = context.getDatabasePath("cm_sync.db").absolutePath
+
+    /** SQLCipher's raw-key syntax: the 32 bytes as a blob literal, no key derivation. */
+    fun rawKey(hex: String): String = "x'$hex'"
+
+    /** Opens the sync database with the raw key (migrating a 1.0.x passphrase database first). */
+    fun open(context: Context): Sql {
+        val hex = get(context)
+        ensureRawKey(context, hex)
+        val db = SQLiteDatabase.openDatabase(path(context), rawKey(hex), null, SQLiteDatabase.OPEN_READWRITE, null, null)
+        db.pragma("PRAGMA busy_timeout = 5000")
+        return CipherSql(db)
+    }
+
+    /**
+     * One-time migration from the passphrase format: open with the passphrase, `PRAGMA rekey` to the raw key (in
+     * rollback-journal mode: rekey rewrites every page), back to WAL. Runs under this object's lock before anyone else
+     * opens the file (Dart asks for the key through [get] first), and is recorded so it never runs again. A database
+     * that already opens with the raw key (a new install, or a migration whose flag was lost) is just recorded.
+     */
+    @Synchronized
+    fun ensureRawKey(context: Context, hex: String = get(context)) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.getBoolean(RAW, false)) return
+        val path = path(context)
+        if (!File(path).exists() || opens(path, rawKey(hex))) {
+            prefs.edit().putBoolean(RAW, true).commit()
+            return
+        }
+        loadLibrary()
+        val db = SQLiteDatabase.openDatabase(path, hex, null, SQLiteDatabase.OPEN_READWRITE, null, null)
+        try {
+            db.pragma("PRAGMA busy_timeout = 5000")
+            db.pragma("PRAGMA journal_mode = DELETE")
+            db.pragma("PRAGMA rekey = \"${rawKey(hex)}\"")
+            db.pragma("PRAGMA journal_mode = WAL")
+        } finally {
+            db.close()
+        }
+        check(opens(path, rawKey(hex))) { "rekey did not take effect" }
+        prefs.edit().putBoolean(RAW, true).commit()
+        Log.i("CmSms", "sync database migrated to a raw key")
+    }
+
+    private fun opens(path: String, key: String): Boolean {
+        loadLibrary()
+        return try {
+            SQLiteDatabase.openDatabase(path, key, null, SQLiteDatabase.OPEN_READONLY, null, null).use { it.pragma("SELECT count(*) FROM sqlite_master") }
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    @Volatile private var loaded = false
+    private fun loadLibrary() {
+        if (!loaded) synchronized(this) { if (!loaded) { System.loadLibrary("sqlcipher"); loaded = true } }
+    }
 
     fun delete(context: Context) {
         cached = null
