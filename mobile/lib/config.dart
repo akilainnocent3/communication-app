@@ -15,7 +15,7 @@ class AppConfig {
         allowedServerHosts: _list(const String.fromEnvironment('ALLOWED_SERVER_HOSTS')),
         pinnedSpki: _list(const String.fromEnvironment('PINNED_SPKI')),
         fcmEnabled: const bool.fromEnvironment('FCM_ENABLED'),
-        appVersion: const String.fromEnvironment('APP_VERSION', defaultValue: '1.0.0'),
+        appVersion: const String.fromEnvironment('APP_VERSION', defaultValue: '1.1.0'),
       );
 
   static List<String> _list(String value) => value.split(',').map((item) => item.trim().toLowerCase()).where((item) => item.isNotEmpty).toList();

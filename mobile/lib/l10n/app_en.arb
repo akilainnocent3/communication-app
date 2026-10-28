@@ -18,7 +18,7 @@
   "batterySamsung": "On Samsung: Settings → Battery → Background usage limits → Never sleeping apps → add Messages.",
   "batteryOpen": "Open battery settings",
   "enrollTitle": "Connect to your company",
-  "enrollBody": "Scan the QR code your administrator shows you, or paste the enrollment code.",
+  "enrollBody": "Scan the QR code your administrator shows you, tap the link they sent, or type the 8-character code.",
   "scanQr": "Scan QR code",
   "enterCode": "Enter code",
   "codeLabel": "Enrollment code",
@@ -29,7 +29,13 @@
   "noticeDecline": "Not now",
   "enrolling": "Connecting this phone…",
   "enrolled": "This phone is connected as {code}.",
-  "@enrolled": {"placeholders": {"code": {"type": "String"}}},
+  "@enrolled": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "removedTitle": "This phone was removed by your administrator",
   "removedBody": "Its connection to the company has been deleted. Your text messages are still on this phone.",
   "pausedBanner": "Syncing is paused by your administrator.",
@@ -44,7 +50,13 @@
   "noConversations": "No conversations yet",
   "noConversationsBody": "Text messages you send and receive appear here.",
   "selectedCount": "{count} selected",
-  "@selectedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "markRead": "Mark as read",
   "markUnread": "Mark as unread",
   "pin": "Pin",
@@ -58,7 +70,13 @@
   "unblock": "Unblock",
   "moveToSpam": "Move to spam",
   "deleteConfirm": "Delete {count, plural, =1{this conversation} other{{count} conversations}} from this phone?",
-  "@deleteConfirm": {"placeholders": {"count": {"type": "int"}}},
+  "@deleteConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cancel": "Cancel",
   "undo": "Undo",
   "today": "Today",
@@ -66,13 +84,34 @@
   "messageHint": "Text message",
   "send": "Send",
   "segments": "{segments} SMS · {remaining} left",
-  "@segments": {"placeholders": {"segments": {"type": "int"}, "remaining": {"type": "int"}}},
+  "@segments": {
+    "placeholders": {
+      "segments": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "mmsWillSend": "Sends as MMS",
   "sentByAdmin": "Sent by admin",
   "sentByAdminNamed": "Sent by admin · {name}",
-  "@sentByAdminNamed": {"placeholders": {"name": {"type": "String"}}},
+  "@sentByAdminNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminReplied": "Admin replied to {name}",
-  "@adminReplied": {"placeholders": {"name": {"type": "String"}}},
+  "@adminReplied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "statusSending": "Sending…",
   "statusSent": "Sent",
   "statusDelivered": "Delivered",
@@ -95,7 +134,13 @@
   "newConversation": "New conversation",
   "scheduleSend": "Schedule send",
   "scheduledFor": "Scheduled for {time}",
-  "@scheduledFor": {"placeholders": {"time": {"type": "String"}}},
+  "@scheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "attach": "Attach",
   "camera": "Camera",
   "gallery": "Gallery",
@@ -130,10 +175,111 @@
   "unlock": "Unlock",
   "locked": "Messages is locked",
   "backfillProgress": "Copying message history: {done} of {total}",
-  "@backfillProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "@backfillProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "flashMessage": "Flash message",
   "startupErrorTitle": "Messages could not start",
   "startupErrorBody": "Your text messages are safe on this phone. Try again; if this keeps happening, restart the phone or contact your administrator.",
   "tryAgain": "Try again",
-  "sendRefused": "Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again."
+  "sendRefused": "Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again.",
+  "unreadConversations": "{count, plural, =1{1 unread conversation} other{{count} unread conversations}}",
+  "@unreadConversations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messagesSection": "Messages",
+  "moreResults": "More results",
+  "noResults": "No results",
+  "contacts": "Contacts",
+  "selectText": "Select text",
+  "done": "Done",
+  "appearanceHint": "Style, theme, text size, swipe actions",
+  "keepFlowingTitle": "Keep messages flowing",
+  "keepFlowingHint": "Stop the phone from pausing this app in the background",
+  "keepFlowingBody": "Phones save battery by pausing apps in the background. Allow this app to run so customer messages reach your company at once and replies go out on time.",
+  "style": "Style",
+  "matchMyPhone": "Match my phone",
+  "skinOneUi": "One UI style",
+  "skinPixel": "Pixel / Material You style",
+  "skinHios": "HiOS / XOS style",
+  "skinHyperOs": "HyperOS / MIUI style",
+  "skinColorOs": "ColorOS style",
+  "skinCompany": "Company",
+  "theme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "bubbleColour": "Bubble colour",
+  "listDensity": "List density",
+  "densityComfortable": "Comfortable",
+  "densityCompact": "Compact",
+  "swipeActions": "Swipe actions",
+  "swipeRight": "Swipe right",
+  "swipeLeft": "Swipe left",
+  "none": "None",
+  "showContactPhotos": "Show contact photos",
+  "checkBattery": "Battery optimisation is off for this app",
+  "checkBackground": "Background use is not restricted",
+  "checkStandby": "Android is not holding the app back",
+  "allow": "Allow",
+  "open": "Open",
+  "oemSamsung": "Samsung: add to \"Never sleeping apps\"",
+  "oemXiaomi": "Xiaomi: allow Autostart",
+  "oemTranssion": "Tecno / Infinix / itel: allow auto-start in Phone Master, and lock the app in recent apps",
+  "oemOppo": "Oppo / Realme: allow auto-launch",
+  "oemOneplus": "OnePlus: allow auto-launch",
+  "oemHuawei": "Huawei: manage app launch manually and allow all",
+  "oemCannotCheck": "The phone does not tell apps whether this is on: check it once.",
+  "forceStopWarning": "Never use \"Force stop\" on this app: Android then blocks all incoming messages for it until it is opened again.",
+  "syncService": "Sync service",
+  "running": "Running",
+  "notRunning": "Not running",
+  "welcomeTitle": "Your company Messages app",
+  "welcomeBody": "Send and receive text messages as usual. Your company sees the messages of this company phone and can reply for you.",
+  "getStarted": "Get started",
+  "whyDefault": "Android lets only the default SMS app receive messages, save them and send them. Your old Messages app keeps working as a normal app.",
+  "roleFallback": "The dialog did not appear or was closed. Choose this app in Settings → Default apps → SMS app.",
+  "openDefaultApps": "Open Default apps",
+  "whyPermissions": "SMS: to read, save and send messages. Contacts: to show names instead of numbers (names are never uploaded except for numbers you message). Phone: to use the right SIM.",
+  "notificationsTitle": "Know when messages arrive",
+  "whyNotifications": "New messages, failed sends and admin replies show as notifications. Their text is hidden on the lock screen.",
+  "notNow": "Not now",
+  "whyFlowing": "Without this some phones stop the app minutes after the screen turns off, and messages reach your company hours late.",
+  "permissionDeniedForGood": "Permission was refused. Allow it in the app settings.",
+  "openSettings": "Open settings",
+  "why": "Why?",
+  "torch": "Torch",
+  "notAnEnrollCode": "That is not an enrollment code. Scan the code from Admin → SMS → Enroll phone.",
+  "noQrInPhoto": "No QR code found in that photo.",
+  "pointAtQr": "Point the camera at the administrator's QR code",
+  "scanFromPhoto": "Scan from photo",
+  "cameraRationale": "The camera is used only to read your administrator's QR code. Nothing is recorded.",
+  "whyEnroll": "Connecting copies this phone's messages to your company so administrators can read and reply. You will see the monitoring notice before anything is connected.",
+  "orTypeCode": "or type the code",
+  "shortCodeLabel": "Code",
+  "noConnection": "No connection to the server. Check the internet and try again.",
+  "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
+  "enrolledTitle": "Connected",
+  "enrolledBody": "Messages now reach your company. The history is being copied in the background.",
+  "openMessages": "Open messages",
+  "backfillDone": "Message history copied",
+  "backfillCopied": "{count} messages copied…",
+  "@backfillCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

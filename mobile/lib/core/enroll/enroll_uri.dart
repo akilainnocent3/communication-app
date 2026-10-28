@@ -36,3 +36,11 @@ EnrollTarget parseEnrollTarget(String raw, {required List<String> allowedHosts, 
   if (server.userInfo.isNotEmpty || !allowedHosts.contains(server.host.toLowerCase())) throw const EnrollUriException('untrusted_server');
   return EnrollTarget(server: Uri(scheme: 'https', host: server.host, port: server.hasPort ? server.port : null), token: token);
 }
+
+/// The chosen server for a typed short code: HTTPS, an exact allow-listed host, no user info.
+Uri allowedServer(String host, {required List<String> allowedHosts}) {
+  final server = Uri.tryParse('https://${host.trim()}');
+  if (server == null || server.host.isEmpty) throw const EnrollUriException('invalid');
+  if (server.userInfo.isNotEmpty || !allowedHosts.contains(server.host.toLowerCase())) throw const EnrollUriException('untrusted_server');
+  return Uri(scheme: 'https', host: server.host, port: server.hasPort ? server.port : null);
+}

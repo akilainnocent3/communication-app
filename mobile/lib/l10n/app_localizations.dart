@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_sw.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,7 +93,10 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('sw'),
+  ];
 
   /// No description provided for @appTitle.
   ///
@@ -205,7 +209,7 @@ abstract class AppLocalizations {
   /// No description provided for @enrollBody.
   ///
   /// In en, this message translates to:
-  /// **'Scan the QR code your administrator shows you, or paste the enrollment code.'**
+  /// **'Scan the QR code your administrator shows you, tap the link they sent, or type the 8-character code.'**
   String get enrollBody;
 
   /// No description provided for @scanQr.
@@ -861,6 +865,474 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again.'**
   String get sendRefused;
+
+  /// No description provided for @unreadConversations.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 unread conversation} other{{count} unread conversations}}'**
+  String unreadConversations(int count);
+
+  /// No description provided for @messagesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messagesSection;
+
+  /// No description provided for @moreResults.
+  ///
+  /// In en, this message translates to:
+  /// **'More results'**
+  String get moreResults;
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get noResults;
+
+  /// No description provided for @contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contacts;
+
+  /// No description provided for @selectText.
+  ///
+  /// In en, this message translates to:
+  /// **'Select text'**
+  String get selectText;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @appearanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Style, theme, text size, swipe actions'**
+  String get appearanceHint;
+
+  /// No description provided for @keepFlowingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep messages flowing'**
+  String get keepFlowingTitle;
+
+  /// No description provided for @keepFlowingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the phone from pausing this app in the background'**
+  String get keepFlowingHint;
+
+  /// No description provided for @keepFlowingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Phones save battery by pausing apps in the background. Allow this app to run so customer messages reach your company at once and replies go out on time.'**
+  String get keepFlowingBody;
+
+  /// No description provided for @style.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get style;
+
+  /// No description provided for @matchMyPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Match my phone'**
+  String get matchMyPhone;
+
+  /// No description provided for @skinOneUi.
+  ///
+  /// In en, this message translates to:
+  /// **'One UI style'**
+  String get skinOneUi;
+
+  /// No description provided for @skinPixel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pixel / Material You style'**
+  String get skinPixel;
+
+  /// No description provided for @skinHios.
+  ///
+  /// In en, this message translates to:
+  /// **'HiOS / XOS style'**
+  String get skinHios;
+
+  /// No description provided for @skinHyperOs.
+  ///
+  /// In en, this message translates to:
+  /// **'HyperOS / MIUI style'**
+  String get skinHyperOs;
+
+  /// No description provided for @skinColorOs.
+  ///
+  /// In en, this message translates to:
+  /// **'ColorOS style'**
+  String get skinColorOs;
+
+  /// No description provided for @skinCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get skinCompany;
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @bubbleColour.
+  ///
+  /// In en, this message translates to:
+  /// **'Bubble colour'**
+  String get bubbleColour;
+
+  /// No description provided for @listDensity.
+  ///
+  /// In en, this message translates to:
+  /// **'List density'**
+  String get listDensity;
+
+  /// No description provided for @densityComfortable.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable'**
+  String get densityComfortable;
+
+  /// No description provided for @densityCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get densityCompact;
+
+  /// No description provided for @swipeActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe actions'**
+  String get swipeActions;
+
+  /// No description provided for @swipeRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe right'**
+  String get swipeRight;
+
+  /// No description provided for @swipeLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left'**
+  String get swipeLeft;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// No description provided for @showContactPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Show contact photos'**
+  String get showContactPhotos;
+
+  /// No description provided for @checkBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimisation is off for this app'**
+  String get checkBattery;
+
+  /// No description provided for @checkBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background use is not restricted'**
+  String get checkBackground;
+
+  /// No description provided for @checkStandby.
+  ///
+  /// In en, this message translates to:
+  /// **'Android is not holding the app back'**
+  String get checkStandby;
+
+  /// No description provided for @allow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get allow;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @oemSamsung.
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung: add to \"Never sleeping apps\"'**
+  String get oemSamsung;
+
+  /// No description provided for @oemXiaomi.
+  ///
+  /// In en, this message translates to:
+  /// **'Xiaomi: allow Autostart'**
+  String get oemXiaomi;
+
+  /// No description provided for @oemTranssion.
+  ///
+  /// In en, this message translates to:
+  /// **'Tecno / Infinix / itel: allow auto-start in Phone Master, and lock the app in recent apps'**
+  String get oemTranssion;
+
+  /// No description provided for @oemOppo.
+  ///
+  /// In en, this message translates to:
+  /// **'Oppo / Realme: allow auto-launch'**
+  String get oemOppo;
+
+  /// No description provided for @oemOneplus.
+  ///
+  /// In en, this message translates to:
+  /// **'OnePlus: allow auto-launch'**
+  String get oemOneplus;
+
+  /// No description provided for @oemHuawei.
+  ///
+  /// In en, this message translates to:
+  /// **'Huawei: manage app launch manually and allow all'**
+  String get oemHuawei;
+
+  /// No description provided for @oemCannotCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone does not tell apps whether this is on: check it once.'**
+  String get oemCannotCheck;
+
+  /// No description provided for @forceStopWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Never use \"Force stop\" on this app: Android then blocks all incoming messages for it until it is opened again.'**
+  String get forceStopWarning;
+
+  /// No description provided for @syncService.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync service'**
+  String get syncService;
+
+  /// No description provided for @running.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get running;
+
+  /// No description provided for @notRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Not running'**
+  String get notRunning;
+
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your company Messages app'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Send and receive text messages as usual. Your company sees the messages of this company phone and can reply for you.'**
+  String get welcomeBody;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get getStarted;
+
+  /// No description provided for @whyDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Android lets only the default SMS app receive messages, save them and send them. Your old Messages app keeps working as a normal app.'**
+  String get whyDefault;
+
+  /// No description provided for @roleFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'The dialog did not appear or was closed. Choose this app in Settings → Default apps → SMS app.'**
+  String get roleFallback;
+
+  /// No description provided for @openDefaultApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Default apps'**
+  String get openDefaultApps;
+
+  /// No description provided for @whyPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS: to read, save and send messages. Contacts: to show names instead of numbers (names are never uploaded except for numbers you message). Phone: to use the right SIM.'**
+  String get whyPermissions;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Know when messages arrive'**
+  String get notificationsTitle;
+
+  /// No description provided for @whyNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'New messages, failed sends and admin replies show as notifications. Their text is hidden on the lock screen.'**
+  String get whyNotifications;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @whyFlowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Without this some phones stop the app minutes after the screen turns off, and messages reach your company hours late.'**
+  String get whyFlowing;
+
+  /// No description provided for @permissionDeniedForGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission was refused. Allow it in the app settings.'**
+  String get permissionDeniedForGood;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get openSettings;
+
+  /// No description provided for @why.
+  ///
+  /// In en, this message translates to:
+  /// **'Why?'**
+  String get why;
+
+  /// No description provided for @torch.
+  ///
+  /// In en, this message translates to:
+  /// **'Torch'**
+  String get torch;
+
+  /// No description provided for @notAnEnrollCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That is not an enrollment code. Scan the code from Admin → SMS → Enroll phone.'**
+  String get notAnEnrollCode;
+
+  /// No description provided for @noQrInPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code found in that photo.'**
+  String get noQrInPhoto;
+
+  /// No description provided for @pointAtQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the administrator\'s QR code'**
+  String get pointAtQr;
+
+  /// No description provided for @scanFromPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan from photo'**
+  String get scanFromPhoto;
+
+  /// No description provided for @cameraRationale.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera is used only to read your administrator\'s QR code. Nothing is recorded.'**
+  String get cameraRationale;
+
+  /// No description provided for @whyEnroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting copies this phone\'s messages to your company so administrators can read and reply. You will see the monitoring notice before anything is connected.'**
+  String get whyEnroll;
+
+  /// No description provided for @orTypeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'or type the code'**
+  String get orTypeCode;
+
+  /// No description provided for @shortCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get shortCodeLabel;
+
+  /// No description provided for @noConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to the server. Check the internet and try again.'**
+  String get noConnection;
+
+  /// No description provided for @tooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a few minutes and try again.'**
+  String get tooManyAttempts;
+
+  /// No description provided for @enrolledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get enrolledTitle;
+
+  /// No description provided for @enrolledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages now reach your company. The history is being copied in the background.'**
+  String get enrolledBody;
+
+  /// No description provided for @openMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Open messages'**
+  String get openMessages;
+
+  /// No description provided for @backfillDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Message history copied'**
+  String get backfillDone;
+
+  /// No description provided for @backfillCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} messages copied…'**
+  String backfillCopied(int count);
 }
 
 class _AppLocalizationsDelegate
@@ -874,7 +1346,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+      <String>['en', 'sw'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -885,6 +1357,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'sw':
+      return AppLocalizationsSw();
   }
 
   throw FlutterError(

@@ -1,4 +1,5 @@
 import 'package:cm_sms/core/enroll/enroll_uri.dart';
+import 'package:cm_sms/core/enroll/short_code.dart';
 import 'package:cm_sms/core/text/otp.dart';
 import 'package:cm_sms/core/text/phone_format.dart';
 import 'package:cm_sms/core/text/segments.dart';
@@ -78,6 +79,25 @@ void main() {
     });
     test('a pasted code uses the single allowed server', () {
       expect(parseEnrollTarget(token, allowedHosts: hosts, defaultServer: 'https://sms.company.co.tz').server.host, 'sms.company.co.tz');
+    });
+  });
+
+  group('enrollment short code', () {
+    test('Crockford reading rules: case, dashes, O→0, I/L→1', () {
+      expect(normaliseShortCode('7f3k-9q2m'), '7F3K9Q2M');
+      expect(normaliseShortCode(' 7F3K 9Q2M '), '7F3K9Q2M');
+      expect(normaliseShortCode('OIL1-ABCD'), '0111ABCD');
+      expect(formatShortCode('7F3K9Q2M'), '7F3K-9Q2M');
+    });
+    test('anything else is not a short code (U is not in the alphabet; tokens are longer)', () {
+      expect(normaliseShortCode('7F3K-9Q2U'), isNull);
+      expect(normaliseShortCode('7F3K-9Q2'), isNull);
+      expect(normaliseShortCode('a' * 43), isNull);
+    });
+    test('a typed short code can only be resolved on an allow-listed HTTPS server', () {
+      expect(allowedServer('sms.company.co.tz', allowedHosts: ['sms.company.co.tz']).toString(), 'https://sms.company.co.tz');
+      expect(() => allowedServer('evil.example', allowedHosts: ['sms.company.co.tz']), throwsA(isA<EnrollUriException>()));
+      expect(() => allowedServer('user@sms.company.co.tz', allowedHosts: ['sms.company.co.tz']), throwsA(isA<EnrollUriException>()));
     });
   });
 }

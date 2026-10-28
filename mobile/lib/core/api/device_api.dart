@@ -67,6 +67,9 @@ class DeviceApi {
 
   // --- Enrollment (public endpoints) ------------------------------------------------------------------------
 
+  /// Exchanges an 8-character short code for the invite's token (single use; throttled per IP and globally).
+  Future<String> resolveShortCode(String code) async => (await _post(_url('enroll/resolve/'), {'code': code}))['token'] as String;
+
   Future<Map<String, dynamic>> enrollInfo(String token) async =>
       _decode(await transport.send('GET', _url('enroll/info/', {'token': token}), headers: const {'Accept': 'application/json'}));
 

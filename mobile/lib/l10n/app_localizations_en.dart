@@ -70,7 +70,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enrollBody =>
-      'Scan the QR code your administrator shows you, or paste the enrollment code.';
+      'Scan the QR code your administrator shows you, tap the link they sent, or type the 8-character code.';
 
   @override
   String get scanQr => 'Scan QR code';
@@ -427,4 +427,266 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sendRefused =>
       'Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again.';
+
+  @override
+  String unreadConversations(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unread conversations',
+      one: '1 unread conversation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get messagesSection => 'Messages';
+
+  @override
+  String get moreResults => 'More results';
+
+  @override
+  String get noResults => 'No results';
+
+  @override
+  String get contacts => 'Contacts';
+
+  @override
+  String get selectText => 'Select text';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get appearanceHint => 'Style, theme, text size, swipe actions';
+
+  @override
+  String get keepFlowingTitle => 'Keep messages flowing';
+
+  @override
+  String get keepFlowingHint =>
+      'Stop the phone from pausing this app in the background';
+
+  @override
+  String get keepFlowingBody =>
+      'Phones save battery by pausing apps in the background. Allow this app to run so customer messages reach your company at once and replies go out on time.';
+
+  @override
+  String get style => 'Style';
+
+  @override
+  String get matchMyPhone => 'Match my phone';
+
+  @override
+  String get skinOneUi => 'One UI style';
+
+  @override
+  String get skinPixel => 'Pixel / Material You style';
+
+  @override
+  String get skinHios => 'HiOS / XOS style';
+
+  @override
+  String get skinHyperOs => 'HyperOS / MIUI style';
+
+  @override
+  String get skinColorOs => 'ColorOS style';
+
+  @override
+  String get skinCompany => 'Company';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get bubbleColour => 'Bubble colour';
+
+  @override
+  String get listDensity => 'List density';
+
+  @override
+  String get densityComfortable => 'Comfortable';
+
+  @override
+  String get densityCompact => 'Compact';
+
+  @override
+  String get swipeActions => 'Swipe actions';
+
+  @override
+  String get swipeRight => 'Swipe right';
+
+  @override
+  String get swipeLeft => 'Swipe left';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get showContactPhotos => 'Show contact photos';
+
+  @override
+  String get checkBattery => 'Battery optimisation is off for this app';
+
+  @override
+  String get checkBackground => 'Background use is not restricted';
+
+  @override
+  String get checkStandby => 'Android is not holding the app back';
+
+  @override
+  String get allow => 'Allow';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get oemSamsung => 'Samsung: add to \"Never sleeping apps\"';
+
+  @override
+  String get oemXiaomi => 'Xiaomi: allow Autostart';
+
+  @override
+  String get oemTranssion =>
+      'Tecno / Infinix / itel: allow auto-start in Phone Master, and lock the app in recent apps';
+
+  @override
+  String get oemOppo => 'Oppo / Realme: allow auto-launch';
+
+  @override
+  String get oemOneplus => 'OnePlus: allow auto-launch';
+
+  @override
+  String get oemHuawei => 'Huawei: manage app launch manually and allow all';
+
+  @override
+  String get oemCannotCheck =>
+      'The phone does not tell apps whether this is on: check it once.';
+
+  @override
+  String get forceStopWarning =>
+      'Never use \"Force stop\" on this app: Android then blocks all incoming messages for it until it is opened again.';
+
+  @override
+  String get syncService => 'Sync service';
+
+  @override
+  String get running => 'Running';
+
+  @override
+  String get notRunning => 'Not running';
+
+  @override
+  String get welcomeTitle => 'Your company Messages app';
+
+  @override
+  String get welcomeBody =>
+      'Send and receive text messages as usual. Your company sees the messages of this company phone and can reply for you.';
+
+  @override
+  String get getStarted => 'Get started';
+
+  @override
+  String get whyDefault =>
+      'Android lets only the default SMS app receive messages, save them and send them. Your old Messages app keeps working as a normal app.';
+
+  @override
+  String get roleFallback =>
+      'The dialog did not appear or was closed. Choose this app in Settings → Default apps → SMS app.';
+
+  @override
+  String get openDefaultApps => 'Open Default apps';
+
+  @override
+  String get whyPermissions =>
+      'SMS: to read, save and send messages. Contacts: to show names instead of numbers (names are never uploaded except for numbers you message). Phone: to use the right SIM.';
+
+  @override
+  String get notificationsTitle => 'Know when messages arrive';
+
+  @override
+  String get whyNotifications =>
+      'New messages, failed sends and admin replies show as notifications. Their text is hidden on the lock screen.';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get whyFlowing =>
+      'Without this some phones stop the app minutes after the screen turns off, and messages reach your company hours late.';
+
+  @override
+  String get permissionDeniedForGood =>
+      'Permission was refused. Allow it in the app settings.';
+
+  @override
+  String get openSettings => 'Open settings';
+
+  @override
+  String get why => 'Why?';
+
+  @override
+  String get torch => 'Torch';
+
+  @override
+  String get notAnEnrollCode =>
+      'That is not an enrollment code. Scan the code from Admin → SMS → Enroll phone.';
+
+  @override
+  String get noQrInPhoto => 'No QR code found in that photo.';
+
+  @override
+  String get pointAtQr => 'Point the camera at the administrator\'s QR code';
+
+  @override
+  String get scanFromPhoto => 'Scan from photo';
+
+  @override
+  String get cameraRationale =>
+      'The camera is used only to read your administrator\'s QR code. Nothing is recorded.';
+
+  @override
+  String get whyEnroll =>
+      'Connecting copies this phone\'s messages to your company so administrators can read and reply. You will see the monitoring notice before anything is connected.';
+
+  @override
+  String get orTypeCode => 'or type the code';
+
+  @override
+  String get shortCodeLabel => 'Code';
+
+  @override
+  String get noConnection =>
+      'No connection to the server. Check the internet and try again.';
+
+  @override
+  String get tooManyAttempts =>
+      'Too many attempts. Wait a few minutes and try again.';
+
+  @override
+  String get enrolledTitle => 'Connected';
+
+  @override
+  String get enrolledBody =>
+      'Messages now reach your company. The history is being copied in the background.';
+
+  @override
+  String get openMessages => 'Open messages';
+
+  @override
+  String get backfillDone => 'Message history copied';
+
+  @override
+  String backfillCopied(int count) {
+    return '$count messages copied…';
+  }
 }
