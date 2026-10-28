@@ -1,0 +1,148 @@
+# CI: backend, frontend and mobile on every push and pull request; the Playwright suite nightly (and on demand).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "30 1 * * *"   # nightly E2E (03:30 Dar es Salaam)
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: cm, POSTGRES_PASSWORD: cm, POSTGRES_DB: cm }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U cm" --health-interval 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: backend/requirements.lock }
+      - run: pip install -r requirements.lock -r requirements-dev.in
+      - name: Tests (coverage gate ≥ 85 % on the Calls and directory services and APIs)
+        run: >-
+          pytest -q --create-db
+          --cov=modules/calls --cov=modules/directory --cov-report=term-missing:skip-covered --cov-fail-under=85
+      - name: Migrations are complete
+        run: python manage.py makemigrations --check --dry-run
+        env: { DJANGO_SETTINGS_MODULE: config.settings.test }
+      - name: OpenAPI contract is current
+        env: { DJANGO_SETTINGS_MODULE: config.settings.test }
+        run: |
+          python manage.py spectacular --file /tmp/openapi.yaml --validate
+          diff -u ../contracts/openapi.yaml /tmp/openapi.yaml
+
+  frontend:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - name: Generated API types are current
+        run: npm run gen:api && git diff --exit-code src/services/api/schema.d.ts
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+
+  mobile:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: "3.47.8", channel: stable, cache: true }
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('mobile/android/**/*.gradle.kts', 'mobile/android/gradle/wrapper/gradle-wrapper.properties') }}
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - name: Kotlin unit tests (Robolectric)
+        run: ./gradlew :app:testPlayDebugUnitTest --console=plain
+        working-directory: mobile/android
+      - name: Release builds, both flavors (debug-signed: no key.properties in CI)
+        run: |
+          flutter build apk --release --flavor private --split-per-abi --dart-define=ALLOWED_SERVER_HOSTS=ci.invalid --dart-define=APP_VERSION=ci
+          flutter build appbundle --release --flavor play --dart-define=ALLOWED_SERVER_HOSTS=ci.invalid --dart-define=APP_VERSION=ci
+      - name: APK size budget (arm64 ≤ 25 MB)
+        run: |
+          size=$(stat -c %s build/app/outputs/flutter-apk/app-arm64-v8a-private-release.apk)
+          echo "arm64 APK: $size bytes"
+          test "$size" -le 26214400
+
+  e2e:
+    # Nightly or on demand: the full Playwright suite (Gmail + SMS + Calls) on the four projects.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: cm, POSTGRES_PASSWORD: cm, POSTGRES_DB: cm }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U cm" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://cm:cm@127.0.0.1:5432/cm
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: backend/requirements.lock }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - name: Backend with demo data
+        working-directory: backend
+        run: |
+          pip install -r requirements.lock
+          python manage.py migrate --noinput
+          python manage.py seed_demo
+          nohup python manage.py runserver 127.0.0.1:8000 > /tmp/django.log 2>&1 &
+      - name: Frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run build
+          nohup npm run start > /tmp/next.log 2>&1 &
+          npx --yes wait-on http://127.0.0.1:3000/login
+      - name: Playwright
+        working-directory: frontend
+        run: npx playwright test
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-traces
+          path: |
+            frontend/test-results
+            /tmp/django.log
+            /tmp/next.log

@@ -77,3 +77,17 @@ def test_short_code_resolve_fails_closed(db, broken_security_store):
     response = APIClient().post("/api/v1/device/enroll/resolve/", {"code": "ABCD-EFGH"}, format="json")
     assert response.status_code == 503
     assert not EnrollmentInvite.objects.filter(short_code_used_at__isnull=False).exists()
+
+
+def test_deploy_check_flags_an_evicting_broker(settings):
+    from common import checks
+
+    settings.REDIS_URL, settings.REDIS_CACHE_URL = "redis://broker:6379/0", ""
+    with mock.patch.object(checks, "_redis_config", return_value={"maxmemory-policy": "allkeys-lru", "appendonly": "no"}):
+        ids = {issue.id for issue in checks.check_redis_roles(None)}
+    assert ids == {"cm.E003", "cm.W001", "cm.W002"}
+    settings.REDIS_CACHE_URL = "redis://cache:6379/0"
+    with mock.patch.object(checks, "_redis_config", return_value={"maxmemory-policy": "noeviction", "appendonly": "yes"}):
+        assert checks.check_redis_roles(None) == []
+    settings.REDIS_URL = ""
+    assert [issue.id for issue in checks.check_redis_roles(None)] == ["cm.E001"]
