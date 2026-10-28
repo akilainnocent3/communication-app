@@ -70,6 +70,14 @@ android {
         }
     }
 
+    // Compress native libraries in the APK (decision 58): phones get the APK file itself, and stored libraries made the
+    // arm64 split about 28 MB; deflated it is about 16 MB. Android extracts them once at install.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
