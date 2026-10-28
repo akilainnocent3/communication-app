@@ -39,8 +39,12 @@ sequenceDiagram
   participant KS as Android Keystore
   participant API as /api/v1/device/
   Admin->>API: (admin API) create enrollment: name, office, options
-  API-->>Admin: single-use code (32 random bytes, SHA-256 stored, 24 h) + QR cmsms://enroll?server=…&token=…
-  Holder->>App: scan QR (or paste code)
+  API-->>Admin: single-use code (32 random bytes, SHA-256 stored, 24 h) + QR cmsms://enroll?server=…&token=…<br/>+ short code XXXX-XXXX (15 min, single use)
+  Holder->>App: scan the QR (or a photo of it), tap the link, or type the short code
+  opt short code
+    App->>API: POST enroll/resolve {code} (5/min and 20/h per IP, global breaker)
+    API-->>App: a fresh token for that invite (usable 15 min)
+  end
   App->>App: server must be HTTPS and in ALLOWED_SERVER_HOSTS (build time)
   App->>API: GET enroll/info?token → company, phone name, monitoring notice
   Holder->>App: accept the notice
@@ -54,6 +58,10 @@ sequenceDiagram
   end
 ```
 
+- Three ways in, one path: the **QR** (camera, or *Scan from photo* for a QR received as a WhatsApp image), the
+  **link** `cmsms://enroll?…` (tapped on the phone; it only pre-fills) and the **short code** (`XXXX-XXXX`, Crockford
+  base32, 40 bits, typed on the phone; it names no server, so it is resolved only on an allow-listed one). Every path
+  then checks HTTPS and the allow-list and shows the monitoring notice; nothing enrolls until the holder accepts it.
 - The **device code** (`DEV-7F3K-9Q2M`, Crockford base32) identifies a phone in the admin; it is never a credential.
 - No long-lived bearer secret exists on the phone. Tokens live 15 minutes (`SMS_DEVICE_TOKEN_TTL`) and are minted with
   a fresh Keystore signature, a ±5-minute clock window and a never-seen nonce (cache, 10 minutes).
@@ -73,8 +81,9 @@ flowchart LR
   R["SmsReceiver / MmsDownloaded /<br/>sent & delivered receivers /<br/>mark read, delete, block"] -->|"1. write Telephony provider"| P[(Telephony provider)]
   R -->|"2. append event (seq)"| O[(SQLCipher outbox<br/>sync_events)]
   R -->|"3. wake"| T{SyncTrigger}
-  T --> S["SyncService (foreground,<br/>remoteMessaging)<br/>headless Dart loop"]
-  T --> W[WorkManager<br/>expedited + 15 min]
+  R -->|"3. upload directly (≤ 8 s)<br/>when the service is down"| API
+  T --> S["SyncService (foreground,<br/>remoteMessaging)<br/>NativeSyncEngine loop"]
+  T --> W["WorkManager (expedited + 15 min)<br/>runs NativeSyncEngine"]
   N[NetworkCallback] --> S
   F[FCM data message] --> S
   S -->|"batches ≤ 200 events, < 1 MB"| API["POST /device/sync/events/"]
@@ -98,6 +107,81 @@ flowchart LR
   default SMS app, permission revoked, battery optimisation on, upload backlog, app outdated.
 - **Contacts are minimised:** names are looked up only for numbers that appear in conversations; the server ignores
   names for any other number.
+
+The engine is native Kotlin (`sync/NativeSyncEngine.kt`); no Flutter engine runs in the background. The same
+engine runs in the foreground service's loop, in WorkManager jobs, in an FCM wake-up (`PushService`) and, for the upload
+of a just-received message, in the SMS/MMS receivers. The UI asks it to "sync now" and reads what it caches (quick
+replies, last sync time).
+
+## Keeping messages flowing in the background
+
+Goal: an incoming SMS reaches the server within seconds, and an admin reply goes out promptly, whether the app is open,
+in the background, swiped away or the phone has just rebooted.
+
+| Situation | What happens |
+|---|---|
+| App open, in the background, or another app in front | The foreground service (`remoteMessaging`, silent ongoing notification "Messages sync active") uploads at once |
+| Swiped from recents | The service keeps running (`onTaskRemoved` also queues a sync for OEMs that kill the process); START_STICKY restarts it after a kill |
+| Process killed, service not back yet | The receiver uploads the new message itself inside its broadcast window (≤ 8 s), then queues expedited work |
+| Doze / app standby | High-priority FCM wakes the phone for admin replies; the battery-optimisation exemption keeps the service's network |
+| Reboot, app update | BOOT_COMPLETED / MY_PACKAGE_REPLACED start the service (allowed exemptions) and schedule the 15-minute backstop |
+| Android 12+ refuses a background service start | The refusal is remembered for 15 min and never retried in a loop; WorkManager runs the engine meanwhile |
+
+**Production needs FCM.** Without it the phone polls every 20 s while the service runs and every 15 minutes otherwise;
+with it, admin replies wake the phone in about a second and the service polls only every 5 minutes. Configure
+`FCM_PROJECT_ID` / `FCM_SERVICE_ACCOUNT_FILE` on the server and ship `google-services.json` in the app.
+
+**Manufacturer battery killers.** Onboarding and *Settings → Keep messages flowing* detect the manufacturer and open the
+right screen (with fallbacks when a screen does not exist on that build):
+
+| Phone | Setting |
+|---|---|
+| All | Battery optimisation → *Don't optimise* (asked by the app) · App info → Battery → *Unrestricted* |
+| Samsung | Settings → Battery → Background usage limits → *Never sleeping apps* → add Messages |
+| Xiaomi / Redmi / POCO | Security → *Autostart* on · Battery saver → *No restrictions* · lock the app in Recents |
+| Tecno / Infinix / itel | Phone Master → *Auto-start* → allow · lock the app in Recents |
+| Oppo / Realme | App info → Battery → *Allow background activity* and *Auto launch* |
+| OnePlus | App info → Battery → *Unrestricted* · Battery → Advanced → *Auto-launch* |
+| Huawei / Honor | Battery → App launch → Messages → *Manage manually*, all three on |
+
+What Android lets an app check, it checks and reports in every heartbeat: battery-optimisation exemption,
+`ActivityManager.isBackgroundRestricted` and the standby bucket (`UsageStatsManager`). The admin's phone page shows
+*Background use is restricted* / *Android is holding the app back* with the steps for that manufacturer. The OEM
+auto-start switches cannot be read by apps; the app says so and asks the holder to check them once.
+
+**What Android cannot be talked out of.** *Force stop* (App info → Force stop, or some OEM "clean" buttons) puts the app
+in the stopped state: Android delivers **no** broadcasts to it, not even incoming SMS, until someone opens it again.
+No app can override this. On company phones use MDM policy instead of trusting people: with **Android Enterprise**
+(fully managed) or **Samsung Knox**, allow-list the app from battery optimisation, block "Force stop" and uninstall for
+it, and keep it as the default SMS app. For everything else the admin's *Offline* alert (no heartbeat for two
+intervals) is the safety net.
+
+The scenarios to verify on emulators and phones (API 29–36) and their results are in the background matrix in
+[sms-mobile-performance.md](sms-mobile-performance.md#background-matrix).
+
+## How the app looks: skins
+
+The app replaces the phone's own Messages app, so it looks like it. One widget tree, driven by design tokens
+(`lib/ui/skin/tokens.dart`); each look's values are in one file under `lib/ui/skin/skins/`, so they can be tuned without
+touching widgets. Looks are named by style; there are no vendor logos, icons or assets (Material icons only).
+
+| Skin | For | Character |
+|---|---|---|
+| One UI style | Samsung | Large "Messages" title over the top third that collapses on scroll, Conversations / Contacts tabs, list in a rounded container, blue sent bubbles, round compose button |
+| Pixel / Material You | Google and everyone else | Wallpaper colours (Android 12+), search-bar header, extended "Start chat" button, tonal bubbles, "+" and a round "Text message" field |
+| HiOS / XOS style | Tecno, Infinix, itel | Compact title bar, brand-blue bubbles, larger avatars and spacing, round compose button |
+| HyperOS / MIUI style | Xiaomi, Redmi, POCO | Large left-aligned title with a search field under it, flat surfaces, red unread dots, round "+" |
+| ColorOS style | Oppo, Realme, OnePlus | Collapsing large title, green bubbles, round "+" |
+| Company | — | The app's own teal theme |
+
+*Match my phone* (default) picks the skin from the manufacturer/brand. *Settings → Appearance* chooses another, with a
+live preview, plus theme (system/light/dark), bubble colour, text size, density, swipe actions and contact photos;
+changes apply at once. Every skin has predictive back, edge-to-edge, haptics on long-press, English and Swahili. Golden
+tests (`test/goldens/`) pin each skin's list row, bubbles and compose bar in light and dark.
+
+**Team:** put real screenshots of each original Messages app (Samsung, Google, Tecno/Infinix, Xiaomi, Oppo/Realme;
+light and dark; the conversation list, a chat, the compose bar) in `docs/design/references/`, then tune the token files
+against them. The current values were set from public material, not side by side with a device.
 
 ## Admin reply → phone sends it
 
@@ -146,7 +230,9 @@ Commands (mark read on open, resync, block/unblock) ride on the same claim and a
   on the phone too). `?peek=1` does neither.
 - Logs carry ids, counts and masked numbers (`+2557•••••331`), never text, contact names, tokens or full numbers.
 - Phone: no backups (`allowBackup=false`, extraction rules exclude everything), no cleartext, SPKI pinning, R8 and Dart
-  obfuscation, Keystore keys, SQLCipher database, optional app lock and FLAG_SECURE, lock-screen text hidden by default.
+  obfuscation, Keystore keys, SQLCipher database (raw 256-bit key, Keystore-wrapped), optional app lock and
+  FLAG_SECURE, lock-screen text hidden by default. The read caches (conversation rows and each conversation's newest 50
+  messages) live in the same encrypted database, are never logged and are deleted with it on revoke.
 
 ## Retention and PDPA (Tanzania)
 
@@ -168,9 +254,11 @@ Build, signing, pins and Firebase: [mobile/README.md](../mobile/README.md).
 
 ## Without FCM
 
-Firebase is optional. Without `FCM_*` on the server and `google-services.json` in the app, the foreground service
-polls every `SMS_DEVICE_POLL_SECONDS` (20 s) while online and WorkManager syncs every 15 minutes. With FCM, admin
-replies reach the phone in about a second (data-only messages: `{"type": "outbox", "device": id}`, no content).
+Development and demos work without Firebase. Without `FCM_*` on the server and `google-services.json` in the app, the
+foreground service polls every `SMS_DEVICE_POLL_SECONDS` (20 s) while online and WorkManager syncs every 15 minutes.
+With FCM, admin replies reach the phone in about a second (data-only, high-priority messages: `{"type": "outbox",
+"device": id}`, no content), the engine runs straight from the push, and the service polls every 5 minutes.
+**Production should always configure FCM**: it is the exemption Android 12+ honours for starting background work.
 
 ## Demo without a phone
 

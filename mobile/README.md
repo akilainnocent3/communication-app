@@ -10,17 +10,19 @@ Design, security model and the sync protocol are in [docs/sms-mobile.md](../docs
 
 ```
 lib/
-  main.dart                  UI entry point and `backgroundMain` (headless sync engine in the foreground service)
-  app.dart, theme.dart       router (go_router), Material 3, dynamic colour, l10n
+  main.dart                  UI entry point: one native round trip and one database read, then the first frame
+  app.dart                   router (first route from cached values), skin theming, launch targets
   config.dart                --dart-define values (allowed servers, SPKI pins, FCM)
   platform/                  Pigeon-generated bindings (do not edit; regenerate)
-  core/api/                  device API client (proof-of-possession tokens), transport (native, pinned)
-  core/db/                   drift + SQLCipher: durable outbox, outbound states, app state
-  core/sync/                 sync engine, background loop, backoff
-  core/enroll, core/text     QR parsing (allow-list), segment counter, numbers, one-time codes
-  data/                      phone gateway (native) and conversations repository
-  features/                  onboarding, enroll, conversations, chat, compose, settings
-  l10n/app_en.arb            every user-facing string (add app_sw.arb for Swahili)
+  core/api/                  enrollment client (the native engine does the rest), transport (native, pinned)
+  core/db/                   drift + SQLCipher (raw key): outbox, outbound states, app state, read caches
+  core/enroll, core/text     QR/link parsing (allow-list), short codes, segment counter, numbers, one-time codes
+  core/perf.dart             profile-only timings (cm.perf in logcat)
+  data/                      phone gateway (native) and the cache-first conversations repository
+  state/                     list and chat controllers, event coalescing
+  ui/skin/                   design tokens and one file per skin (One UI, Pixel, HiOS, HyperOS, ColorOS, Company)
+  features/                  onboarding, enroll + scanner, conversations, chat, compose, settings
+  l10n/app_en.arb, app_sw.arb  every user-facing string, English and Swahili
 pigeons/telephony.dart       the Dart ↔ Kotlin contract
 android/app/src/main/kotlin/com/kilimanjaro/communicationmanager/sms/
   telephony/                 SMS receiver, sender + sent/delivered receivers, provider access, notifications,
@@ -28,8 +30,11 @@ android/app/src/main/kotlin/com/kilimanjaro/communicationmanager/sms/
   mms/                       WAP push receiver, download/send, minimal PDU codec
   security/                  Keystore device key (attestation), DB key wrapping, pinned OkHttp
   data/                      native writer for the shared SQLCipher sync database
-  sync/                      foreground service (remoteMessaging), WorkManager, boot, FCM
-  bridge/                    Pigeon host API implementation and event bus
+  sync/                      native sync engine, device API client, foreground service (remoteMessaging),
+                             WorkManager, boot, FCM, revocation
+  bridge/                    Pigeon host API implementation, device state, event bus
+  Oem.kt                     manufacturer battery / auto-start screens
+src/devtools/                debug and profile builds only: the seeding receiver for performance runs
 ```
 
 ## Requirements
@@ -44,8 +49,10 @@ flutter pub get
 dart run pigeon --input pigeons/telephony.dart                 # after changing the contract
 dart run build_runner build --delete-conflicting-outputs       # after changing drift tables
 flutter gen-l10n                                               # after changing app_en.arb
-flutter analyze && flutter test                                 # Dart unit and widget tests
-(cd android && ./gradlew :app:testDebugUnitTest)               # Kotlin unit tests (Robolectric)
+flutter analyze && flutter test                                 # Dart unit, widget and golden tests
+flutter test --update-goldens test/skin_test.dart              # after changing a skin on purpose
+UPDATE_SCHEMA=1 flutter test test/db_test.dart                 # after changing tables (Kotlin tests use the schema)
+(cd android && ./gradlew :app:testDebugUnitTest)               # Kotlin unit tests (Robolectric + MockWebServer)
 flutter run --dart-define=ALLOWED_SERVER_HOSTS=sms.company.co.tz
 ```
 
@@ -61,11 +68,18 @@ Every value below is build-time configuration, not a secret:
 | `APP_VERSION` | Sent with every request; the server refuses versions below `SMS_MIN_APP_VERSION` (426). Keep it equal to `version:` in pubspec.yaml. |
 
 ```bash
-flutter build apk --release --obfuscate --split-debug-info=build/symbols \
+# One APK per ABI (company phones are arm64-v8a; armeabi-v7a for old ones):
+flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/symbols \
   --dart-define=ALLOWED_SERVER_HOSTS=sms.company.co.tz \
   --dart-define=PINNED_SPKI=<current-pin>,<backup-pin> \
-  --dart-define=APP_VERSION=1.0.0
+  --dart-define=FCM_ENABLED=true --dart-define=APP_VERSION=1.1.0
+# Managed Google Play private app: an AAB (Play serves each phone only its ABI)
+flutter build appbundle --release --obfuscate --split-debug-info=build/symbols --dart-define=…
 ```
+
+The QR scanner uses Google Play services' barcode model (`dev.steenbakker.mobile_scanner.useUnbundled=true` in
+`android/gradle.properties`, fetched at install time) instead of bundling ML Kit's (~5 MB per ABI). Phones without Play
+services enroll with the link or the short code. R8 and resource shrinking stay on for release.
 
 Get a pin from the live server (repeat for the backup key's CSR/certificate):
 
@@ -141,6 +155,19 @@ Declaration. This is an internal company app, so distribute it privately:
 On each phone: install → open → make it the default SMS app → allow permissions → turn off battery optimisation
 (Samsung: Settings → Battery → Background usage limits → Never sleeping apps) → scan the QR code from
 **Admin → SMS → Enroll phone** → accept the monitoring notice.
+
+## Measuring performance
+
+Profile builds print `cm.perf …` lines (startup marks, chat-open spans, frame summaries) to logcat; release builds
+print nothing. To fill a test phone or emulator (debug/profile builds only; the receiver needs adb shell's DUMP
+permission and the app must be the default SMS app):
+
+```bash
+adb shell am broadcast -n com.kilimanjaro.communicationmanager.sms/.devtools.SeedReceiver \
+  --ei threads 300 --ei messages 20000 --ei big 2000
+```
+
+Method and results: [docs/sms-mobile-performance.md](../docs/sms-mobile-performance.md).
 
 ## Emulator test
 

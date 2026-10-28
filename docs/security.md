@@ -138,7 +138,9 @@ Full design: [sms-mobile.md](sms-mobile.md). The controls, and where they live:
 | Control | Code |
 |---|---|
 | Enrollment codes: 32 random bytes, SHA-256 stored, single use, 24 h, revocable, burned after 5 failures, audited | `modules/devices/services/enrollment.py` |
-| Allow-listed HTTPS server only (a malicious QR can't redirect a phone) | `mobile/lib/core/enroll/enroll_uri.dart` |
+| Allow-listed HTTPS server only (a malicious QR or link can't redirect a phone); a typed short code is resolved only on an allow-listed server | `mobile/lib/core/enroll/enroll_uri.dart` |
+| Enrollment links (`cmsms://enroll`) only pre-fill: the same allow-list, HTTPS check and monitoring notice follow | `mobile/…/bridge/HostApiImpl.kt` (`LaunchIntent`), `features/enroll/enroll_screen.dart` |
+| Short codes: 40 bits (8 Crockford characters), HMAC-SHA256 with `SECRET_KEY` stored, 15 minutes, single use, bound to one invite; resolving issues a second token (hash only, usable 15 min); 5/min and 20/h per IP; 50 misses from all clients in 15 min lock every live short code; issue, resolve, miss and lock audited | `modules/devices/services/enrollment.py`, `api/views.py` (`EnrollResolveView`) |
 | Keystore EC P-256 identity (StrongBox when present); attestation chain + challenge = SHA-256(code) verified; optional hard requirement and Play Integrity | `modules/devices/services/identity.py`, `integrity.py`, `mobile/…/security/DeviceKey.kt` |
 | No long-lived secret on the phone: 15-minute opaque tokens minted from a signed, timestamped, single-use-nonce request; only SHA-256 stored | `modules/devices/services/auth.py` |
 | Separate surfaces: `/api/v1/device/` = device tokens only (no cookies, no CSRF), admin = sessions only | `modules/devices/api/auth.py`, `base.py`, `config/urls.py` |
@@ -152,10 +154,11 @@ Full design: [sms-mobile.md](sms-mobile.md). The controls, and where they live:
 | At-most-once sending (durable mark before SmsManager, leases, `unknown` instead of resending) | `modules/sms/services/outbound.py`, `mobile/…/telephony/SmsSender.kt` |
 | Outbound abuse limits: per user and per phone rate, daily cap, short codes / premium numbers refused | `modules/sms/services/outbound.py` |
 | Logs: ids and masked numbers only (`+2557•••••331`) | `modules/devices/services/phone.py: mask` |
-| Phone: no backups, no cleartext, SPKI pinning in OkHttp, R8 + obfuscation, SQLCipher DB with a Keystore-wrapped key, only the four role components exported (each behind its system permission), narrow FileProvider, optional FLAG_SECURE and app lock, lock-screen text hidden by default, root/emulator signals reported | `mobile/android/…`, `AndroidManifest.xml` |
+| Phone read caches (conversation rows, each conversation's newest 50 messages): same SQLCipher file, never logged, deleted with it on revoke | `mobile/lib/core/db/database.dart`, `…/sync/Revocation.kt` |
+| Phone: no backups, no cleartext, SPKI pinning in OkHttp, R8 + obfuscation, SQLCipher DB with a Keystore-wrapped raw 256-bit key, only the four role components exported (each behind its system permission), narrow FileProvider, optional FLAG_SECURE and app lock, lock-screen text hidden by default, root/emulator signals reported | `mobile/android/…`, `AndroidManifest.xml` |
 | Retention and PDPA: notice accepted before enrollment and stored; `SMS_RETENTION_DAYS`; phone deletes keep the server copy unless `SMS_MIRROR_DEVICE_DELETES`; contacts minimised | `modules/sms/services/retention.py`, `docs/sms-mobile.md` |
 
-Audited SMS/device actions: enrollment code create/revoke, enroll success and failure (with reason), token failures
+Audited SMS/device actions: enrollment code create/revoke, short code issue/resolve/miss/lockdown, enroll success and failure (with reason), token failures
 (rate-limited), notice acceptance, suspend/resume/revoke, option and SIM changes, access changes, resync requests,
 conversation opens, sensitive reveals, sends/schedules/cancels/retries, expiries and unknowns, blocks, notes,
 quick-reply and rule changes, media downloads, retention purges, SMS settings.

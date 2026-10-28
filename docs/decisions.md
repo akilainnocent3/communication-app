@@ -111,3 +111,65 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
     passphrase is gone or invalidated (or the stored passphrase is missing), the database can never be opened again;
     the app deletes it and asks to enroll again instead of failing on every start and every incoming SMS. Transient
     Keystore errors are not treated as loss. The phone's own SMS are never touched, and the server keeps its copy.
+41. **The sync engine is native Kotlin; Dart only enrolls.** The foreground service used to boot a second Flutter
+    engine and Dart isolate (tens of MB, seconds to start, a second database opener, and a loop that died for good on
+    one uncaught platform exception). `sync/NativeSyncEngine.kt` is a port of the Dart engine with the same protocol,
+    idempotency, at-most-once guard and backoff; the Dart tests were ported to Robolectric + MockWebServer. WorkManager,
+    FCM, boot and the service all run the same engine; one process-wide lock serialises cycles and a request during a
+    cycle runs it once more. Dart keeps the enrollment client (it shows the notice) and reads what the engine caches.
+42. **Data methods are `@async` on `Dispatchers.IO`, not one serial Pigeon task queue.** A serial background queue
+    takes the work off the main thread but lets one slow call (a body search, a 2 000-message page) hold up the list's
+    refresh. Concurrent IO calls don't. Quick binder getters (`roleStatus`, `permissions`, `startup`) use the task
+    queue; only Activity calls (role and permission requests, settings screens, FLAG_SECURE) run on main.
+43. **SQLCipher raw key, migrated natively before anyone opens the file.** The key is 32 random bytes, so PBKDF2
+    (256 000 iterations per open, per opener) bought nothing. `DatabaseKey.ensureRawKey` runs under the key's lock
+    before `startup()` hands the key to Dart and before any receiver opens the store; rekey happens in rollback-journal
+    mode (it rewrites every page) and the result is verified before the flag is set. New databases start raw.
+44. **Read caches live in the same encrypted database and the provider stays the truth.** `thread_cache` (one row per
+    conversation) and `message_cache` (each conversation's newest 50) give the first frame something to draw; the
+    provider's newest page then replaces the window it covers, so a thread deleted elsewhere disappears and the cache is
+    pruned. Nothing else is cached, nothing is logged, and the wipe on revoke deletes them with the file.
+45. **Events are precise and coalesced on both sides.** Native events carry the thread id; the UI coalesces them for
+    250 ms and refreshes that row and, if open, that chat. The `content://mms-sms/` observer runs only while the UI
+    listens, is debounced 500 ms and ignores changes for 1.5 s after the app's own writes (which already raised precise
+    events). The app's own actions (archive, pin, mark read) update state directly and raise no event at all.
+46. **With FCM, the service polls every 5 minutes; without it, every 20 s.** A registered push token means admin replies
+    wake the phone; polling every 20 s on top only costs radio time. Without FCM the server's `poll_seconds` stays the
+    fallback. FCM is now required in the production checklist (docs/deployment.md, docs/sms-mobile.md).
+47. **The QR scanner uses Google Play services' barcode model (unbundled).** Bundling ML Kit's model cost about 5 MB per
+    ABI for a screen used once per phone. The model is fetched at install time (`com.google.mlkit.vision.DEPENDENCIES`).
+    Phones without Play services (some Huawei) can't scan: they enroll with the link or the 8-character short code.
+48. **Short codes: HMAC, a second token per invite, and a global breaker instead of per-invite counting.** The code is
+    40 bits (8 Crockford characters); a bare SHA-256 of it could be brute-forced from a database copy, so it is stored
+    as an HMAC with `SECRET_KEY`. Resolving it issues a fresh token for the invite (only its hash kept, usable for the
+    code's 15 minutes) rather than storing the QR token reversibly; the QR keeps working. A wrong code does not say
+    which invite it was aimed at, so misses cannot be counted "per invite" without giving up entropy to an invite
+    selector. Instead: 5/min and 20/h per IP, and `SMS_SHORT_CODE_MAX_FAILURES` (50) misses from everyone within 15
+    minutes lock every live short code (QR and links unaffected), audited. Once a code resolves, the invite's existing
+    five-failure burn applies to enrollment attempts with its token.
+49. **Receivers upload the new message themselves when the service is down.** After the provider row and the outbox
+    event, the SMS/MMS receiver uploads inside its goAsync window (8 s budget, calls bounded by an OkHttp call timeout,
+    sharing the engine's process lock) and then queues expedited work for the rest. With the service up, it just
+    nudges the service.
+50. **A refused foreground start is remembered, never looped on.** Android 12+ refuses background starts outside its
+    exemptions; the refusal is kept for 15 minutes and WorkManager runs the engine itself meanwhile. Exemptions that do
+    start it: high-priority FCM, BOOT_COMPLETED, MY_PACKAGE_REPLACED, the battery-optimisation exemption.
+51. **Skins are tokens plus two layout variants.** `SkinTokens` (a ThemeExtension) carries every visual decision;
+    screens read tokens and never test which skin is active, except for the header and the compose button, which are
+    variants chosen by token. "Match my phone" is resolved from manufacturer/brand at each start (nothing to migrate if
+    the mapping improves). The Pixel skin seeds Material 3 from the wallpaper accent colour, read before the first frame:
+    `dynamic_color`'s full schemes now use `material_ui`'s `ColorScheme`, a different type from Flutter's.
+52. **No deferred Dart libraries.** Deferred components shrink the download only with Play Feature Delivery; this app is
+    an MDM/private APK, where a deferred import still lands in the same `libapp.so`. Rarely used screens are lazy in the
+    sense that matters: built on navigation, and the camera and scanner start only on the scanner screen.
+53. **Measurement code exists only in debug and profile builds.** `cm.perf` timings print only in profile/debug (names
+    and milliseconds); the seeding receiver lives in `src/devtools` (debug/profile source sets) and is guarded by
+    `android.permission.DUMP`, so only `adb shell` can trigger it. Release builds contain neither.
+54. **Conversation channels on Android 11+, one channel per thread before.** With a long-lived shortcut and
+    MessagingStyle, Android 11+ files the notifications under Conversations and offers per-conversation settings on a
+    `messages` parent channel; Android 10 has no conversation API, so it keeps the per-thread channels.
+55. **The camera permission is asked for in-app and not reported to the server.** Only the scanner needs it; listing it
+    in the heartbeat would raise "permission revoked" alerts for something the phone's job does not need.
+56. **WorkManager initialises on demand.** Its androidx.startup initializer opened its database on the main thread at
+    every process start, including every incoming-SMS receiver start; `CmApplication` provides the configuration
+    instead. EmojiCompat's initializer is removed (Flutter renders its own emoji).
