@@ -104,6 +104,9 @@ class DeviceSerializer(serializers.Serializer):
     signal = serializers.IntegerField(allow_null=True)
     is_default_sms_app = serializers.BooleanField()
     battery_optimised = serializers.BooleanField()
+    background_restricted = serializers.BooleanField()
+    standby_bucket = serializers.IntegerField(allow_null=True)
+    background_help = serializers.SerializerMethodField(help_text="What to change on this phone (by manufacturer) when it is restricted.")
     pending_outbox = serializers.IntegerField()
     last_sync_at = serializers.DateTimeField(allow_null=True)
     sync_progress = serializers.DictField()
@@ -128,6 +131,11 @@ class DeviceSerializer(serializers.Serializer):
     @extend_schema_field(AlertSerializer(many=True))
     def get_attention(self, obj):
         return [{"code": code, "label": ATTENTION_LABELS.get(code, code)} for code in obj.attention or []]
+
+    def get_background_help(self, obj) -> list[str]:
+        from modules.devices.services.health import background_guidance
+
+        return background_guidance(obj)
 
     @extend_schema_field(SimLineSerializer(many=True))
     def get_sims(self, obj):
@@ -264,10 +272,15 @@ class EnrollmentSerializer(serializers.Serializer):
     device = serializers.SerializerMethodField()
     failed_attempts = serializers.IntegerField()
     last_failure = serializers.CharField()
+    short_code_expires_at = serializers.DateTimeField(allow_null=True)
+    short_code_used = serializers.SerializerMethodField()
 
     @extend_schema_field(SmsOfficeRefSerializer)
     def get_office(self, obj):
         return {"id": obj.office_id, "name": obj.office.name, "colour": obj.office.colour}
+
+    def get_short_code_used(self, obj) -> bool:
+        return obj.short_code_used_at is not None
 
     def get_created_by(self, obj) -> str | None:
         return obj.created_by.email if obj.created_by_id and obj.created_by else None
@@ -281,6 +294,12 @@ class EnrollmentCreatedSerializer(EnrollmentSerializer):
     code = serializers.CharField()
     uri = serializers.CharField()
     qr_svg = serializers.CharField()
+    short_code = serializers.CharField(help_text="XXXX-XXXX, single use, valid until short_code_expires_at.")
+
+
+class EnrollmentShortCodeSerializer(serializers.Serializer):
+    short_code = serializers.CharField()
+    short_code_expires_at = serializers.DateTimeField()
 
 
 # --- Conversations ---------------------------------------------------------------------------------------------

@@ -233,6 +233,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/device/enroll/resolve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Short code (XXXX-XXXX) → a token for its invite. 5 per minute and 20 per hour per IP, a global breaker, audited. */
+        post: operations["device_enroll_resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/device/heartbeat/": {
         parameters: {
             query?: never;
@@ -1648,6 +1665,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sms/enrollments/{id}/short-code/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description A new short code for an active invite (the previous one stops working); codes last 15 minutes, invites 24 h. */
+        post: operations["sms_enrollments_short_code"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sms/messages/{id}/cancel/": {
         parameters: {
             query?: never;
@@ -2240,6 +2274,10 @@ export interface components {
             signal: number | null;
             is_default_sms_app: boolean;
             battery_optimised: boolean;
+            background_restricted: boolean;
+            standby_bucket: number | null;
+            /** @description What to change on this phone (by manufacturer) when it is restricted. */
+            readonly background_help: string[];
             pending_outbox: number;
             /** Format: date-time */
             last_sync_at: string | null;
@@ -2300,6 +2338,10 @@ export interface components {
             signal: number | null;
             is_default_sms_app: boolean;
             battery_optimised: boolean;
+            background_restricted: boolean;
+            standby_bucket: number | null;
+            /** @description What to change on this phone (by manufacturer) when it is restricted. */
+            readonly background_help: string[];
             pending_outbox: number;
             /** Format: date-time */
             last_sync_at: string | null;
@@ -2460,6 +2502,9 @@ export interface components {
             readonly device: components["schemas"]["DeviceRef"] | null;
             failed_attempts: number;
             last_failure: string;
+            /** Format: date-time */
+            short_code_expires_at: string | null;
+            readonly short_code_used: boolean;
         };
         EnrollmentCreateRequest: {
             name: string;
@@ -2488,9 +2533,19 @@ export interface components {
             readonly device: components["schemas"]["DeviceRef"] | null;
             failed_attempts: number;
             last_failure: string;
+            /** Format: date-time */
+            short_code_expires_at: string | null;
+            readonly short_code_used: boolean;
             code: string;
             uri: string;
             qr_svg: string;
+            /** @description XXXX-XXXX, single use, valid until short_code_expires_at. */
+            short_code: string;
+        };
+        EnrollmentShortCode: {
+            short_code: string;
+            /** Format: date-time */
+            short_code_expires_at: string;
         };
         EventRequest: {
             seq: number;
@@ -2569,6 +2624,11 @@ export interface components {
             };
             /** @default false */
             battery_optimised: boolean;
+            /** @default false */
+            background_restricted: boolean;
+            standby_bucket?: number | null;
+            /** @default  */
+            manufacturer: string;
             /** @default 0 */
             pending_outbox: number;
             /** @default  */
@@ -3204,6 +3264,14 @@ export interface components {
             /** @description Regex on the text (optional). */
             body_pattern?: string;
             is_enabled?: boolean;
+        };
+        ShortCodeRequestRequest: {
+            code: string;
+        };
+        ShortCodeResponse: {
+            token: string;
+            /** @description Seconds the resolved token can be used to enroll. */
+            expires_in: number;
         };
         SignatureWriteRequest: {
             /** Format: email */
@@ -3960,6 +4028,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnrollInfo"];
+                };
+            };
+        };
+    };
+    device_enroll_resolve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShortCodeRequestRequest"];
+                "multipart/form-data": components["schemas"]["ShortCodeRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ShortCodeRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShortCodeResponse"];
                 };
             };
         };
@@ -6656,6 +6749,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Enrollment"];
+                };
+            };
+        };
+    };
+    sms_enrollments_short_code: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentShortCode"];
                 };
             };
         };

@@ -27,7 +27,36 @@ ATTENTION_LABELS = {
     "app_outdated": "App needs an update",
     "suspended": "Suspended",
     "risk_signals": "Rooted or emulated phone",
+    "background_restricted": "Background use is restricted",
+    "standby_restricted": "Android is holding the app back",
 }
+
+# UsageStatsManager buckets at or above "rare" delay jobs and alarms by hours.
+STANDBY_RESTRICTED = 40
+
+# What to change on the phone itself, by manufacturer (the app's "Keep messages flowing" screen has the buttons).
+BACKGROUND_GUIDANCE = {
+    "samsung": ["Settings → Apps → Messages → Battery → Unrestricted.", "Settings → Battery → Background usage limits → Never sleeping apps → add Messages."],
+    "xiaomi": ["Settings → Apps → Manage apps → Messages → Autostart on.", "Battery saver → No restrictions.", "In Recents, pull the app down to lock it."],
+    "transsion": ["Phone Master → App management → Auto-start → allow Messages.", "Settings → Battery → App launch / Background → allow.", "Lock the app in Recents."],
+    "oppo": ["Settings → Apps → Messages → Battery → Allow background activity and Auto launch."],
+    "oneplus": ["Settings → Apps → Messages → Battery → Unrestricted.", "Settings → Battery → Advanced → Auto-launch → allow."],
+    "huawei": ["Settings → Battery → App launch → Messages → Manage manually, allow all three."],
+    "other": ["Settings → Apps → Messages → Battery → Unrestricted (or turn battery optimisation off)."],
+}
+
+
+def manufacturer_family(manufacturer: str) -> str:
+    name = (manufacturer or "").lower()
+    for family, words in (("samsung", ["samsung"]), ("xiaomi", ["xiaomi", "redmi", "poco"]), ("transsion", ["tecno", "infinix", "itel", "transsion"]),
+                          ("oneplus", ["oneplus"]), ("oppo", ["oppo", "realme"]), ("huawei", ["huawei", "honor"])):
+        if any(word in name for word in words):
+            return family
+    return "other"
+
+
+def background_guidance(device: Device) -> list[str]:
+    return BACKGROUND_GUIDANCE[manufacturer_family(device.manufacturer)]
 
 
 def is_online(device: Device, now=None) -> bool:
@@ -49,6 +78,10 @@ def attention_for(device: Device, now=None) -> list[str]:
         codes.append("permission_revoked")
     if device.battery_optimised:
         codes.append("battery_optimised")
+    if device.background_restricted and not device.is_simulated:
+        codes.append("background_restricted")
+    if device.standby_bucket is not None and device.standby_bucket >= STANDBY_RESTRICTED and not device.is_simulated:
+        codes.append("standby_restricted")
     if device.pending_outbox >= BACKLOG_THRESHOLD:
         codes.append("outbox_backlog")
     if device.app_version and not is_supported(device.app_version):
@@ -68,7 +101,7 @@ def touch(device: Device) -> None:
 
 HEARTBEAT_FIELDS = [
     "last_seen_at", "battery", "charging", "network_type", "signal", "is_default_sms_app", "permissions", "battery_optimised",
-    "pending_outbox", "app_version", "android_version", "last_sync_at", "risk_signals", "attention",
+    "background_restricted", "standby_bucket", "manufacturer", "pending_outbox", "app_version", "android_version", "last_sync_at", "risk_signals", "attention",
 ]
 
 
@@ -84,6 +117,10 @@ def record_heartbeat(device: Device, data: dict) -> Device:
     device.is_default_sms_app = bool(data.get("is_default_sms_app"))
     device.permissions = {str(k)[:64]: bool(v) for k, v in (data.get("permissions") or {}).items()}
     device.battery_optimised = bool(data.get("battery_optimised"))
+    device.background_restricted = bool(data.get("background_restricted"))
+    device.standby_bucket = data.get("standby_bucket")
+    if data.get("manufacturer"):
+        device.manufacturer = str(data["manufacturer"])[:80]
     device.pending_outbox = int(data.get("pending_outbox") or 0)
     if data.get("app_version"):
         device.app_version = str(data["app_version"])[:32]

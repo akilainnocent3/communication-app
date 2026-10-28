@@ -17,6 +17,7 @@ urlpatterns = [
     path("sms/enrollments/", devices.EnrollmentListView.as_view()),
     path("sms/enrollments/<int:pk>/", devices.EnrollmentDetailView.as_view()),
     path("sms/enrollments/<int:pk>/revoke/", devices.EnrollmentRevokeView.as_view()),
+    path("sms/enrollments/<int:pk>/short-code/", devices.EnrollmentShortCodeView.as_view()),
     # Conversations and messages
     path("sms/conversations/", conversations.ConversationListView.as_view()),
     path("sms/conversations/actions/", conversations.ActionView.as_view()),

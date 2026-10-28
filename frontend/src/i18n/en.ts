@@ -112,7 +112,7 @@ export const en = {
     devices: {
       title: "Phones", enroll: "Enroll phone", enrollTitle: "Enroll a company phone", code: "Device code", status: { active: "Active", suspended: "Suspended", revoked: "Removed" },
       waiting: "Waiting for the phone to enroll…", enrolled: (code: string) => `Enrolled ✓ ${code} is uploading its messages now.`,
-      scan: "Scan this QR code with the Communication Manager SMS app, or paste the code.",
+      scan: "Scan this QR code with the Communication Manager SMS app, type the short code on the phone, or send the link to the phone and tap it.",
       suspend: "Suspend", resume: "Resume", revoke: "Remove phone", resync: "Request resync",
       revokeBody: "The phone deletes its key and sync data at its next connection and stops sending. Messages already copied stay here. This can't be undone.",
       typeCode: (code: string) => `Type ${code} to confirm`,

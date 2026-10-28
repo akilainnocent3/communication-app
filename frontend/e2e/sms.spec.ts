@@ -132,6 +132,9 @@ test("sms dashboard, phones and enroll dialog", async ({ page }, testInfo) => {
   await dialog.getByRole("button", { name: "Create enrollment code" }).click();
   await expect(dialog.getByRole("img", { name: /QR code/ }).locator("svg")).toBeVisible({ timeout: 20_000 });
   await expect(dialog.getByText("Waiting for the phone to enroll…")).toBeVisible();
+  // The short code to type on the phone (XXXX-XXXX, Crockford) and the link to tap.
+  await expect(dialog.getByLabel("Short code")).toHaveText(/^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/);
+  await expect(dialog.getByLabel(/Link for the phone/)).toHaveValue(/^cmsms:\/\/enroll\?server=/);
   await shot(page, testInfo, "sms-enroll");
   await dialog.getByRole("button", { name: "Revoke code" }).click();
 

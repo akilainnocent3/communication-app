@@ -25,6 +25,7 @@ from .serializers import (
     DeviceStatusChangeSerializer,
     DeviceUpdateSerializer,
     EnrollmentCreatedSerializer,
+    EnrollmentShortCodeSerializer,
     EnrollmentCreateSerializer,
     EnrollmentSerializer,
     HeartbeatHistorySerializer,
@@ -214,11 +215,11 @@ class SimulatorView(APIView):
 # --- Enrollment --------------------------------------------------------------------------------------------------
 
 
-def _enrollment_payload(invite, token: str) -> dict:
+def _enrollment_payload(invite, token: str, short_code: str) -> dict:
     from modules.mail.services.connect import qr_svg
 
     uri = enrollment.enroll_uri(token)
-    return {**EnrollmentSerializer(invite).data, "code": token, "uri": uri, "qr_svg": qr_svg(uri)}
+    return {**EnrollmentSerializer(invite).data, "code": token, "uri": uri, "qr_svg": qr_svg(uri), "short_code": enrollment.format_short_code(short_code)}
 
 
 class EnrollmentListView(APIView):
@@ -244,7 +245,8 @@ class EnrollmentListView(APIView):
                 raise ApiError("validation_error", "Choose an active user.", errors={"assigned_to": ["Unknown user."]})
         options = {k: values[k] for k in ("signature_enabled", "signature", "mark_read_on_open", "backfill_days")}
         invite, token = enrollment.create_invite(request.user, name=values["name"], office=office, assigned_to=assigned, options=options, request=request)
-        return Response(_enrollment_payload(invite, token), status=status.HTTP_201_CREATED)
+        short_code = enrollment.issue_short_code(invite, request.user, request=request)
+        return Response(_enrollment_payload(invite, token, short_code), status=status.HTTP_201_CREATED)
 
 
 class _EnrollmentBase(APIView):
@@ -261,6 +263,18 @@ class EnrollmentDetailView(_EnrollmentBase):
     @extend_schema(responses=EnrollmentSerializer, operation_id="sms_enrollments_retrieve")
     def get(self, request, pk):
         return Response(EnrollmentSerializer(self._invite(pk)).data)
+
+
+class EnrollmentShortCodeView(_EnrollmentBase):
+    """A new short code for an active invite (the previous one stops working); codes last 15 minutes, invites 24 h."""
+
+    @extend_schema(request=None, responses=EnrollmentShortCodeSerializer, operation_id="sms_enrollments_short_code")
+    def post(self, request, pk):
+        invite = self._invite(pk)
+        if invite.state != "active":
+            raise ApiError("invite_inactive", "This enrollment was already used, revoked or has expired.", status.HTTP_409_CONFLICT)
+        code = enrollment.issue_short_code(invite, request.user, request=request)
+        return Response({"short_code": enrollment.format_short_code(code), "short_code_expires_at": invite.short_code_expires_at})
 
 
 class EnrollmentRevokeView(_EnrollmentBase):

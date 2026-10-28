@@ -50,6 +50,8 @@ class Device(models.Model):
     is_default_sms_app = models.BooleanField(default=False)
     permissions = models.JSONField(default=dict, blank=True, help_text="Android permission → granted.")
     battery_optimised = models.BooleanField(default=False)
+    background_restricted = models.BooleanField(default=False, help_text="ActivityManager.isBackgroundRestricted: background work is restricted for the app.")
+    standby_bucket = models.PositiveSmallIntegerField(null=True, blank=True, help_text="UsageStatsManager standby bucket (10 active … 40 rare, 45 restricted).")
     pending_outbox = models.PositiveIntegerField(default=0)
     last_sync_at = models.DateTimeField(null=True, blank=True)
     risk_signals = models.JSONField(default=dict, blank=True, help_text="Root / emulator / debugger signals. Reported, not blocking.")
@@ -115,6 +117,13 @@ class EnrollmentInvite(models.Model):
     device = models.OneToOneField(Device, null=True, blank=True, on_delete=models.SET_NULL, related_name="invite")
     failed_attempts = models.PositiveSmallIntegerField(default=0)
     last_failure = models.CharField(max_length=64, blank=True)
+    # Short code for typing (XXXX-XXXX, 40 bits): HMAC-SHA256 with the server secret (a bare SHA-256 of 40 bits could be
+    # brute-forced from a database copy), 15 minutes, single use. Resolving it issues a second token for this invite
+    # (only its hash is kept, valid for the code's lifetime after resolution).
+    short_code_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    short_code_expires_at = models.DateTimeField(null=True, blank=True)
+    short_code_used_at = models.DateTimeField(null=True, blank=True)
+    resolved_token_hash = models.CharField(max_length=64, blank=True, db_index=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
 

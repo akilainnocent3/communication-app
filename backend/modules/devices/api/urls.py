@@ -6,6 +6,7 @@ from . import views
 
 urlpatterns = [
     path("enroll/info/", views.EnrollInfoView.as_view()),
+    path("enroll/resolve/", views.EnrollResolveView.as_view()),
     path("enroll/", views.EnrollView.as_view()),
     path("auth/token/", views.TokenView.as_view()),
     path("heartbeat/", views.HeartbeatView.as_view()),

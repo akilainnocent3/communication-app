@@ -74,6 +74,9 @@ class HeartbeatSerializer(serializers.Serializer):
     is_default_sms_app = serializers.BooleanField()
     permissions = serializers.DictField(child=serializers.BooleanField(), required=False, default=dict)
     battery_optimised = serializers.BooleanField(required=False, default=False)
+    background_restricted = serializers.BooleanField(required=False, default=False)
+    standby_bucket = serializers.IntegerField(min_value=0, max_value=100, required=False, allow_null=True, default=None)
+    manufacturer = serializers.CharField(max_length=80, required=False, allow_blank=True, default="")
     pending_outbox = serializers.IntegerField(min_value=0, max_value=10_000_000, required=False, default=0)
     app_version = serializers.CharField(max_length=32, required=False, allow_blank=True, default="")
     android_version = serializers.CharField(max_length=20, required=False, allow_blank=True, default="")
@@ -92,6 +95,15 @@ class HeartbeatResponseSerializer(serializers.Serializer):
     attention = serializers.ListField(child=serializers.CharField())
     server_time = serializers.IntegerField()
     poll_seconds = serializers.IntegerField()
+
+
+class ShortCodeRequestSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=16)
+
+
+class ShortCodeResponseSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    expires_in = serializers.IntegerField(help_text="Seconds the resolved token can be used to enroll.")
 
 
 class PushTokenSerializer(serializers.Serializer):

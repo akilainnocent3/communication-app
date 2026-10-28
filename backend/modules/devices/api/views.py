@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from common.errors import ApiError
+from common.http import ClientIpScopedThrottle
 
 from ..services import enrollment
 from ..services.auth import DeviceAuthError, mint
@@ -18,6 +19,8 @@ from .serializers import (
     HeartbeatResponseSerializer,
     HeartbeatSerializer,
     PushTokenSerializer,
+    ShortCodeRequestSerializer,
+    ShortCodeResponseSerializer,
     TokenRequestSerializer,
     TokenResponseSerializer,
 )
@@ -39,6 +42,30 @@ class EnrollInfoView(PublicDeviceAPIView):
             "state": invite.state, "company_name": settings.COMPANY_NAME, "device_name": invite.name, "office": invite.office.name,
             "notice": SmsSettings.load().monitoring_notice, "expires_at": invite.expires_at, "server_time": int(time.time()),
         })
+
+
+class ShortCodeHourlyThrottle(ClientIpScopedThrottle):
+    """The second, hourly per-IP limit on short codes (ScopedRateThrottle reads one scope per class)."""
+
+    scope_attr = "throttle_scope_hourly"
+
+
+class EnrollResolveView(PublicDeviceAPIView):
+    """Short code (XXXX-XXXX) → a token for its invite. 5 per minute and 20 per hour per IP, a global breaker, audited."""
+
+    throttle_scope = "device_short_code"
+    throttle_scope_hourly = "device_short_code_hour"
+    throttle_classes = [ClientIpScopedThrottle, ShortCodeHourlyThrottle]
+
+    @extend_schema(request=ShortCodeRequestSerializer, responses=ShortCodeResponseSerializer, operation_id="device_enroll_resolve")
+    def post(self, request):
+        data = ShortCodeRequestSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        try:
+            token, ttl = enrollment.resolve_short_code(data.validated_data["code"], request=request)
+        except enrollment.EnrollmentError as exc:
+            raise ApiError(exc.code, exc.message, exc.status) from None
+        return Response({"token": token, "expires_in": ttl})
 
 
 class EnrollView(PublicDeviceAPIView):

@@ -102,6 +102,7 @@ export type HeartbeatHistory = S["HeartbeatHistory"];
 export type Enrollment = S["Enrollment"];
 export type EnrollmentCreated = S["EnrollmentCreated"];
 export type EnrollmentCreateRequest = S["EnrollmentCreateRequest"];
+export type EnrollmentShortCode = S["EnrollmentShortCode"];
 export type ConversationSummary = S["ConversationSummary"];
 export type ConversationDetail = S["ConversationDetail"];
 export type ConversationPage = S["ConversationPage"];

@@ -116,6 +116,8 @@ REST_FRAMEWORK = {
         "public_connect": "60/min",
         # Phone-facing API (/api/v1/device/...): public enrollment and token minting per client IP, the rest per device.
         "device_enroll": "10/min",
+        "device_short_code": "5/min",
+        "device_short_code_hour": "20/hour",
         "device_auth": "30/min",
         "device": "300/min",
     },
@@ -206,6 +208,10 @@ SMS_MEDIA_ROOT = env("SMS_MEDIA_ROOT", default=str(BASE_DIR / "private" / "sms-m
 SMS_MAX_MMS_BYTES = env.int("SMS_MAX_MMS_BYTES", default=2 * 1024 * 1024)
 SMS_INITIAL_SYNC_DAYS = env.int("SMS_INITIAL_SYNC_DAYS", default=90)
 SMS_ENROLL_TTL_HOURS = env.int("SMS_ENROLL_TTL_HOURS", default=24)
+# Short enrollment codes (XXXX-XXXX): lifetime, and wrong codes (from all clients) within that window that lock every
+# live short code. Per-IP limits: the device_short_code throttles below.
+SMS_SHORT_CODE_MINUTES = env.int("SMS_SHORT_CODE_MINUTES", default=15)
+SMS_SHORT_CODE_MAX_FAILURES = env.int("SMS_SHORT_CODE_MAX_FAILURES", default=50)
 SMS_DEVICE_TOKEN_TTL = env.int("SMS_DEVICE_TOKEN_TTL", default=15)  # minutes
 SMS_MIN_APP_VERSION = env("SMS_MIN_APP_VERSION", default="1.0.0")
 # Refuse phones whose key is not hardware-backed with a verified Android key attestation chain. Needs the

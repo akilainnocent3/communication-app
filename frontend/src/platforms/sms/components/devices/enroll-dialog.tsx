@@ -15,7 +15,7 @@ import { CheckCircleIcon, CopyIcon } from "@/components/ui/icons";
 import { m } from "@/i18n";
 import { dateTime } from "@/lib/format";
 import { errorMessage, fieldError, mutate, request } from "@/services/api/client";
-import type { Enrollment, EnrollmentCreated, EnrollmentCreateRequest, Office, User } from "@/services/api/types";
+import type { Enrollment, EnrollmentCreated, EnrollmentCreateRequest, EnrollmentShortCode, Office, User } from "@/services/api/types";
 import { smsKeys } from "../../api/keys";
 
 /**
@@ -40,6 +40,16 @@ export function EnrollDialog({ isOpen, onOpenChange }: { isOpen: boolean; onOpen
     refetchInterval: (q) => (q.state.data?.state === "used" ? false : 3000),
   });
   const enrolled = status.data?.state === "used" ? status.data : null;
+  // Short codes live 15 minutes (the invite 24 h): a fresh one replaces the shown one.
+  const [shortCode, setShortCode] = useState<EnrollmentShortCode | null>(null);
+  const short = shortCode ?? (invite ? { short_code: invite.short_code, short_code_expires_at: invite.short_code_expires_at ?? "" } : null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isOpen || !invite) return;
+    const timer = setInterval(() => setNow(Date.now()), 15_000);
+    return () => clearInterval(timer);
+  }, [isOpen, invite]);
+  const shortExpired = !!short?.short_code_expires_at && new Date(short.short_code_expires_at).getTime() < now;
   const enrolledId = enrolled?.id;
   useEffect(() => {
     if (!enrolledId) return;
@@ -49,12 +59,15 @@ export function EnrollDialog({ isOpen, onOpenChange }: { isOpen: boolean; onOpen
   const officeId = form.office || offices.data?.[0]?.id || 0;
 
   const close = (open: boolean) => {
-    if (!open) { create.reset(); setForm((f) => ({ ...f, name: "" })); }
+    if (!open) { create.reset(); setShortCode(null); setForm((f) => ({ ...f, name: "" })); }
     onOpenChange(open);
   };
-  const copy = async () => {
+  const copy = async (text: string, what: string) => {
+    try { await navigator.clipboard.writeText(text); toast.success(`${what} copied.`); } catch { toast.error("Couldn't copy automatically. Select it and copy it."); }
+  };
+  const newShortCode = async () => {
     if (!invite) return;
-    try { await navigator.clipboard.writeText(invite.code); toast.success("Code copied."); } catch { toast.error("Couldn't copy automatically. Select the code and copy it."); }
+    try { setShortCode(await mutate<EnrollmentShortCode>(`sms/enrollments/${invite.id}/short-code/`, "POST")); } catch (e) { toast.error(errorMessage(e)); }
   };
 
   return (
@@ -88,11 +101,17 @@ export function EnrollDialog({ isOpen, onOpenChange }: { isOpen: boolean; onOpen
             <div className="shrink-0 rounded-xl border border-card-border bg-white p-2.5 [&_svg]:size-40" aria-label="QR code for enrolling the phone" role="img"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(invite.qr_svg, { USE_PROFILES: { svg: true } }) }} />
             <div className="w-full min-w-0 space-y-3">
-              <label className="block text-xs font-medium text-text-secondary" htmlFor="enroll-code">Enrollment code</label>
+              <span className="block text-xs font-medium text-text-secondary">Short code (type it on the phone)</span>
+              <div className="flex items-center gap-2">
+                <output data-short-code="" aria-label="Short code" className={`font-mono text-2xl font-semibold tracking-[0.2em] ${shortExpired ? "text-text-tertiary line-through" : "text-text-primary"}`}>{short?.short_code}</output>
+                <Button appearance="ghost" onPress={newShortCode}>{shortExpired ? "New code" : "Replace"}</Button>
+              </div>
+              <p className="text-xs text-text-tertiary">{shortExpired ? "This short code expired. Create a new one, or use the QR code." : `Single use · valid until ${dateTime(short?.short_code_expires_at ?? "")}`}</p>
+              <label className="block text-xs font-medium text-text-secondary" htmlFor="enroll-link">Link for the phone (send it in a chat, tap it on the phone)</label>
               <div className="flex gap-2">
-                <input id="enroll-code" readOnly value={invite.code} onFocus={(event) => event.currentTarget.select()}
+                <input id="enroll-link" readOnly value={invite.uri} onFocus={(event) => event.currentTarget.select()}
                   className="h-10 min-w-0 flex-1 rounded-lg border border-card-border bg-background-gray-secondary_alt/50 px-3 font-mono text-xs text-text-primary focus:border-primary-500 focus:outline-none" />
-                <Button appearance="outline" onPress={copy} aria-label="Copy code"><CopyIcon size={16} />{m.common.copy}</Button>
+                <Button appearance="outline" onPress={() => copy(invite.uri, "Link")} aria-label="Copy link"><CopyIcon size={16} />{m.common.copy}</Button>
               </div>
               <p className="text-xs text-text-tertiary">Works once · expires {dateTime(invite.expires_at)} · {invite.name} · {invite.office.name}</p>
               <p className="text-xs text-text-tertiary">The phone holder sees the company monitoring notice and must accept it before the phone is enrolled.</p>

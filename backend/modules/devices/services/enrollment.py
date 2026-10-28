@@ -11,13 +11,16 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import logging
 import secrets
 from datetime import timedelta
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from modules.audit.services import record
@@ -83,9 +86,104 @@ def revoke_invite(invite: EnrollmentInvite, user, request=None) -> None:
 
 
 def invite_for_token(token: str) -> EnrollmentInvite | None:
+    """The invite for its QR token, or for a token issued by resolving its short code (usable for the code's TTL)."""
     if not token or len(token) > 100:
         return None
-    return EnrollmentInvite.objects.select_related("office").filter(token_hash=hash_token(token)).first()
+    digest = hash_token(token)
+    invite = EnrollmentInvite.objects.select_related("office").filter(Q(token_hash=digest) | Q(resolved_token_hash=digest)).first()
+    if invite and invite.resolved_token_hash == digest and invite.short_code_used_at and timezone.now() - invite.short_code_used_at > SHORT_CODE_TTL():
+        return None
+    return invite
+
+
+# --- Short codes -------------------------------------------------------------------------------------------------
+#
+# XXXX-XXXX in Crockford base32 (no I, L, O, U): 8 characters, 40 bits, for typing instead of the 43-character token.
+# 15 minutes, single use, bound to one invite. Resolving it returns a fresh token for that invite (the QR token keeps
+# working); every check that follows (notice, attestation, five-failure burn) is the normal enrollment path.
+#
+# A wrong code does not say which invite it was aimed at, so misses cannot be counted per invite. Instead: a strict
+# per-IP throttle (views), and a global breaker: SMS_SHORT_CODE_MAX_FAILURES misses within 15 minutes lock every live
+# short code (QR codes and links still work) and the lock is audited. Expected number of guesses to hit one of N live
+# codes is 2^40 / N; at 5 per minute per IP that is out of reach.
+
+CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+_FAILURES_KEY = "devices:short_code:failures"
+_LOCK_KEY = "devices:short_code:locked"
+
+
+def SHORT_CODE_TTL() -> timedelta:  # noqa: N802 - reads settings at call time (tests override them)
+    return timedelta(minutes=settings.SMS_SHORT_CODE_MINUTES)
+
+
+def normalise_short_code(raw: str) -> str | None:
+    text = (raw or "").strip().upper().replace("-", "").replace(" ", "").replace("O", "0").replace("I", "1").replace("L", "1")
+    return text if len(text) == 8 and all(c in CROCKFORD for c in text) else None
+
+
+def _short_code_digest(code: str) -> str:
+    return hmac.new(settings.SECRET_KEY.encode(), f"cmsms-short-code:{code}".encode(), hashlib.sha256).hexdigest()
+
+
+def issue_short_code(invite: EnrollmentInvite, user=None, request=None) -> str:
+    """A new short code for an active invite (replaces any earlier one)."""
+    for _ in range(10):
+        code = "".join(secrets.choice(CROCKFORD) for _ in range(8))
+        digest = _short_code_digest(code)
+        if not EnrollmentInvite.objects.filter(short_code_hash=digest).exists():
+            break
+    invite.short_code_hash = digest
+    invite.short_code_expires_at = min(timezone.now() + SHORT_CODE_TTL(), invite.expires_at)
+    invite.short_code_used_at = None
+    invite.save(update_fields=["short_code_hash", "short_code_expires_at", "short_code_used_at"])
+    record("device.short_code_issue", request=request, actor=user, target_type="enrollment", target_id=invite.pk,
+           metadata={"expires_at": invite.short_code_expires_at.isoformat()})
+    return code
+
+
+def format_short_code(code: str) -> str:
+    return f"{code[:4]}-{code[4:]}"
+
+
+def _short_code_miss(request) -> EnrollmentError:
+    window = int(settings.SMS_SHORT_CODE_MINUTES) * 60
+    cache.add(_FAILURES_KEY, 0, window)
+    try:
+        failures = cache.incr(_FAILURES_KEY)
+    except ValueError:  # expired between add and incr
+        cache.set(_FAILURES_KEY, 1, window)
+        failures = 1
+    record("device.short_code_failed", request=request, target_type="enrollment", metadata={"failures_in_window": failures})
+    if failures >= settings.SMS_SHORT_CODE_MAX_FAILURES and cache.add(_LOCK_KEY, True, window):
+        locked = EnrollmentInvite.objects.filter(short_code_used_at__isnull=True, short_code_expires_at__gt=timezone.now()).update(short_code_expires_at=timezone.now())
+        record("device.short_code_lockdown", request=request, target_type="enrollment", metadata={"failures": failures, "codes_locked": locked})
+        log.warning("short-code lockdown after %s failures (%s live codes locked)", failures, locked)
+    return EnrollmentError("invalid_code", "This code is not valid or has expired. Ask your administrator for a new one.", 404)
+
+
+def resolve_short_code(raw: str, request=None) -> tuple[str, int]:
+    """Exchange a short code for a token of its invite. Returns (token, seconds it stays usable)."""
+    if cache.get(_LOCK_KEY):
+        raise EnrollmentError("throttled", "Too many wrong codes were entered. Scan the QR code or try again later.", 429)
+    code = normalise_short_code(raw)
+    if code is None:
+        raise _short_code_miss(request)
+    now = timezone.now()
+    token = secrets.token_urlsafe(32)
+    with transaction.atomic():
+        invite = EnrollmentInvite.objects.select_for_update(of=("self",)).filter(
+            short_code_hash=_short_code_digest(code), short_code_used_at__isnull=True, short_code_expires_at__gt=now,
+        ).first()
+        if invite is not None and invite.state == "active":
+            invite.short_code_used_at = now
+            invite.resolved_token_hash = hash_token(token)
+            invite.save(update_fields=["short_code_used_at", "resolved_token_hash"])
+        else:
+            invite = None
+    if invite is None:
+        raise _short_code_miss(request)  # outside the transaction: the audit row and a lockdown must persist
+    record("device.short_code_resolved", request=request, target_type="enrollment", target_id=invite.pk, metadata={"name": invite.name})
+    return token, int(SHORT_CODE_TTL().total_seconds())
 
 
 def _fail(invite: EnrollmentInvite | None, code: str, message: str, request, status: int = 400) -> EnrollmentError:

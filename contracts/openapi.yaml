@@ -333,6 +333,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnrollInfo'
           description: ''
+  /api/v1/device/enroll/resolve/:
+    post:
+      operationId: device_enroll_resolve
+      description: Short code (XXXX-XXXX) → a token for its invite. 5 per minute and
+        20 per hour per IP, a global breaker, audited.
+      tags:
+      - device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShortCodeRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ShortCodeRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ShortCodeRequestRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortCodeResponse'
+          description: ''
   /api/v1/device/heartbeat/:
     post:
       operationId: device_heartbeat
@@ -3235,6 +3263,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/Enrollment'
           description: ''
+  /api/v1/sms/enrollments/{id}/short-code/:
+    post:
+      operationId: sms_enrollments_short_code
+      description: A new short code for an active invite (the previous one stops working);
+        codes last 15 minutes, invites 24 h.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sms
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentShortCode'
+          description: ''
   /api/v1/sms/messages/{id}/cancel/:
     post:
       operationId: sms_messages_cancel
@@ -4616,6 +4666,17 @@ components:
           type: boolean
         battery_optimised:
           type: boolean
+        background_restricted:
+          type: boolean
+        standby_bucket:
+          type: integer
+          nullable: true
+        background_help:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          description: What to change on this phone (by manufacturer) when it is restricted.
         pending_outbox:
           type: integer
         last_sync_at:
@@ -4649,6 +4710,8 @@ components:
       - app_version
       - assigned_to
       - attention
+      - background_help
+      - background_restricted
       - battery
       - battery_optimised
       - charging
@@ -4670,6 +4733,7 @@ components:
       - permissions
       - signal
       - sims
+      - standby_bucket
       - status
       - sync_progress
       - unread
@@ -4774,6 +4838,17 @@ components:
           type: boolean
         battery_optimised:
           type: boolean
+        background_restricted:
+          type: boolean
+        standby_bucket:
+          type: integer
+          nullable: true
+        background_help:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          description: What to change on this phone (by manufacturer) when it is restricted.
         pending_outbox:
           type: integer
         last_sync_at:
@@ -4845,6 +4920,8 @@ components:
       - assigned_to
       - attention
       - attestation
+      - background_help
+      - background_restricted
       - battery
       - battery_optimised
       - charging
@@ -4875,6 +4952,7 @@ components:
       - sdk_int
       - signal
       - sims
+      - standby_bucket
       - status
       - suspended_at
       - sync_progress
@@ -5221,6 +5299,13 @@ components:
           type: integer
         last_failure:
           type: string
+        short_code_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        short_code_used:
+          type: boolean
+          readOnly: true
       required:
       - created_at
       - created_by
@@ -5231,6 +5316,8 @@ components:
       - last_failure
       - name
       - office
+      - short_code_expires_at
+      - short_code_used
       - state
       - used_at
     EnrollmentCreateRequest:
@@ -5299,12 +5386,22 @@ components:
           type: integer
         last_failure:
           type: string
+        short_code_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        short_code_used:
+          type: boolean
+          readOnly: true
         code:
           type: string
         uri:
           type: string
         qr_svg:
           type: string
+        short_code:
+          type: string
+          description: XXXX-XXXX, single use, valid until short_code_expires_at.
       required:
       - code
       - created_at
@@ -5317,9 +5414,23 @@ components:
       - name
       - office
       - qr_svg
+      - short_code
+      - short_code_expires_at
+      - short_code_used
       - state
       - uri
       - used_at
+    EnrollmentShortCode:
+      type: object
+      properties:
+        short_code:
+          type: string
+        short_code_expires_at:
+          type: string
+          format: date-time
+      required:
+      - short_code
+      - short_code_expires_at
     EventRequest:
       type: object
       properties:
@@ -5504,6 +5615,18 @@ components:
         battery_optimised:
           type: boolean
           default: false
+        background_restricted:
+          type: boolean
+          default: false
+        standby_bucket:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+        manufacturer:
+          type: string
+          default: ''
+          maxLength: 80
         pending_outbox:
           type: integer
           maximum: 10000000
@@ -7133,6 +7256,26 @@ components:
       required:
       - kind
       - name
+    ShortCodeRequestRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 16
+      required:
+      - code
+    ShortCodeResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        expires_in:
+          type: integer
+          description: Seconds the resolved token can be used to enroll.
+      required:
+      - expires_in
+      - token
     SignatureWriteRequest:
       type: object
       properties:
