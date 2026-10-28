@@ -1,4 +1,4 @@
-# Communication Manager SMS (Android)
+# OCM — Office Communication (Android)
 
 The company's default SMS app. It sends and receives real carrier SMS and MMS (billed by the carrier, like any
 phone), copies them to the company's Communication Manager, and sends the replies administrators write in the admin.
@@ -52,9 +52,27 @@ flutter gen-l10n                                               # after changing 
 flutter analyze && flutter test                                 # Dart unit, widget and golden tests
 flutter test --update-goldens test/skin_test.dart              # after changing a skin on purpose
 UPDATE_SCHEMA=1 flutter test test/db_test.dart                 # after changing tables (Kotlin tests use the schema)
-(cd android && ./gradlew :app:testDebugUnitTest)               # Kotlin unit tests (Robolectric + MockWebServer)
-flutter run --dart-define=ALLOWED_SERVER_HOSTS=sms.company.co.tz
+(cd android && ./gradlew :app:testPlayDebugUnitTest)           # Kotlin unit tests (Robolectric + MockWebServer)
+flutter run --flavor private --dart-define=ALLOWED_SERVER_HOSTS=sms.company.co.tz
 ```
+
+## Flavors: `play` and `private`
+
+Every build is one of two product flavors (`android/app/build.gradle.kts`). Both carry the Google Play
+`isMonitoringTool=enterprise_management` flag and the always-visible "OCM: company monitoring active" notification.
+
+| Flavor | For | Battery optimisation |
+|---|---|---|
+| `play` | Google Play (public listing or managed Google Play) | Does **not** declare `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (Play restricts it to a few app categories). *Keep messages flowing* opens Android's battery-optimisation list and tells the holder to pick OCM → *Don't optimise* |
+| `private` | MDM push / signed APK | Declares it (`src/private/AndroidManifest.xml`) and shows Android's direct "Let OCM always run in the background?" dialog |
+
+```bash
+flutter build apk --release --flavor private --split-per-abi --dart-define=…     # MDM / APK
+flutter build appbundle --release --flavor play --dart-define=…                    # Google Play
+flutter test; (cd android && ./gradlew :app:testPlayDebugUnitTest)                 # tests (either flavor)
+```
+
+Store listing, permission declarations and Data safety answers: [docs/play-store.md](../docs/play-store.md).
 
 ## Build a release
 
@@ -69,12 +87,12 @@ Every value below is build-time configuration, not a secret:
 
 ```bash
 # One APK per ABI (company phones are arm64-v8a; armeabi-v7a for old ones):
-flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/symbols \
+flutter build apk --release --flavor private --split-per-abi --obfuscate --split-debug-info=build/symbols \
   --dart-define=ALLOWED_SERVER_HOSTS=sms.company.co.tz \
   --dart-define=PINNED_SPKI=<current-pin>,<backup-pin> \
   --dart-define=FCM_ENABLED=true --dart-define=APP_VERSION=1.1.0
 # Managed Google Play private app: an AAB (Play serves each phone only its ABI)
-flutter build appbundle --release --obfuscate --split-debug-info=build/symbols --dart-define=…
+flutter build appbundle --release --flavor play --obfuscate --split-debug-info=build/symbols --dart-define=…
 ```
 
 The QR scanner uses Google Play services' barcode model (`dev.steenbakker.mobile_scanner.useUnbundled=true` in

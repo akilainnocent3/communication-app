@@ -2,7 +2,7 @@ import { useId } from "react";
 import { cn } from "@/utils/cn";
 import { m } from "@/i18n";
 
-/** Communication Manager mark: a speech bubble whose tail forms an envelope fold (every channel, one place). */
+/** OCM mark: a speech bubble whose tail forms an envelope fold (every channel, one place). */
 export function BrandMark({ size = 32, className }: { size?: number; className?: string }) {
   // Unique per instance: a shared id resolves to the first copy, which may sit in a hidden (display:none) sidebar.
   const gradient = `cm-mark-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -26,8 +26,8 @@ export function BrandLogo({ size = 32, className }: { size?: number; className?:
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <BrandMark size={size} />
       <span className="flex flex-col leading-none">
-        <span className="text-[15px] font-semibold tracking-tight text-text-primary">Communication</span>
-        <span className="mt-0.5 text-[11px] font-medium tracking-[0.18em] text-text-tertiary uppercase">Manager</span>
+        <span className="text-[15px] font-semibold tracking-tight text-text-primary">{m.brand.name}</span>
+        <span className="mt-0.5 text-[11px] font-medium tracking-[0.08em] text-text-tertiary">{m.brand.full}</span>
       </span>
     </span>
   );

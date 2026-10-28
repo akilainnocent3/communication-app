@@ -181,7 +181,7 @@ class TotpSetupView(APIView):
         secret = pyotp.random_base32()
         user.totp_secret = encrypt_json({"secret": secret})
         user.save(update_fields=["totp_secret"])
-        uri = pyotp.TOTP(secret).provisioning_uri(name=user.email, issuer_name="Communication Manager")
+        uri = pyotp.TOTP(secret).provisioning_uri(name=user.email, issuer_name="OCM")
         return Response({"secret": secret, "otpauth_uri": uri, "qr_svg": _qr_svg(uri)})
 
 

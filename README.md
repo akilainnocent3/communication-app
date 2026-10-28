@@ -74,7 +74,7 @@ python manage.py spectacular --file ../contracts/openapi.yaml --validate
 cd frontend && npm run typecheck && npm run lint && npm run gen:api
 npx playwright test                                                        # needs both dev servers running
 cd mobile && flutter analyze && flutter test                               # Dart unit + widget tests
-(cd mobile/android && ./gradlew :app:testDebugUnitTest)                    # Kotlin unit tests
+(cd mobile/android && ./gradlew :app:testPlayDebugUnitTest)                # Kotlin unit tests
 ```
 
 ## Documentation

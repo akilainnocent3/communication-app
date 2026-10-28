@@ -200,3 +200,17 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
     (frontend/src/hooks) freezes the on-screen order while the pointer moves over the list, is pressed, or was released
     within 600 ms; row data still updates in place, new rows wait, the next page is appended. A resting mouse releases
     the hold after 1.5 s, so a hovering admin still sees new conversations rise. No retries were added to the test.
+62. **OCM branding; no system-app names.** The launcher label "Messages" imitated the system app (Play impersonation
+    policy). The application label is "OCM"; launcher entries are activity-aliases ("OCM Messages", and "OCM Phone" on
+    Calls phones) with OCM's own ring mark, not a vendor icon. The admin brand is "OCM" (Office Communication
+    Management); `COMPANY_NAME` stays configurable. Screen titles inside the app ("Messages") are generic words and stay.
+63. **The monitoring flag sits directly under `<manifest>`.** Google's *Stalkerware and monitoring applications* help page
+    (checked 2026-10-28) shows `<meta-data android:name="isMonitoringTool" …/>` as a child of `<manifest>`, not of
+    `<application>`; aapt2 keeps it there. Every flavor carries `enterprise_management`.
+64. **The monitoring notice is always visible.** The service channel was `IMPORTANCE_MIN` (no status-bar icon); a channel's
+    importance cannot be raised, so a new `monitoring` channel (`IMPORTANCE_LOW`, silent) replaces `sync_service`, the
+    notification is shown at once (`FOREGROUND_SERVICE_IMMEDIATE`) and, because Android 14+ lets people swipe
+    foreground notifications away, its delete intent posts it again.
+65. **Two flavors, `play` and `private`.** Play restricts `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`; only `private` (MDM)
+    declares it, through a flavor manifest, and `BuildConfig.DIRECT_BATTERY_REQUEST` decides whether the direct dialog is
+    offered or the battery-optimisation list is opened.

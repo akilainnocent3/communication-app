@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Private distribution only (MDM / signed APK): the direct "skip battery optimisation" dialog. Google Play
+         restricts this permission, so the play flavor does not declare it (mobile/README.md). -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+</manifest>

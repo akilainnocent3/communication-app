@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- OCM Messages: the OCM ring with a speech bubble inside (108dp adaptive canvas, 72dp safe zone). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M54,24a30,30 0,1 0,27.2 42.7l-5,-2.3A24.5,24.5 0,1 1,54 29.5a24.5,24.5 0,0 1,22.2 14.1l5,-2.3A30,30 0,0 0,54 24z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M77,51h8v6h-8z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M44,42h20a4,4 0,0 1,4 4v11a4,4 0,0 1,-4 4h-12l-6,5v-5h-2a4,4 0,0 1,-4 -4v-11a4,4 0,0 1,4 -4z" />
+</vector>

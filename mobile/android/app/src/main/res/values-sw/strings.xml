@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Kiswahili. Keep in step with values/strings.xml. -->
 <resources>
-    <string name="app_name">Ujumbe</string>
-    <string name="channel_service">Usawazishaji wa ujumbe</string>
+    <string name="app_name">OCM</string>
+    <string name="launcher_messages">OCM Ujumbe</string>
+    <string name="launcher_phone">OCM Simu</string>
+    <string name="channel_service">Ufuatiliaji wa kampuni</string>
     <string name="channel_admin">Majibu ya msimamizi</string>
     <string name="channel_failed">Ujumbe ulioshindwa</string>
     <string name="channel_mms">Ujumbe wa picha</string>
     <string name="channel_messages">Ujumbe</string>
-    <string name="service_title">Usawazishaji wa ujumbe unaendelea</string>
+    <string name="service_title">OCM: ufuatiliaji wa kampuni unaendelea</string>
+    <string name="service_text">Ujumbe na simu za simu hii zinanakiliwa kwa kampuni yako.</string>
     <string name="new_message">Ujumbe mpya</string>
     <string name="reply">Jibu</string>
     <string name="mark_read">Weka kuwa umesomwa</string>

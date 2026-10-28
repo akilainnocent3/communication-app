@@ -9,7 +9,7 @@ import "./globals.css";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { template: "%s · Communication Manager", default: "Communication Manager" },
+  title: { template: "%s · OCM", default: "OCM" },
   description: "Manage every company communication channel (Gmail first) from one place.",
   icons: { icon: "/favicon.svg" },
   robots: { index: false, follow: false },

@@ -45,6 +45,7 @@ class SyncService : Service() {
         @Volatile private var refusedAt = 0L
         private const val REFUSAL_BACKOFF_MS = 15 * 60_000L
         private const val NOTIFICATION_ID = 41
+        private const val ACTION_SHOW_NOTICE = "show_notice"
 
         /** true when the service is running or was started; false when the OS refused (remembered, not retried). */
         fun start(context: Context): Boolean {
@@ -94,18 +95,28 @@ class SyncService : Service() {
         safely("periodic sync") { SyncTrigger.schedulePeriodic(this) }
     }
 
-    /** Minimal and silent; tapping it opens Settings → Sync status. */
+    /**
+     * The monitoring disclosure (Google Play's monitoring-app policy): shown at once, in the status bar, for as long as
+     * the service runs. Silent. Android 14+ lets people swipe foreground notifications away; it is posted again.
+     * Tapping it opens Settings → Sync status.
+     */
     private fun notification(): Notification {
         Notifications.ensureServiceChannel(this)
         val open = PendingIntent.getActivity(this, 41, Intent(this, MainActivity::class.java).setData(Uri.parse("cmsms://route/settings/sync")),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val again = PendingIntent.getService(this, 42, Intent(this, SyncService::class.java).setAction(ACTION_SHOW_NOTICE), PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(this, Notifications.SERVICE_CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat_message).setContentTitle(getString(R.string.service_title)).setOngoing(true).setSilent(true)
-            .setShowWhen(false).setContentIntent(open).setPriority(NotificationCompat.PRIORITY_MIN).setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_DEFERRED).build()
+            .setSmallIcon(R.drawable.ic_stat_ocm).setContentTitle(getString(R.string.service_title)).setContentText(getString(R.string.service_text))
+            .setOngoing(true).setSilent(true).setShowWhen(false).setContentIntent(open).setDeleteIntent(again)
+            .setPriority(NotificationCompat.PRIORITY_LOW).setCategory(NotificationCompat.CATEGORY_SERVICE).setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE).build()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_SHOW_NOTICE) {
+            safely("monitoring notice") { getSystemService(android.app.NotificationManager::class.java).notify(NOTIFICATION_ID, notification()) }
+            return START_STICKY
+        }
         loop?.request(forceHeartbeat = intent?.action == "network")
         return START_STICKY
     }

@@ -49,6 +49,20 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // play: Google Play (managed or public); omits REQUEST_IGNORE_BATTERY_OPTIMIZATIONS and only guides the holder
+    // to the setting. private: MDM / signed APK; declares it (src/private/AndroidManifest.xml). See mobile/README.md.
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("play") {
+            dimension = "distribution"
+            buildConfigField("boolean", "DIRECT_BATTERY_REQUEST", "false")
+        }
+        create("private") {
+            dimension = "distribution"
+            buildConfigField("boolean", "DIRECT_BATTERY_REQUEST", "true")
+        }
+    }
+
     signingConfigs {
         create("release") {
             if (keyProperties.isNotEmpty()) {
@@ -120,6 +134,8 @@ if (file("google-services.json").exists()) {
 
 // Robolectric tests package the merged assets, which the Flutter plugin also writes: order them explicitly.
 tasks.configureEach {
-    if (name == "packageDebugUnitTestForUnitTest") dependsOn("copyFlutterAssetsDebug")
-    if (name == "packageReleaseUnitTestForUnitTest") dependsOn("copyFlutterAssetsRelease")
+    for (flavor in listOf("Play", "Private")) {
+        if (name == "package${flavor}DebugUnitTestForUnitTest") dependsOn("copyFlutterAssets${flavor}Debug")
+        if (name == "package${flavor}ReleaseUnitTestForUnitTest") dependsOn("copyFlutterAssets${flavor}Release")
+    }
 }

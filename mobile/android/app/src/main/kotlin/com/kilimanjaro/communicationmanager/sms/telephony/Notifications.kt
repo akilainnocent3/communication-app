@@ -41,7 +41,8 @@ import java.util.UUID
  * version: "New message"). Admin replies post a silent "Admin replied" notification.
  */
 object Notifications {
-    const val SERVICE_CHANNEL = "sync_service"
+    // "monitoring" replaces "sync_service" (IMPORTANCE_MIN hid the notice; a channel's importance cannot be raised later).
+    const val SERVICE_CHANNEL = "monitoring"
     private const val MESSAGES_CHANNEL = "messages"
     private const val ADMIN_CHANNEL = "admin_replies"
     private const val GROUP = "cm_messages"
@@ -54,9 +55,12 @@ object Notifications {
         Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
     fun ensureServiceChannel(context: Context) {
-        context.getSystemService(NotificationManager::class.java).createNotificationChannel(
-            NotificationChannel(SERVICE_CHANNEL, context.getString(R.string.channel_service), NotificationManager.IMPORTANCE_MIN).apply { setShowBadge(false) },
+        // LOW: always listed with its icon in the status bar, never makes a sound. The monitoring disclosure must be visible.
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(
+            NotificationChannel(SERVICE_CHANNEL, context.getString(R.string.channel_service), NotificationManager.IMPORTANCE_LOW).apply { setShowBadge(false) },
         )
+        manager.deleteNotificationChannel("sync_service")
     }
 
     private fun messagesChannel(context: Context) {
@@ -101,7 +105,7 @@ object Notifications {
     /** Long-lived shortcut: what makes Android treat the notification as a conversation (and offer it in share). */
     private fun pushShortcut(context: Context, id: String, threadId: Long, title: String, person: Person) = safely("shortcut") {
         ShortcutManagerCompat.pushDynamicShortcut(context, ShortcutInfoCompat.Builder(context, id)
-            .setShortLabel(title).setLongLived(true).setPerson(person).setIcon(person.icon ?: IconCompat.createWithResource(context, R.mipmap.ic_launcher))
+            .setShortLabel(title).setLongLived(true).setPerson(person).setIcon(person.icon ?: IconCompat.createWithResource(context, R.mipmap.ic_launcher_messages))
             .setLocusId(LocusIdCompat(id)).setIntent(openChat(context, threadId)).build())
     }
 
@@ -128,11 +132,11 @@ object Notifications {
         for (m in unread) style.addMessage(m.body.ifEmpty { context.getString(R.string.picture_message) }, m.date, sender)
         val open = PendingIntent.getActivity(context, message.threadId.toInt(), openChat(context, message.threadId), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val builder = NotificationCompat.Builder(context, channel)
-            .setSmallIcon(R.drawable.ic_stat_message).setStyle(style).setContentTitle(title).setContentText(message.body)
+            .setSmallIcon(R.drawable.ic_stat_ocm).setStyle(style).setContentTitle(title).setContentText(message.body)
             .setShortcutId(shortcutId).setLocusId(LocusIdCompat(shortcutId)).setContentIntent(open).setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE).setGroup(GROUP).setNumber(unread.size).setWhen(message.date)
             .setVisibility(if (hide) NotificationCompat.VISIBILITY_PRIVATE else NotificationCompat.VISIBILITY_PUBLIC)
-            .setPublicVersion(NotificationCompat.Builder(context, channel).setSmallIcon(R.drawable.ic_stat_message).setContentTitle(context.getString(R.string.new_message)).build())
+            .setPublicVersion(NotificationCompat.Builder(context, channel).setSmallIcon(R.drawable.ic_stat_ocm).setContentTitle(context.getString(R.string.new_message)).build())
         // Explicit, immutable intents to our own non-exported receiver (the reply one must be mutable for RemoteInput).
         val reply = Intent(context, NotificationActionReceiver::class.java).setAction("reply").setPackage(context.packageName)
             .putExtra("thread", message.threadId).putExtra("address", address).putExtra("sub", message.subscriptionId ?: -1L)
@@ -158,7 +162,7 @@ object Notifications {
     private fun summary(context: Context, manager: NotificationManagerCompat) {
         val count = manager.activeNotifications.count { it.notification.group == GROUP && it.id != SUMMARY_ID }
         if (count < 1) return
-        manager.notify(SUMMARY_ID, NotificationCompat.Builder(context, MESSAGES_CHANNEL).setSmallIcon(R.drawable.ic_stat_message)
+        manager.notify(SUMMARY_ID, NotificationCompat.Builder(context, MESSAGES_CHANNEL).setSmallIcon(R.drawable.ic_stat_ocm)
             .setContentTitle(context.resources.getQuantityString(R.plurals.new_messages, count, count)).setGroup(GROUP).setGroupSummary(true)
             .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN).setAutoCancel(true).setSilent(true)
             .setContentIntent(PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)).build())
@@ -177,7 +181,7 @@ object Notifications {
         manager.createNotificationChannel(NotificationChannel(ADMIN_CHANNEL, context.getString(R.string.channel_admin), NotificationManager.IMPORTANCE_LOW))
         val title = context.getString(R.string.admin_replied, Contacts.name(context, address) ?: address)
         NotificationManagerCompat.from(context).notify((threadId + 100000).toInt(), NotificationCompat.Builder(context, ADMIN_CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat_message).setContentTitle(title).setSilent(true).setAutoCancel(true).build())
+            .setSmallIcon(R.drawable.ic_stat_ocm).setContentTitle(title).setSilent(true).setAutoCancel(true).build())
     }
 
     @SuppressLint("MissingPermission") // POST_NOTIFICATIONS is checked by allowed()
@@ -187,7 +191,7 @@ object Notifications {
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(NotificationChannel("failed", context.getString(R.string.channel_failed), NotificationManager.IMPORTANCE_DEFAULT))
         NotificationManagerCompat.from(context).notify((message.threadId + 200000).toInt(), NotificationCompat.Builder(context, "failed")
-            .setSmallIcon(R.drawable.ic_stat_message).setContentTitle(context.getString(R.string.send_failed)).setAutoCancel(true).build())
+            .setSmallIcon(R.drawable.ic_stat_ocm).setContentTitle(context.getString(R.string.send_failed)).setAutoCancel(true).build())
     }
 
     @SuppressLint("MissingPermission") // POST_NOTIFICATIONS is checked by allowed()
@@ -195,7 +199,7 @@ object Notifications {
         if (!allowed(context)) return
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(NotificationChannel("mms", context.getString(R.string.channel_mms), NotificationManager.IMPORTANCE_DEFAULT))
-        NotificationManagerCompat.from(context).notify(300000, NotificationCompat.Builder(context, "mms").setSmallIcon(R.drawable.ic_stat_message)
+        NotificationManagerCompat.from(context).notify(300000, NotificationCompat.Builder(context, "mms").setSmallIcon(R.drawable.ic_stat_ocm)
             .setContentTitle(context.getString(R.string.mms_waiting)).setContentText(from ?: "").setAutoCancel(true).build())
     }
 

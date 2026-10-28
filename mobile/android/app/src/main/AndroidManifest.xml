@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Google Play: this is an employee-monitoring app. Declared in every build and every flavor, placed as a direct
+         child of <manifest> as Google's "Stalkerware and monitoring applications" help page shows. -->
+    <meta-data android:name="isMonitoringTool" android:value="enterprise_management" />
+
     <!-- SMS / MMS (most are granted together with the default SMS app role). -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
@@ -17,8 +21,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Android 14+: the foreground-service type made for relaying messages (dataSync is capped at 6 h/day on 15). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
-    <!-- Private distribution only (managed Google Play private app / MDM): asks to skip battery optimisation. -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: private flavor only (src/private/AndroidManifest.xml). -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.CAMERA" />
 
@@ -28,7 +31,8 @@
     <application
         android:label="@string/app_name"
         android:name=".CmApplication"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_messages"
+        android:roundIcon="@mipmap/ic_launcher_messages"
         android:allowBackup="false"
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -47,10 +51,6 @@
             android:windowSoftInputMode="adjustResize"
             android:enableOnBackInvokedCallback="true">
             <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/NormalTheme" />
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
             <!-- Required for the SMS role: compose from other apps (sms:, smsto:, mms:, mmsto:). -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -71,6 +71,20 @@
                 <data android:scheme="cmsms" android:host="enroll" />
             </intent-filter>
         </activity>
+
+        <!-- Launcher entries. Each is labelled OCM … (never a system app's name) and opens the same activity. -->
+        <activity-alias
+            android:name=".MessagesLauncher"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:label="@string/launcher_messages"
+            android:icon="@mipmap/ic_launcher_messages"
+            android:roundIcon="@mipmap/ic_launcher_messages">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <activity android:name=".ClassZeroActivity" android:exported="false" android:theme="@android:style/Theme.DeviceDefault.Dialog" android:excludeFromRecents="true" />
 

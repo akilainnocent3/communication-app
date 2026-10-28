@@ -73,7 +73,7 @@ function Connect() {
         </div>
       )}
       <h1 className="text-2xl leading-snug font-semibold text-text-primary sm:text-[28px]">
-        {data.company_name} wants to connect the mailbox <span className="break-all text-primary-500 dark:text-primary-300">{data.mailbox_email}</span> to Communication Manager.
+        {data.company_name} wants to connect the mailbox <span className="break-all text-primary-500 dark:text-primary-300">{data.mailbox_email}</span> to OCM.
       </h1>
 
       <div className="mt-6 flex gap-3 rounded-xl border border-card-border bg-background-gray-secondary_alt/40 p-4 text-sm text-text-secondary">
@@ -113,7 +113,7 @@ function UnverifiedHelp() {
           <p>This is expected: the app is private to your company. It is safe to continue.</p>
           <ol className="list-decimal space-y-1 pl-5">
             <li>Tap <b className="text-text-primary">Advanced</b> (bottom left).</li>
-            <li>Tap <b className="text-text-primary">Go to Communication Manager (unsafe)</b>.</li>
+            <li>Tap <b className="text-text-primary">Go to OCM (unsafe)</b>.</li>
             <li>Leave every box ticked and tap <b className="text-text-primary">Allow</b>.</li>
           </ol>
           {/* Small illustration of Google's warning screen with the two taps highlighted. */}
@@ -125,7 +125,7 @@ function UnverifiedHelp() {
               <span className="rounded px-1.5 py-0.5 font-medium text-[#1a73e8] ring-2 ring-warning-500">Advanced ①</span>
               <span className="rounded bg-[#1a73e8] px-2 py-1 font-medium text-white">Back to safety</span>
             </div>
-            <p className="mt-3 border-t border-zinc-100 pt-2"><span className="rounded px-1 font-medium text-[#1a73e8] underline ring-2 ring-warning-500">Go to Communication Manager (unsafe) ②</span></p>
+            <p className="mt-3 border-t border-zinc-100 pt-2"><span className="rounded px-1 font-medium text-[#1a73e8] underline ring-2 ring-warning-500">Go to OCM (unsafe) ②</span></p>
           </div>
         </div>
       )}

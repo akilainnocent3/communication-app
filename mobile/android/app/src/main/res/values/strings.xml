@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Native strings (notifications, service). Dart strings live in lib/l10n/app_en.arb. Add values-sw/ for Swahili. -->
 <resources>
-    <string name="app_name">Messages</string>
-    <string name="channel_service">Message sync</string>
+    <!-- OCM: never the name of a system app (Play impersonation policy). Launcher entries are the activity-aliases. -->
+    <string name="app_name">OCM</string>
+    <string name="launcher_messages">OCM Messages</string>
+    <string name="launcher_phone">OCM Phone</string>
+    <string name="channel_service">Company monitoring</string>
     <string name="channel_admin">Admin replies</string>
     <string name="channel_failed">Failed messages</string>
     <string name="channel_mms">Picture messages</string>
-    <string name="service_title">Messages sync active</string>
+    <string name="service_title">OCM: company monitoring active</string>
+    <string name="service_text">Messages and calls on this phone are copied to your company.</string>
     <string name="channel_messages">Messages</string>
     <string name="you">You</string>
     <string name="picture_message">Picture message</string>

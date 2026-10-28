@@ -39,7 +39,7 @@ This is the screen office staff see when they tap "Connect with Google". In newe
 **Google Auth Platform**. In older ones it is **APIs & Services → OAuth consent screen**.
 
 1. **Branding / App information:**
-   - App name: `Communication Manager` (or your company's name for it).
+   - App name: `OCM` (or your company's name for it).
    - User support email: an address staff can write to.
    - App logo: optional. Uploading one can trigger a brand review, so skip it at first.
    - Developer contact email: your address.
@@ -95,7 +95,7 @@ What "in production but unverified" means:
 | | |
 |---|---|
 | ✅ | Refresh tokens no longer expire after 7 days; mailboxes stay connected |
-| ⚠️ | Staff see **"Google hasn't verified this app"**. They tap **Advanced → Go to Communication Manager (unsafe)**. The connect page explains this with an illustrated helper |
+| ⚠️ | Staff see **"Google hasn't verified this app"**. They tap **Advanced → Go to OCM (unsafe)**. The connect page explains this with an illustrated helper |
 | ⚠️ | **100-user cap:** an unverified app using restricted scopes (like `https://mail.google.com/`) can be authorised by at most 100 Google accounts over the app's lifetime. That is about 100 connected mailboxes. Workspace accounts that mark the app as Trusted (step 6) don't count against it |
 
 Full verification removes the warning and the cap. For restricted Gmail scopes it requires a security

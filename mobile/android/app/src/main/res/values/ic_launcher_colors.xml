@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ocm_messages_background">#0F766E</color>
+    <color name="ocm_phone_background">#1D4ED8</color>
+</resources>

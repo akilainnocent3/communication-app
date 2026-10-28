@@ -78,8 +78,10 @@ object Oem {
 
     fun open(context: Context, id: String): Boolean {
         val candidates = when (id) {
-            "battery_optimisation" -> listOf(
-                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${context.packageName}")),
+            // The direct "allow?" dialog needs REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, which only the private (MDM) flavor
+            // declares (Google Play restricts it). The play flavor opens the list, where the holder picks OCM.
+            "battery_optimisation" -> listOfNotNull(
+                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${context.packageName}")).takeIf { BuildConfig.DIRECT_BATTERY_REQUEST },
                 Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
             )
             "app_battery" -> emptyList()

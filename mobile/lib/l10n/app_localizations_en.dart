@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Messages';
+  String get appTitle => 'OCM Messages';
 
   @override
   String get companyApp => 'Communication Manager SMS';
@@ -60,7 +60,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batterySamsung =>
-      'On Samsung: Settings → Battery → Background usage limits → Never sleeping apps → add Messages.';
+      'On Samsung: Settings → Battery → Background usage limits → Never sleeping apps → add OCM.';
 
   @override
   String get batteryOpen => 'Open battery settings';
@@ -398,13 +398,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutBody =>
-      'Messages on this company phone are copied to your company\'s Communication Manager. Authorised administrators can read them and send messages from this phone. All access is logged.';
+      'Messages on this company phone are copied to your company\'s OCM (Office Communication Management). Authorised administrators can read them and send messages from this phone. All access is logged.';
 
   @override
   String get unlock => 'Unlock';
 
   @override
-  String get locked => 'Messages is locked';
+  String get locked => 'OCM is locked';
 
   @override
   String backfillProgress(int done, int total) {
@@ -415,7 +415,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flashMessage => 'Flash message';
 
   @override
-  String get startupErrorTitle => 'Messages could not start';
+  String get startupErrorTitle => 'OCM could not start';
 
   @override
   String get startupErrorBody =>
@@ -426,7 +426,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sendRefused =>
-      'Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again.';
+      'Message not sent. Check that OCM Messages is the default SMS app and a SIM card is active, then try again.';
 
   @override
   String unreadConversations(int count) {
@@ -586,7 +586,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notRunning => 'Not running';
 
   @override
-  String get welcomeTitle => 'Your company Messages app';
+  String get welcomeTitle => 'OCM Messages, your company\'s messages app';
 
   @override
   String get welcomeBody =>

@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Messages'**
+  /// **'OCM Messages'**
   String get appTitle;
 
   /// No description provided for @companyApp.
@@ -191,7 +191,7 @@ abstract class AppLocalizations {
   /// No description provided for @batterySamsung.
   ///
   /// In en, this message translates to:
-  /// **'On Samsung: Settings → Battery → Background usage limits → Never sleeping apps → add Messages.'**
+  /// **'On Samsung: Settings → Battery → Background usage limits → Never sleeping apps → add OCM.'**
   String get batterySamsung;
 
   /// No description provided for @batteryOpen.
@@ -815,7 +815,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutBody.
   ///
   /// In en, this message translates to:
-  /// **'Messages on this company phone are copied to your company\'s Communication Manager. Authorised administrators can read them and send messages from this phone. All access is logged.'**
+  /// **'Messages on this company phone are copied to your company\'s OCM (Office Communication Management). Authorised administrators can read them and send messages from this phone. All access is logged.'**
   String get aboutBody;
 
   /// No description provided for @unlock.
@@ -827,7 +827,7 @@ abstract class AppLocalizations {
   /// No description provided for @locked.
   ///
   /// In en, this message translates to:
-  /// **'Messages is locked'**
+  /// **'OCM is locked'**
   String get locked;
 
   /// No description provided for @backfillProgress.
@@ -845,7 +845,7 @@ abstract class AppLocalizations {
   /// No description provided for @startupErrorTitle.
   ///
   /// In en, this message translates to:
-  /// **'Messages could not start'**
+  /// **'OCM could not start'**
   String get startupErrorTitle;
 
   /// No description provided for @startupErrorBody.
@@ -863,7 +863,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendRefused.
   ///
   /// In en, this message translates to:
-  /// **'Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again.'**
+  /// **'Message not sent. Check that OCM Messages is the default SMS app and a SIM card is active, then try again.'**
   String get sendRefused;
 
   /// No description provided for @unreadConversations.
@@ -1157,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your company Messages app'**
+  /// **'OCM Messages, your company\'s messages app'**
   String get welcomeTitle;
 
   /// No description provided for @welcomeBody.

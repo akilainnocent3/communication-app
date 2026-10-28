@@ -42,7 +42,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
     override suspend fun getForegroundInfo(): ForegroundInfo {
         Notifications.ensureServiceChannel(applicationContext)
         val notification = NotificationCompat.Builder(applicationContext, Notifications.SERVICE_CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat_message).setContentTitle(applicationContext.getString(R.string.service_title)).setSilent(true)
+            .setSmallIcon(R.drawable.ic_stat_ocm).setContentTitle(applicationContext.getString(R.string.service_title)).setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_MIN).setCategory(NotificationCompat.CATEGORY_SERVICE).build()
         return ForegroundInfo(NOTIFICATION_ID, notification)
     }

@@ -3,7 +3,7 @@
  * object with the same shape and choosing it in `i18n/index.ts`.
  */
 export const en = {
-  brand: { name: "Communication Manager", short: "CM", tagline: "Every company channel, one place." },
+  brand: { name: "OCM", full: "Office Communication Management", short: "OCM", tagline: "Every company channel, one place." },
   common: {
     retry: "Retry", cancel: "Cancel", save: "Save", saving: "Saving…", saved: "Saved", delete: "Delete", edit: "Edit",
     close: "Close", back: "Back", add: "Add", create: "Create", confirm: "Confirm", loading: "Loading…", search: "Search",
@@ -19,7 +19,7 @@ export const en = {
   shell: {
     openMenu: "Open sidebar menu", closeMenu: "Close sidebar", toggleSidebar: "Toggle sidebar", quickAccess: "Open quick access",
     theme: "Toggle colour theme", palette: "Search and commands", palettePlaceholder: "Type a command or search…", paletteEmpty: "No matching commands.",
-    platformSwitched: (name: string) => `Switched to ${name}`, comingSoon: (name: string) => `${name} is coming soon`, home: "Communication Manager home",
+    platformSwitched: (name: string) => `Switched to ${name}`, comingSoon: (name: string) => `${name} is coming soon`, home: "OCM home",
     settings: "SETTINGS", searchMenu: "Search menu", noMenuMatch: (q: string) => `No menu items match “${q}”.`,
     preferences: "Preferences", account: "Account menu",
   },
@@ -82,7 +82,7 @@ export const en = {
       retry: "Retry", cancel: "Cancel", details: "Message details",
       loadOlder: "Load older messages",
       otherAdminReplied: (name: string) => `${name} replied in this conversation since you opened it.`,
-      externalLink: "You're leaving Communication Manager",
+      externalLink: "You're leaving OCM",
       externalLinkBody: (host: string) => `This link opens ${host}. Only continue if you trust the sender.`,
       openLink: "Open link",
       attachment: "Attachment",
@@ -112,7 +112,7 @@ export const en = {
     devices: {
       title: "Phones", enroll: "Enroll phone", enrollTitle: "Enroll a company phone", code: "Device code", status: { active: "Active", suspended: "Suspended", revoked: "Removed" },
       waiting: "Waiting for the phone to enroll…", enrolled: (code: string) => `Enrolled ✓ ${code} is uploading its messages now.`,
-      scan: "Scan this QR code with the Communication Manager SMS app, type the short code on the phone, or send the link to the phone and tap it.",
+      scan: "Scan this QR code with the OCM Messages app, type the short code on the phone, or send the link to the phone and tap it.",
       suspend: "Suspend", resume: "Resume", revoke: "Remove phone", resync: "Request resync",
       revokeBody: "The phone deletes its key and sync data at its next connection and stops sending. Messages already copied stay here. This can't be undone.",
       typeCode: (code: string) => `Type ${code} to confirm`,

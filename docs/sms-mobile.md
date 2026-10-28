@@ -120,7 +120,7 @@ in the background, swiped away or the phone has just rebooted.
 
 | Situation | What happens |
 |---|---|
-| App open, in the background, or another app in front | The foreground service (`remoteMessaging`, silent ongoing notification "Messages sync active") uploads at once |
+| App open, in the background, or another app in front | The foreground service (`remoteMessaging`, silent ongoing notification "OCM: company monitoring active") uploads at once |
 | Swiped from recents | The service keeps running (`onTaskRemoved` also queues a sync for OEMs that kill the process); START_STICKY restarts it after a kill |
 | Process killed, service not back yet | The receiver uploads the new message itself inside its broadcast window (≤ 8 s), then queues expedited work |
 | Doze / app standby | High-priority FCM wakes the phone for admin replies; the battery-optimisation exemption keeps the service's network |
@@ -137,12 +137,12 @@ right screen (with fallbacks when a screen does not exist on that build):
 | Phone | Setting |
 |---|---|
 | All | Battery optimisation → *Don't optimise* (asked by the app) · App info → Battery → *Unrestricted* |
-| Samsung | Settings → Battery → Background usage limits → *Never sleeping apps* → add Messages |
+| Samsung | Settings → Battery → Background usage limits → *Never sleeping apps* → add OCM |
 | Xiaomi / Redmi / POCO | Security → *Autostart* on · Battery saver → *No restrictions* · lock the app in Recents |
 | Tecno / Infinix / itel | Phone Master → *Auto-start* → allow · lock the app in Recents |
 | Oppo / Realme | App info → Battery → *Allow background activity* and *Auto launch* |
 | OnePlus | App info → Battery → *Unrestricted* · Battery → Advanced → *Auto-launch* |
-| Huawei / Honor | Battery → App launch → Messages → *Manage manually*, all three on |
+| Huawei / Honor | Battery → App launch → OCM → *Manage manually*, all three on |
 
 What Android lets an app check, it checks and reports in every heartbeat: battery-optimisation exemption,
 `ActivityManager.isBackgroundRestricted` and the standby bucket (`UsageStatsManager`). The admin's phone page shows

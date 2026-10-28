@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Messages",
+  "appTitle": "OCM Messages",
   "companyApp": "Communication Manager SMS",
   "onboardingTitle": "Make this the phone's SMS app",
   "onboardingBody": "This company phone's text messages are managed by your company. To receive and send SMS, this app must be the default SMS app.",
@@ -15,7 +15,7 @@
   "continueLabel": "Continue",
   "batteryTitle": "Keep messages flowing",
   "batteryBody": "Some phones stop apps in the background. Turn off battery optimisation for this app so messages are never delayed.",
-  "batterySamsung": "On Samsung: Settings → Battery → Background usage limits → Never sleeping apps → add Messages.",
+  "batterySamsung": "On Samsung: Settings → Battery → Background usage limits → Never sleeping apps → add OCM.",
   "batteryOpen": "Open battery settings",
   "enrollTitle": "Connect to your company",
   "enrollBody": "Scan the QR code your administrator shows you, tap the link they sent, or type the 8-character code.",
@@ -171,9 +171,9 @@
   "offline": "Offline",
   "never": "Never",
   "about": "About",
-  "aboutBody": "Messages on this company phone are copied to your company's Communication Manager. Authorised administrators can read them and send messages from this phone. All access is logged.",
+  "aboutBody": "Messages on this company phone are copied to your company's OCM (Office Communication Management). Authorised administrators can read them and send messages from this phone. All access is logged.",
   "unlock": "Unlock",
-  "locked": "Messages is locked",
+  "locked": "OCM is locked",
   "backfillProgress": "Copying message history: {done} of {total}",
   "@backfillProgress": {
     "placeholders": {
@@ -186,10 +186,10 @@
     }
   },
   "flashMessage": "Flash message",
-  "startupErrorTitle": "Messages could not start",
+  "startupErrorTitle": "OCM could not start",
   "startupErrorBody": "Your text messages are safe on this phone. Try again; if this keeps happening, restart the phone or contact your administrator.",
   "tryAgain": "Try again",
-  "sendRefused": "Message not sent. Check that Messages is the default SMS app and a SIM card is active, then try again.",
+  "sendRefused": "Message not sent. Check that OCM Messages is the default SMS app and a SIM card is active, then try again.",
   "unreadConversations": "{count, plural, =1{1 unread conversation} other{{count} unread conversations}}",
   "@unreadConversations": {
     "placeholders": {
@@ -245,7 +245,7 @@
   "syncService": "Sync service",
   "running": "Running",
   "notRunning": "Not running",
-  "welcomeTitle": "Your company Messages app",
+  "welcomeTitle": "OCM Messages, your company's messages app",
   "welcomeBody": "Send and receive text messages as usual. Your company sees the messages of this company phone and can reply for you.",
   "getStarted": "Get started",
   "whyDefault": "Android lets only the default SMS app receive messages, save them and send them. Your old Messages app keeps working as a normal app.",

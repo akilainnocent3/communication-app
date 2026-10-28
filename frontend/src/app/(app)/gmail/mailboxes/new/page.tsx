@@ -26,7 +26,7 @@ const STEPS = ["Office & email", "Connection method", "Connect"];
 
 const METHOD: Record<string, { icon: React.ReactNode; title: string; sentence: string }> = {
   gmail_oauth: { icon: <GoogleIcon />, title: "Google sign-in", sentence: "This is a Google mailbox. The office person opens a link, chooses the account and taps Allow. No passwords are shared." },
-  workspace_delegation: { icon: <BuildingIcon />, title: "Company Google Workspace", sentence: "Your company has authorised Communication Manager for this domain, so the mailbox connects instantly with no sign-in." },
+  workspace_delegation: { icon: <BuildingIcon />, title: "Company Google Workspace", sentence: "Your company has authorised OCM for this domain, so the mailbox connects instantly with no sign-in." },
   imap_smtp: { icon: <GlobeIcon />, title: "Email server (IMAP/SMTP)", sentence: "This mailbox is hosted outside Google. Connect it with the normal email password; the server settings are filled in for you." },
   fake: { icon: <InfoIcon />, title: "Demo mailbox", sentence: "A sample mailbox filled with realistic mail, for trying the workspace without real credentials." },
   unsupported: { icon: <WarningIcon />, title: "Not supported yet", sentence: "" },

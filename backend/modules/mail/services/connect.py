@@ -289,7 +289,7 @@ def complete_oauth(code: str, state: str, request=None) -> tuple[Mailbox, dict]:
     if missing:
         if refresh_token:
             _revoke_quietly(refresh_token)
-        raise OAuthFailure("missing_scopes", "Some permissions were not ticked. Communication Manager needs all of them to work with this mailbox.", missing=missing, expected=mailbox.email, state=data)
+        raise OAuthFailure("missing_scopes", "Some permissions were not ticked. OCM needs all of them to work with this mailbox.", missing=missing, expected=mailbox.email, state=data)
     if not refresh_token:
         raise OAuthFailure("error", "Google did not return long-term access. Try again.", state=data)
 

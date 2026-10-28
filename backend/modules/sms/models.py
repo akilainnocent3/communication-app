@@ -235,7 +235,7 @@ class SmsSettings(models.Model):
 
     monitoring_notice = models.TextField(
         default=(
-            "This is a company phone. Its text messages will be copied to the company's Communication Manager, and "
+            "This is a company phone. Its text messages will be copied to the company's OCM (Office Communication Management), and "
             "authorised administrators will be able to read them and send messages from this phone. All access is logged."
         )
     )

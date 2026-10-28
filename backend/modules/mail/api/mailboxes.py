@@ -162,7 +162,7 @@ class InviteListView(APIView):
             raise ApiError("validation_error", "Connect links are for Google mailboxes. Use the server settings form for this mailbox.")
         invite, token = connect.create_invite(mailbox, request.user, request=request)
         url = connect.connect_url(token)
-        message = f"Hello! Please connect the mailbox {mailbox.email} to {settings.COMPANY_NAME}'s Communication Manager. Open this link and tap 'Connect with Google': {url}"
+        message = f"Hello! Please connect the mailbox {mailbox.email} to {settings.COMPANY_NAME}'s OCM. Open this link and tap 'Connect with Google': {url}"
         return Response(
             {**InviteSerializer(invite).data, "url": url, "whatsapp_url": f"https://wa.me/?text={quote(message)}", "qr_svg": connect.qr_svg(url)},
             status=status.HTTP_201_CREATED,

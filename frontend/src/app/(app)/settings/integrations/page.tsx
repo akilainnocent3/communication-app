@@ -47,7 +47,7 @@ export default function IntegrationsPage() {
   if (!mail && !sms) return <Page><PageHeader title="Integrations" description="You don't have permission to change integrations." /></Page>;
   return (
     <Page className="max-w-4xl">
-      <PageHeader title="Integrations" description="How Communication Manager connects to Google, other mail services and company phones." />
+      <PageHeader title="Integrations" description="How OCM connects to Google, other mail services and company phones." />
       <div className="space-y-4 sm:space-y-5">
         {mail && (settings.isPending ? <PageSkeleton /> : settings.error ? <RequestState loading={false} error={errorMessage(settings.error)} onRetry={() => settings.refetch()} /> : (
           <>
@@ -118,7 +118,7 @@ function Workspace() {
 
   return (
     <SectionCard title="Google Workspace: company-wide access (optional)"
-      description="Connect every mailbox in a company domain with zero clicks per mailbox. A Workspace admin authorises Communication Manager once.">
+      description="Connect every mailbox in a company domain with zero clicks per mailbox. A Workspace admin authorises OCM once.">
       {domains.isPending || domains.error ? <RequestState loading={domains.isPending} error={errorMessage(domains.error)} onRetry={() => domains.refetch()} /> : (
         <div className="space-y-4">
           {domains.data!.map((row) => <DomainCard key={row.id} row={row} />)}

@@ -15,7 +15,7 @@ export function ConnectFrame({ children, company }: { children: ReactNode; compa
           <ThemeToggle />
         </header>
         <section className="flex-1 animate-fade-up rounded-2xl border border-card-border bg-card-surface-area p-5 shadow-sm sm:p-8">{children}</section>
-        <footer className="mt-5 text-center text-xs text-text-tertiary">{company ? `${company} · ` : ""}Communication Manager · Every access is logged</footer>
+        <footer className="mt-5 text-center text-xs text-text-tertiary">{company ? `${company} · ` : ""}OCM · Every access is logged</footer>
       </div>
     </main>
   );

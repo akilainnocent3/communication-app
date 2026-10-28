@@ -10,7 +10,7 @@ class AppLocalizationsSw extends AppLocalizations {
   AppLocalizationsSw([String locale = 'sw']) : super(locale);
 
   @override
-  String get appTitle => 'Ujumbe';
+  String get appTitle => 'OCM Ujumbe';
 
   @override
   String get companyApp => 'Communication Manager SMS';
@@ -59,7 +59,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get batterySamsung =>
-      'Kwenye Samsung: Mipangilio → Betri → Vikomo vya matumizi ya chinichini → Programu zisizolala kamwe → ongeza Ujumbe.';
+      'Kwenye Samsung: Mipangilio → Betri → Vikomo vya matumizi ya chinichini → Programu zisizolala kamwe → ongeza OCM.';
 
   @override
   String get batteryOpen => 'Fungua mipangilio ya betri';
@@ -398,13 +398,13 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get aboutBody =>
-      'Ujumbe kwenye simu hii ya kampuni unanakiliwa kwenye Communication Manager ya kampuni yako. Wasimamizi walioidhinishwa wanaweza kuusoma na kutuma ujumbe kutoka simu hii. Kila ufikiaji unarekodiwa.';
+      'Ujumbe kwenye simu hii ya kampuni unanakiliwa kwenye OCM ya kampuni yako. Wasimamizi walioidhinishwa wanaweza kuusoma na kutuma ujumbe kutoka simu hii. Kila ufikiaji unarekodiwa.';
 
   @override
   String get unlock => 'Fungua';
 
   @override
-  String get locked => 'Ujumbe umefungwa';
+  String get locked => 'OCM imefungwa';
 
   @override
   String backfillProgress(int done, int total) {
@@ -415,7 +415,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get flashMessage => 'Ujumbe wa ghafla';
 
   @override
-  String get startupErrorTitle => 'Ujumbe haukuweza kuanza';
+  String get startupErrorTitle => 'OCM haikuweza kuanza';
 
   @override
   String get startupErrorBody =>
@@ -426,7 +426,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get sendRefused =>
-      'Ujumbe haukutumwa. Hakikisha Ujumbe ni programu chaguo-msingi ya SMS na SIM inafanya kazi, kisha ujaribu tena.';
+      'Ujumbe haukutumwa. Hakikisha OCM Ujumbe ni programu chaguo-msingi ya SMS na SIM inafanya kazi, kisha ujaribu tena.';
 
   @override
   String unreadConversations(int count) {
@@ -589,7 +589,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get notRunning => 'Haifanyi kazi';
 
   @override
-  String get welcomeTitle => 'Programu ya Ujumbe ya kampuni yako';
+  String get welcomeTitle => 'OCM Ujumbe, programu ya ujumbe ya kampuni yako';
 
   @override
   String get welcomeBody =>
