@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -216,7 +217,12 @@ object Notifications {
             }
             "copy" -> {
                 val code = intent.getStringExtra("code") ?: return
-                context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("code", code))
+                val clip = ClipData.newPlainText("code", code)
+                // Android 13+ hides sensitive clips from the clipboard preview and keyboard suggestions.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    clip.description.extras = android.os.PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
+                }
+                context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
             }
         }
         EventBus.emit("message_changed", threadId = threadId)
