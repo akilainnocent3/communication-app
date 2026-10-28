@@ -3,7 +3,7 @@ from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.views import APIView
 
 from common.errors import ApiError
-from common.http import ClientIpScopedThrottle
+from common.http import ClientIpScopedThrottle, SecurityStoreThrottle
 
 from ..services.health import touch
 from ..services.versions import is_supported
@@ -12,7 +12,7 @@ from .auth import DeviceTokenAuthentication, IsDevice
 APP_VERSION_HEADER = "HTTP_X_CM_APP_VERSION"
 
 
-class DeviceThrottle(SimpleRateThrottle):
+class DeviceThrottle(SecurityStoreThrottle, SimpleRateThrottle):
     """Per-device rate (scope `device`), keyed on the authenticated device, not the IP (phones share carrier NAT)."""
 
     scope = "device"

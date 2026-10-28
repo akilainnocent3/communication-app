@@ -14,6 +14,7 @@ class IdentityConfig(AppConfig):
     verbose_name = "Identity"
 
     def ready(self):
+        import common.checks  # noqa: F401 - deploy checks (Redis roles)
         import common.schema  # noqa: F401 - registers the OpenAPI auth extension
 
         # No sender filter: runs after every app's migrations, so later apps' permissions are included.

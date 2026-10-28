@@ -1,5 +1,5 @@
 import pytest
-from django.core.cache import cache
+from django.core.cache import caches
 from rest_framework.test import APIClient
 
 from modules.identity.models import Office, Role, User
@@ -19,9 +19,11 @@ def _run_on_commit_immediately(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _clear_cache():
-    cache.clear()
+    for alias in ("default", "security"):
+        caches[alias].clear()
     yield
-    cache.clear()
+    for alias in ("default", "security"):
+        caches[alias].clear()
 
 
 @pytest.fixture

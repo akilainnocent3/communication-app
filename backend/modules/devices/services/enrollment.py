@@ -18,11 +18,11 @@ from datetime import timedelta
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from common import stores
 from modules.audit.services import record
 
 from ..models import Device, DeviceStatus, EnrollmentInvite, SimLine
@@ -147,14 +147,9 @@ def format_short_code(code: str) -> str:
 
 def _short_code_miss(request) -> EnrollmentError:
     window = int(settings.SMS_SHORT_CODE_MINUTES) * 60
-    cache.add(_FAILURES_KEY, 0, window)
-    try:
-        failures = cache.incr(_FAILURES_KEY)
-    except ValueError:  # expired between add and incr
-        cache.set(_FAILURES_KEY, 1, window)
-        failures = 1
+    failures = stores.bump(_FAILURES_KEY, window)
     record("device.short_code_failed", request=request, target_type="enrollment", metadata={"failures_in_window": failures})
-    if failures >= settings.SMS_SHORT_CODE_MAX_FAILURES and cache.add(_LOCK_KEY, True, window):
+    if failures >= settings.SMS_SHORT_CODE_MAX_FAILURES and stores.add_once(_LOCK_KEY, window):
         locked = EnrollmentInvite.objects.filter(short_code_used_at__isnull=True, short_code_expires_at__gt=timezone.now()).update(short_code_expires_at=timezone.now())
         record("device.short_code_lockdown", request=request, target_type="enrollment", metadata={"failures": failures, "codes_locked": locked})
         log.warning("short-code lockdown after %s failures (%s live codes locked)", failures, locked)
@@ -163,7 +158,7 @@ def _short_code_miss(request) -> EnrollmentError:
 
 def resolve_short_code(raw: str, request=None) -> tuple[str, int]:
     """Exchange a short code for a token of its invite. Returns (token, seconds it stays usable)."""
-    if cache.get(_LOCK_KEY):
+    if stores.read(_LOCK_KEY):
         raise EnrollmentError("throttled", "Too many wrong codes were entered. Scan the QR code or try again later.", 429)
     code = normalise_short_code(raw)
     if code is None:
@@ -222,6 +217,9 @@ def enroll(data: dict, request=None) -> tuple[Device, str, int]:
         message = identity.canonical("ENROLL", hash_token(token), fp, str(data["timestamp"]), data["nonce"])
         identity.verify_signature(key, message, data["signature"])
         use_nonce(f"enroll:{fp}", data["nonce"])
+    except stores.SecurityStoreUnavailable:
+        # Not counted against the invite: a store outage must not burn enrollment codes.
+        raise EnrollmentError("try_later", "The server cannot check this request right now. Try again in a minute.", 503) from None
     except identity.IdentityError as exc:
         raise _fail(candidate, exc.code, str(exc), request) from None
 

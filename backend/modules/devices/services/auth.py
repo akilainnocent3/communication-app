@@ -5,7 +5,7 @@ No long-lived bearer secret exists on the phone. To get an access token the phon
     CMSMS-AUTH-1 / POST / /api/v1/device/auth/token/ / <device id> / <unix time> / <nonce>
 
 with its Keystore key. The server checks the signature, a ±5 minute clock window and that the nonce was never
-seen (cache, 10 minutes), then issues an opaque random token (only the SHA-256 is stored) valid for
+seen (security store, 10 minutes), then issues an opaque random token (only the SHA-256 is stored) valid for
 `SMS_DEVICE_TOKEN_TTL` minutes.
 """
 
@@ -23,6 +23,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
+from common import stores
 from modules.audit.services import record
 
 from ..models import Device, DeviceStatus, DeviceToken
@@ -58,10 +59,11 @@ def check_clock(timestamp) -> None:
 
 
 def use_nonce(scope: str, nonce: str) -> None:
-    """Each nonce works once (per scope) within the replay window."""
+    """Each nonce works once (per scope) within the replay window. Nonces live in the security store, which never
+    evicts; if it cannot be written the request is refused (stores.SecurityStoreUnavailable), never accepted."""
     if not NONCE_RE.match(nonce or ""):
         raise IdentityError("bad_nonce", "The request nonce is not valid.")
-    if not cache.add(f"devices:nonce:{scope}:{nonce}", 1, NONCE_TTL_SECONDS):
+    if not stores.add_once(f"devices:nonce:{scope}:{nonce}", NONCE_TTL_SECONDS):
         raise IdentityError("replayed_nonce", "This request was already used.")
 
 
@@ -97,6 +99,8 @@ def mint(data: dict, request=None) -> tuple[Device, str, int]:
         message = canonical("AUTH", "POST", TOKEN_PATH, str(device.pk), str(data.get("timestamp")), str(data.get("nonce") or ""))
         verify_signature(key, message, str(data.get("signature") or ""))
         use_nonce(f"auth:{device.pk}", str(data.get("nonce") or ""))
+    except stores.SecurityStoreUnavailable:
+        raise DeviceAuthError("try_later", "The server cannot check this request right now. Try again in a minute.", 503) from None
     except IdentityError as exc:
         _note_failure(device, exc.code, request)
         status = 400 if exc.code == "clock_skew" else 401

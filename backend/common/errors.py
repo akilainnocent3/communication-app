@@ -41,6 +41,11 @@ def _flatten(detail):
 
 
 def exception_handler(exc, context):
+    from .stores import SecurityStoreUnavailable
+
+    if isinstance(exc, SecurityStoreUnavailable):
+        # Fail closed: a control that cannot be checked refuses the request (common/stores.py).
+        return Response({"code": "try_later", "detail": "This is temporarily unavailable. Try again in a minute.", "errors": {}}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     if isinstance(exc, Http404):
         exc = exceptions.NotFound()
     elif isinstance(exc, DjangoPermissionDenied):

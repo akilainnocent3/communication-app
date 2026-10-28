@@ -7,7 +7,7 @@ if os.environ.get("TEST_DATABASE_URL"):
     import environ  # noqa: E402
 
     DATABASES = {"default": environ.Env.db_url_config(os.environ["TEST_DATABASE_URL"])}
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "default"}, "security": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "security"}}
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_BROKER_URL = "memory://"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

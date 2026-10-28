@@ -30,6 +30,7 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
 
+from common import stores
 from common.errors import ApiError
 from modules.audit.services import record
 from modules.devices.models import Device, DeviceCommand, SimLine
@@ -92,14 +93,11 @@ def check_recipient(raw: str, region: str) -> str:
 
 
 def _bump(key: str, limit: int, window: int = 60) -> bool:
-    """Fixed-window counter in the shared cache. False when the limit is reached."""
-    cache.add(key, 0, window)
+    """Fixed-window counter in the security store (never evicted). False when the limit is reached."""
     try:
-        value = cache.incr(key)
-    except ValueError:
-        cache.set(key, 1, window)
-        value = 1
-    return value <= limit
+        return stores.bump(key, window) <= limit
+    except stores.SecurityStoreUnavailable:
+        raise ApiError("try_later", "Sending is paused for a moment. Try again in a minute.", status.HTTP_503_SERVICE_UNAVAILABLE) from None
 
 
 def check_limits(user, device: Device) -> None:

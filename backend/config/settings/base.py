@@ -92,12 +92,22 @@ CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
 CSRF_COOKIE_HTTPONLY = False
 
-# --- Cache (login rate limit, token buckets) ------------------------------------------------------------
+# --- Redis: broker + security store, and a separate evictable cache (common/stores.py, decision 59) ---------------
+# REDIS_URL: Celery broker and the "security" cache (nonces, lockouts, rate limits, locks). Runs noeviction + AOF.
+# REDIS_CACHE_URL: plain cache data that may be evicted (allkeys-lru). Empty = a separate DB on REDIS_URL's server
+# (fine for development only: that server's noeviction policy then also applies to the cache).
 REDIS_URL = env("REDIS_URL", default="")
+REDIS_CACHE_URL = env("REDIS_CACHE_URL", default="")
 if REDIS_URL:
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}}
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_CACHE_URL or REDIS_URL.rsplit("/", 1)[0] + "/1"},
+        "security": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL, "KEY_PREFIX": "sec"},
+    }
 else:
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "default"},
+        "security": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "security"},
+    }
 
 # --- DRF --------------------------------------------------------------------------------------------------
 REST_FRAMEWORK = {

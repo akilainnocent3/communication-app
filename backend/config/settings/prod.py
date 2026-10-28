@@ -1,5 +1,5 @@
 from .base import *  # noqa: F401,F403
-from .base import MAIL_TOKEN_KEYS, SECRET_KEY, SMS_DEVICE_API_URL, SMS_ATTESTATION_ROOTS_FILE, SMS_DATA_KEYS, SMS_REQUIRE_KEY_ATTESTATION, SMS_REQUIRE_PLAY_INTEGRITY, env
+from .base import MAIL_TOKEN_KEYS, REDIS_URL, SECRET_KEY, SMS_DEVICE_API_URL, SMS_ATTESTATION_ROOTS_FILE, SMS_DATA_KEYS, SMS_REQUIRE_KEY_ATTESTATION, SMS_REQUIRE_PLAY_INTEGRITY, env
 
 DEBUG = False
 SESSION_COOKIE_SECURE = True
@@ -15,6 +15,8 @@ SMS_ENABLE_SIMULATOR = env.bool("SMS_ENABLE_SIMULATOR", default=False)
 # HSTS for subdomains / preload would bind the company's other subdomains, so those are left to the operator.
 SILENCED_SYSTEM_CHECKS = ["security.W005", "security.W008", "security.W021"]
 
+if not REDIS_URL:
+    raise RuntimeError("REDIS_URL must be set in production (Celery broker and the security store: nonces, lockouts, rate limits).")
 if SECRET_KEY.startswith("dev-only"):
     raise RuntimeError("DJANGO_SECRET_KEY must be set in production.")
 if not MAIL_TOKEN_KEYS:

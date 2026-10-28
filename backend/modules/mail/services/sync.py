@@ -12,8 +12,9 @@ import logging
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.cache import cache
 from django.utils import timezone
+
+from common.stores import security_store
 
 from ..models import Draft, Mailbox, MailboxStatus, Thread
 from ..providers import get_provider
@@ -34,12 +35,13 @@ class SyncLock:
         self.acquired = False
 
     def __enter__(self):
-        self.acquired = cache.add(self.key, 1, self.ttl)
+        # The security store never evicts, so a held lock cannot vanish under memory pressure.
+        self.acquired = security_store().add(self.key, 1, self.ttl)
         return self.acquired
 
     def __exit__(self, *exc):
         if self.acquired:
-            cache.delete(self.key)
+            security_store().delete(self.key)
 
 
 def _set(mailbox: Mailbox, **fields) -> None:

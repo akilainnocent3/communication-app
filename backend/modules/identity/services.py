@@ -1,8 +1,9 @@
 """Users, roles and offices: business rules kept out of the views."""
 
 from django.contrib.auth.models import Group, Permission
-from django.core.cache import cache
 from django.db import transaction
+
+from common import stores
 
 from .models import Role, User
 
@@ -88,18 +89,14 @@ def _key(email: str) -> str:
     return f"login-failures:{email.strip().lower()}"
 
 
+# Counters live in the security store (never evicted); a store error raises SecurityStoreUnavailable (sign-in refused).
 def login_locked(email: str) -> bool:
-    return cache.get(_key(email), 0) >= LOGIN_FAILURE_LIMIT
+    return (stores.read(_key(email), 0) or 0) >= LOGIN_FAILURE_LIMIT
 
 
 def note_login_failure(email: str) -> None:
-    key = _key(email)
-    cache.add(key, 0, LOGIN_LOCK_SECONDS)
-    try:
-        cache.incr(key)
-    except ValueError:
-        cache.set(key, 1, LOGIN_LOCK_SECONDS)
+    stores.bump(_key(email), LOGIN_LOCK_SECONDS)
 
 
 def clear_login_failures(email: str) -> None:
-    cache.delete(_key(email))
+    stores.delete(_key(email))

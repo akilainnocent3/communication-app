@@ -1,7 +1,7 @@
 """Auth, CSRF, platforms, audit, threads/search API, stats, error shape."""
 
 import pytest
-from django.core.cache import cache
+from django.core.cache import caches
 from rest_framework.test import APIClient
 
 from modules.audit.models import AuditEvent
@@ -41,7 +41,7 @@ def test_bad_password_error_shape_and_lockout(admin):
     for _ in range(8):
         login(client, admin.email, "wrong-password")
     assert login(client, admin.email).json()["code"] == "login_locked"
-    cache.clear()
+    caches["security"].clear()  # lockouts live in the security store, not the evictable cache
     assert login(client, admin.email).status_code == 200
 
 
