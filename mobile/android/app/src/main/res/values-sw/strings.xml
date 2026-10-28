@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kiswahili. Keep in step with values/strings.xml. -->
+<resources>
+    <string name="app_name">Ujumbe</string>
+    <string name="channel_service">Usawazishaji wa ujumbe</string>
+    <string name="channel_admin">Majibu ya msimamizi</string>
+    <string name="channel_failed">Ujumbe ulioshindwa</string>
+    <string name="channel_mms">Ujumbe wa picha</string>
+    <string name="channel_messages">Ujumbe</string>
+    <string name="service_title">Usawazishaji wa ujumbe unaendelea</string>
+    <string name="new_message">Ujumbe mpya</string>
+    <string name="reply">Jibu</string>
+    <string name="mark_read">Weka kuwa umesomwa</string>
+    <string name="copy_code">Nakili msimbo</string>
+    <string name="admin_replied">Msimamizi amemjibu %1$s</string>
+    <string name="send_failed">Ujumbe haukutumwa</string>
+    <string name="mms_waiting">Ujumbe wa picha unasubiri kupakuliwa</string>
+    <string name="flash_message">Ujumbe wa ghafla</string>
+    <string name="you">Wewe</string>
+    <string name="picture_message">Ujumbe wa picha</string>
+    <plurals name="new_messages">
+        <item quantity="one">Ujumbe mpya %d</item>
+        <item quantity="other">Ujumbe mpya %d</item>
+    </plurals>
+</resources>

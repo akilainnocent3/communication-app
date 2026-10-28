@@ -6,7 +6,14 @@
     <string name="channel_admin">Admin replies</string>
     <string name="channel_failed">Failed messages</string>
     <string name="channel_mms">Picture messages</string>
-    <string name="service_title">Messages are syncing with your company</string>
+    <string name="service_title">Messages sync active</string>
+    <string name="channel_messages">Messages</string>
+    <string name="you">You</string>
+    <string name="picture_message">Picture message</string>
+    <plurals name="new_messages">
+        <item quantity="one">%d new message</item>
+        <item quantity="other">%d new messages</item>
+    </plurals>
     <string name="new_message">New message</string>
     <string name="reply">Reply</string>
     <string name="mark_read">Mark as read</string>
