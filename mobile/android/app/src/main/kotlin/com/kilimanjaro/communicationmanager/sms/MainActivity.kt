@@ -11,7 +11,6 @@ import com.kilimanjaro.communicationmanager.sms.bridge.EventBus
 import com.kilimanjaro.communicationmanager.sms.bridge.HostApiImpl
 import com.kilimanjaro.communicationmanager.sms.bridge.LaunchIntent
 import com.kilimanjaro.communicationmanager.sms.bridge.TelephonyHostApi
-import com.kilimanjaro.communicationmanager.sms.calls.Dialer
 import com.kilimanjaro.communicationmanager.sms.telephony.Provider
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -46,27 +45,13 @@ class MainActivity : FlutterFragmentActivity(), ActivityBridge {
     override val activity: Activity get() = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        handle(intent)
+        LaunchIntent.set(intent)
         super.onCreate(savedInstanceState)
         Thread { safely("stale outbox") { Provider.failStaleOutbox(applicationContext, STALE_OUTBOX_MS) } }.start()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handle(intent)
-    }
-
-    /**
-     * ACTION_CALL through the CallIntentHandler alias (the caller must hold CALL_PHONE) places the call, as the system
-     * dialer would. Everything else pre-fills or routes.
-     */
-    private fun handle(intent: Intent?) {
-        // MainActivity itself is exported without a permission and explicit intents ignore intent filters: an ACTION_CALL
-        // addressed to it (or to the Phone launcher alias) only pre-fills the keypad, like DIAL.
-        if (intent != null && Dialer.placesAtOnce(intent.action, intent.data?.scheme, intent.component?.className, packageName)) {
-            safely("call intent") { Dialer.place(applicationContext, intent.data!!.schemeSpecificPart.orEmpty()) }
-            return
-        }
         LaunchIntent.set(intent)
     }
 

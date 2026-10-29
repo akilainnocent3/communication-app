@@ -194,54 +194,6 @@ class TelephonyEvent {
   String? state;
 }
 
-/// Calls (the dialer). Only meaningful on phones the server enabled for Calls.
-class CallsStatus {
-  CallsStatus({required this.enabled, required this.isDefaultDialer, required this.dialerRoleAvailable, required this.canUseFullScreenIntent, required this.missingPermissions});
-  bool enabled;
-  bool isDefaultDialer;
-  bool dialerRoleAvailable;
-  /// Android 14+: NotificationManager.canUseFullScreenIntent (the incoming-call screen over the lock screen).
-  bool canUseFullScreenIntent;
-  List<String> missingPermissions;
-}
-
-/// One row of the system call log (newest first). USSD/MMI rows are never returned.
-class RecentCall {
-  RecentCall({required this.id, required this.number, this.name, required this.nameSource, required this.direction, required this.result, required this.date, required this.durationSeconds, this.subscriptionId});
-  int id;
-  String number;
-  String? name;
-  /// contact | directory | none
-  String nameSource;
-  String direction; // in | out
-  String result; // answered | missed | rejected | blocked | voicemail | no_answer | answered_elsewhere
-  int date;
-  int durationSeconds;
-  int? subscriptionId;
-}
-
-class PhoneContact {
-  PhoneContact({required this.name, required this.number, required this.starred, this.photoUri, this.directoryName});
-  String name;
-  String number;
-  bool starred;
-  String? photoUri;
-  /// The company directory's name for this number, when it has one.
-  String? directoryName;
-}
-
-class CallbackTaskData {
-  CallbackTaskData({required this.id, required this.number, required this.name, required this.reason, required this.requestedBy, required this.priority, required this.dueAt, required this.state});
-  String id;
-  String number;
-  String name;
-  String reason;
-  String requestedBy;
-  String priority;
-  int dueAt;
-  String state;
-}
-
 // Threading: methods marked @async run their work on Dispatchers.IO (HostApiImpl.io), so no Content Provider query,
 // Keystore operation or HTTP call ever runs on the Android main thread. Small binder getters run on a background task
 // queue. Only calls that need an Activity (role and permission requests, settings screens, FLAG_SECURE) stay on main.
@@ -262,13 +214,6 @@ abstract class TelephonyHostApi {
   /// System photo picker; the chosen image is copied to the app cache and its path returned (QR from a photo).
   @async
   String? pickImage();
-  /// Calls: RoleManager.ROLE_DIALER ("Set as default Phone app").
-  @async
-  bool requestDefaultDialerRole();
-  /// Android 14+: the "full screen notifications" settings page for this app.
-  void openFullScreenIntentSettings();
-  /// The system "new contact" screen, pre-filled with [number] (the person saves it).
-  void addContact(String number);
 
   // --- Background task queue: quick binder calls -----------------------------------------------------------------
   @TaskQueue(type: TaskQueueType.serialBackgroundThread)
@@ -286,8 +231,6 @@ abstract class TelephonyHostApi {
   List<String> oemSettings();
   @TaskQueue(type: TaskQueueType.serialBackgroundThread)
   LaunchTarget? consumeLaunch();
-  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
-  CallsStatus callsStatus();
   @TaskQueue(type: TaskQueueType.serialBackgroundThread)
   bool hasDeviceKey();
   @TaskQueue(type: TaskQueueType.serialBackgroundThread)
@@ -346,24 +289,6 @@ abstract class TelephonyHostApi {
   KeyInfo createDeviceKey(Uint8List attestationChallenge);
   @async
   Uint8List sign(Uint8List message);
-
-  // --- Calls ------------------------------------------------------------------------------------------------------
-  /// Places a call through TelecomManager (emergency numbers always; USSD/MMI handled by Telecom). Returns "placed",
-  /// "permission" or "empty". [origin]: manual | redial | from_sms | callback_task.
-  @async
-  String placeCall(String number, int? subscriptionId, String origin, String? callbackTask);
-  @async
-  List<RecentCall> recentCalls(int limit, int offset);
-  /// The phone's address book (names and numbers), for the keypad's T9 search and the Contacts tab.
-  @async
-  List<PhoneContact> phoneContacts(int limit);
-  @async
-  List<CallbackTaskData> callbackTasks();
-  /// done | snoozed | dialed (reported to the server as callback.state).
-  @async
-  void reportCallback(String id, String state);
-  @async
-  void deleteRecentCall(int id);
 
   /// HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only. Enrollment only:
   /// everything after it is the native sync engine's.

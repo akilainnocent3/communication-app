@@ -26,7 +26,7 @@ object DeviceState {
     fun granted(context: Context, name: String) = ContextCompat.checkSelfPermission(context, "android.permission.$name") == PackageManager.PERMISSION_GRANTED
 
     /** CAMERA is asked for only by the QR scanner; it is shown to the UI but not reported to the server. */
-    val uiPermissionNames = (permissionNames + "CAMERA" + com.kilimanjaro.communicationmanager.sms.calls.CallsFeature.permissionNames).distinct()
+    val uiPermissionNames = permissionNames + "CAMERA"
 
     fun permissions(context: Context, names: List<String> = permissionNames): List<PermissionState> = names.map { PermissionState(name = it, granted = granted(context, it)) }
 

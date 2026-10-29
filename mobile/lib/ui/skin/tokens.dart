@@ -24,10 +24,6 @@ enum TimePlacement { below, inside }
 
 enum SwipeAction { archive, delete, read, none }
 
-/// Dialer keypad keys: filled circles (Pixel, HiOS), rounded squares (Company) or flat digits on the page (One UI,
-/// HyperOS, ColorOS).
-enum KeypadKeyStyle { circle, rounded, flat }
-
 /// Everything a skin decides, resolved for one brightness. Widgets read these and nothing else: no screen asks which
 /// skin is active. Values live in `lib/ui/skin/skins/<skin>.dart`, one file per skin, so they can be tuned without
 /// touching widgets.
@@ -45,8 +41,6 @@ class SkinTokens extends ThemeExtension<SkinTokens> {
     this.composePlusButton = false, this.composeFieldRadius = 24, required this.composeField, this.sendFilled = true,
     this.swipeLeft = SwipeAction.archive, this.swipeRight = SwipeAction.archive,
     this.titleSize = 22, this.largeTitleSize = 34, this.rowTitleSize = 16, this.snippetSize = 14, this.rowTitleWeight = FontWeight.w500,
-    this.keypadKey = KeypadKeyStyle.circle, this.keypadLetters = true, this.keypadKeySize = 72, this.callButton = const Color(0xFF16A34A),
-    this.missedCall = const Color(0xFFDC2626), this.recentsRowHeight = 68,
   });
 
   final String id;
@@ -90,13 +84,6 @@ class SkinTokens extends ThemeExtension<SkinTokens> {
   final double titleSize, largeTitleSize, rowTitleSize, snippetSize;
   final FontWeight rowTitleWeight;
 
-  // Dialer (Phone: keypad, recents).
-  final KeypadKeyStyle keypadKey;
-  final bool keypadLetters;
-  final double keypadKeySize;
-  final Color callButton, missedCall;
-  final double recentsRowHeight;
-
   double rowExtent({required bool compact, required double textScale}) => (rowHeight - (compact ? 12 : 0)) + (textScale - 1) * 30;
 
   static SkinTokens of(BuildContext context) => Theme.of(context).extension<SkinTokens>()!;
@@ -110,7 +97,6 @@ class SkinTokens extends ThemeExtension<SkinTokens> {
         composeColor: composeColor, onComposeColor: onComposeColor, composePlusButton: composePlusButton, composeFieldRadius: composeFieldRadius,
         composeField: composeField, sendFilled: sendFilled, swipeLeft: swipeLeft ?? this.swipeLeft, swipeRight: swipeRight ?? this.swipeRight,
         titleSize: titleSize, largeTitleSize: largeTitleSize, rowTitleSize: rowTitleSize, snippetSize: snippetSize, rowTitleWeight: rowTitleWeight,
-        keypadKey: keypadKey, keypadLetters: keypadLetters, keypadKeySize: keypadKeySize, callButton: callButton, missedCall: missedCall, recentsRowHeight: recentsRowHeight,
       );
 
   /// Skins switch instantly; only colours and sizes are blended during the theme animation.
@@ -129,8 +115,6 @@ class SkinTokens extends ThemeExtension<SkinTokens> {
       onComposeColor: c(onComposeColor, other.onComposeColor), composePlusButton: composePlusButton, composeFieldRadius: composeFieldRadius,
       composeField: c(composeField, other.composeField), sendFilled: sendFilled, swipeLeft: swipeLeft, swipeRight: swipeRight, titleSize: titleSize,
       largeTitleSize: largeTitleSize, rowTitleSize: rowTitleSize, snippetSize: snippetSize, rowTitleWeight: rowTitleWeight,
-      keypadKey: keypadKey, keypadLetters: keypadLetters, keypadKeySize: keypadKeySize, callButton: c(callButton, other.callButton),
-      missedCall: c(missedCall, other.missedCall), recentsRowHeight: recentsRowHeight,
     );
   }
 }

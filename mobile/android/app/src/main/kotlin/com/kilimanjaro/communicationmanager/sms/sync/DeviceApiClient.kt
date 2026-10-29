@@ -53,12 +53,7 @@ class DeviceApiClient(
 
     private fun decode(response: SecureHttp.Response): JSONObject {
         val data = try {
-            val text = String(response.body).trim()
-            when {
-                text.isEmpty() -> JSONObject()
-                text.startsWith("[") -> JSONObject().put("__array", JSONArray(text))
-                else -> JSONObject(text)
-            }
+            if (response.body.isEmpty()) JSONObject() else JSONObject(String(response.body))
         } catch (e: org.json.JSONException) {
             JSONObject()
         }
@@ -116,17 +111,6 @@ class DeviceApiClient(
     fun config() = authorized("GET", "config/")
     fun registerPushToken(token: String) = authorized("POST", "push-token/", JSONObject().put("token", token))
     fun syncEvents(events: JSONArray) = authorized("POST", "sync/events/", JSONObject().put("events", events))
-    // Calls (only on phones the server enabled for Calls; 403 calls_not_enabled otherwise).
-    fun callsConfig() = authorized("GET", "calls/config/")
-    fun callbacks(): JSONArray = authorizedArray("GET", "calls/callbacks/")
-    fun directory(cursor: String?) = authorized("GET", "calls/directory/" + (cursor?.let { "?cursor=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""))
-
-    /** A JSON array response (decode() expects objects). */
-    private fun authorizedArray(method: String, path: String): JSONArray {
-        val wrapped = authorized(method, path)
-        return wrapped.optJSONArray("__array") ?: JSONArray()
-    }
-
     fun claimOutbox(limit: Int = 10) = authorized("POST", "outbox/claim/", JSONObject().put("limit", limit))
     fun reportStatus(reports: JSONArray = JSONArray(), commandAcks: JSONArray = JSONArray()) =
         authorized("POST", "outbox/status/", JSONObject().put("reports", reports).put("command_acks", commandAcks))

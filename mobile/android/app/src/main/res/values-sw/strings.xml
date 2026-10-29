@@ -3,14 +3,13 @@
 <resources>
     <string name="app_name">OCM</string>
     <string name="launcher_messages">OCM Ujumbe</string>
-    <string name="launcher_phone">OCM Simu</string>
     <string name="channel_service">Ufuatiliaji wa kampuni</string>
     <string name="channel_admin">Majibu ya msimamizi</string>
     <string name="channel_failed">Ujumbe ulioshindwa</string>
     <string name="channel_mms">Ujumbe wa picha</string>
     <string name="channel_messages">Ujumbe</string>
     <string name="service_title">OCM: ufuatiliaji wa kampuni unaendelea</string>
-    <string name="service_text">Ujumbe na simu za simu hii zinanakiliwa kwa kampuni yako.</string>
+    <string name="service_text">Ujumbe wa simu hii unanakiliwa kwa kampuni yako.</string>
     <string name="new_message">Ujumbe mpya</string>
     <string name="reply">Jibu</string>
     <string name="mark_read">Weka kuwa umesomwa</string>
@@ -25,50 +24,4 @@
         <item quantity="one">Ujumbe mpya %d</item>
         <item quantity="other">Ujumbe mpya %d</item>
     </plurals>
-    <!-- Calls (the dialer) -->
-    <string name="channel_calls_incoming">Simu zinazoingia</string>
-    <string name="channel_calls_ongoing">Simu zinazoendelea</string>
-    <string name="channel_calls_missed">Simu ambazo hazikupokelewa</string>
-    <string name="channel_callbacks">Kupiga tena kutoka ofisini</string>
-    <string name="missed_call">Simu haikupokelewa</string>
-    <string name="call_back">Piga tena</string>
-    <string name="message">Ujumbe</string>
-    <string name="callback_title">Mpigie %1$s</string>
-    <string name="requested_by">ameombwa na %1$s</string>
-    <string name="call">Piga</string>
-    <string name="snooze">Baadaye</string>
-    <string name="done">Imekamilika</string>
-    <string name="private_number">Namba iliyofichwa</string>
-    <string name="company_directory">Orodha ya kampuni</string>
-    <string name="incoming_call">Simu inaingia</string>
-    <string name="calling">Inapiga…</string>
-    <string name="on_hold">Imesimamishwa</string>
-    <string name="call_ended">Simu imekwisha</string>
-    <string name="decline">Kataa</string>
-    <string name="reply_sms">Jibu kwa SMS</string>
-    <string name="answer">Pokea</string>
-    <string name="call_waiting">Inasubiri: %1$s</string>
-    <string name="hold_and_answer">Simamisha na pokea</string>
-    <string name="mute">Zima sauti</string>
-    <string name="keypad">Vitufe</string>
-    <string name="resume">Endelea</string>
-    <string name="hold">Simamisha</string>
-    <string name="add_call">Ongeza simu</string>
-    <string name="merge">Unganisha</string>
-    <string name="swap">Badili</string>
-    <string name="end_call">Kata simu</string>
-    <string name="speaker">Spika</string>
-    <string name="bluetooth">Bluetooth</string>
-    <string name="headset">Headset</string>
-    <string name="earpiece">Simu</string>
-    <string name="audio_output">Sauti itoke wapi</string>
-    <string name="hide_keypad">Ficha vitufe</string>
-    <string name="reply_default_1">Siwezi kuongea sasa. Nitakupigia.</string>
-    <string name="reply_default_2">Niko kwenye kikao. Tafadhali nitumie ujumbe.</string>
-    <string name="post_call_title">Simu ilikwendaje?</string>
-    <string name="post_call_required">Chagua matokeo (lazima kwa simu ndefu hivi).</string>
-    <string name="post_call_optional">Si lazima: inasaidia ofisi kufuatilia.</string>
-    <string name="post_call_note">Maelezo (si lazima)</string>
-    <string name="skip">Ruka</string>
-    <string name="save">Hifadhi</string>
 </resources>

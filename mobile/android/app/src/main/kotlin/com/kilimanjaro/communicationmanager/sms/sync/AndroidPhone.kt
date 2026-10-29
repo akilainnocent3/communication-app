@@ -6,7 +6,6 @@ import com.kilimanjaro.communicationmanager.sms.bridge.DeviceState
 import com.kilimanjaro.communicationmanager.sms.bridge.ProviderMessage
 import com.kilimanjaro.communicationmanager.sms.bridge.SendRequest
 import com.kilimanjaro.communicationmanager.sms.bridge.SendResult
-import com.kilimanjaro.communicationmanager.sms.calls.CallsFeature
 import com.kilimanjaro.communicationmanager.sms.data.SyncStore
 import com.kilimanjaro.communicationmanager.sms.telephony.Blocking
 import com.kilimanjaro.communicationmanager.sms.telephony.Contacts
@@ -27,15 +26,7 @@ class AndroidPhone(private val context: Context) : Phone {
             put("network_type", status.networkType)
             put("signal", status.signal ?: JSONObject.NULL)
             put("is_default_sms_app", SmsSender.isDefaultSmsApp(context))
-            put("permissions", JSONObject().apply {
-                DeviceState.permissions(context).forEach { put(it.name, it.granted) }
-                if (CallsFeature.enabled(context)) CallsFeature.permissionNames.forEach { put(it, DeviceState.granted(context, it)) }
-            })
-            if (CallsFeature.enabled(context)) {
-                put("is_default_dialer", CallsFeature.isDefaultDialer(context))
-                put("full_screen_intent_allowed", CallsFeature.canUseFullScreenIntent(context))
-                put("call_state", CallsFeature.tracker?.summary() ?: "idle")
-            }
+            put("permissions", JSONObject().apply { DeviceState.permissions(context).forEach { put(it.name, it.granted) } })
             put("battery_optimised", status.batteryOptimised)
             // Why a phone stops syncing in the background, shown on the admin's phone page.
             put("background_restricted", status.backgroundRestricted)
