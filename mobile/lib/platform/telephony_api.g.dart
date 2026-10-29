@@ -1313,6 +1313,306 @@ class TelephonyEvent {
   }
 }
 
+/// Calls (the dialer). Only meaningful on phones the server enabled for Calls.
+class CallsStatus {
+  CallsStatus({
+    required this.enabled,
+    required this.isDefaultDialer,
+    required this.dialerRoleAvailable,
+    required this.canUseFullScreenIntent,
+    required this.missingPermissions,
+  });
+
+  bool enabled;
+
+  bool isDefaultDialer;
+
+  bool dialerRoleAvailable;
+
+  /// Android 14+: NotificationManager.canUseFullScreenIntent (the incoming-call screen over the lock screen).
+  bool canUseFullScreenIntent;
+
+  List<String> missingPermissions;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      enabled,
+      isDefaultDialer,
+      dialerRoleAvailable,
+      canUseFullScreenIntent,
+      missingPermissions,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static CallsStatus decode(Object result) {
+    result as List<Object?>;
+    return CallsStatus(
+      enabled: result[0]! as bool,
+      isDefaultDialer: result[1]! as bool,
+      dialerRoleAvailable: result[2]! as bool,
+      canUseFullScreenIntent: result[3]! as bool,
+      missingPermissions: (result[4]! as List<Object?>).cast<String>(),
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! CallsStatus || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(enabled, other.enabled) && _deepEquals(isDefaultDialer, other.isDefaultDialer) && _deepEquals(dialerRoleAvailable, other.dialerRoleAvailable) && _deepEquals(canUseFullScreenIntent, other.canUseFullScreenIntent) && _deepEquals(missingPermissions, other.missingPermissions);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'CallsStatus(enabled: $enabled, isDefaultDialer: $isDefaultDialer, dialerRoleAvailable: $dialerRoleAvailable, canUseFullScreenIntent: $canUseFullScreenIntent, missingPermissions: $missingPermissions)';
+  }
+}
+
+/// One row of the system call log (newest first). USSD/MMI rows are never returned.
+class RecentCall {
+  RecentCall({
+    required this.id,
+    required this.number,
+    this.name,
+    required this.nameSource,
+    required this.direction,
+    required this.result,
+    required this.date,
+    required this.durationSeconds,
+    this.subscriptionId,
+  });
+
+  int id;
+
+  String number;
+
+  String? name;
+
+  /// contact | directory | none
+  String nameSource;
+
+  String direction;
+
+  String result;
+
+  int date;
+
+  int durationSeconds;
+
+  int? subscriptionId;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      id,
+      number,
+      name,
+      nameSource,
+      direction,
+      result,
+      date,
+      durationSeconds,
+      subscriptionId,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static RecentCall decode(Object result) {
+    result as List<Object?>;
+    return RecentCall(
+      id: result[0]! as int,
+      number: result[1]! as String,
+      name: result[2] as String?,
+      nameSource: result[3]! as String,
+      direction: result[4]! as String,
+      result: result[5]! as String,
+      date: result[6]! as int,
+      durationSeconds: result[7]! as int,
+      subscriptionId: result[8] as int?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! RecentCall || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(id, other.id) && _deepEquals(number, other.number) && _deepEquals(name, other.name) && _deepEquals(nameSource, other.nameSource) && _deepEquals(direction, other.direction) && _deepEquals(result, other.result) && _deepEquals(date, other.date) && _deepEquals(durationSeconds, other.durationSeconds) && _deepEquals(subscriptionId, other.subscriptionId);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'RecentCall(id: $id, number: $number, name: $name, nameSource: $nameSource, direction: $direction, result: $result, date: $date, durationSeconds: $durationSeconds, subscriptionId: $subscriptionId)';
+  }
+}
+
+class PhoneContact {
+  PhoneContact({
+    required this.name,
+    required this.number,
+    required this.starred,
+    this.photoUri,
+    this.directoryName,
+  });
+
+  String name;
+
+  String number;
+
+  bool starred;
+
+  String? photoUri;
+
+  /// The company directory's name for this number, when it has one.
+  String? directoryName;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      name,
+      number,
+      starred,
+      photoUri,
+      directoryName,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static PhoneContact decode(Object result) {
+    result as List<Object?>;
+    return PhoneContact(
+      name: result[0]! as String,
+      number: result[1]! as String,
+      starred: result[2]! as bool,
+      photoUri: result[3] as String?,
+      directoryName: result[4] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PhoneContact || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(name, other.name) && _deepEquals(number, other.number) && _deepEquals(starred, other.starred) && _deepEquals(photoUri, other.photoUri) && _deepEquals(directoryName, other.directoryName);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PhoneContact(name: $name, number: $number, starred: $starred, photoUri: $photoUri, directoryName: $directoryName)';
+  }
+}
+
+class CallbackTaskData {
+  CallbackTaskData({
+    required this.id,
+    required this.number,
+    required this.name,
+    required this.reason,
+    required this.requestedBy,
+    required this.priority,
+    required this.dueAt,
+    required this.state,
+  });
+
+  String id;
+
+  String number;
+
+  String name;
+
+  String reason;
+
+  String requestedBy;
+
+  String priority;
+
+  int dueAt;
+
+  String state;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      id,
+      number,
+      name,
+      reason,
+      requestedBy,
+      priority,
+      dueAt,
+      state,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static CallbackTaskData decode(Object result) {
+    result as List<Object?>;
+    return CallbackTaskData(
+      id: result[0]! as String,
+      number: result[1]! as String,
+      name: result[2]! as String,
+      reason: result[3]! as String,
+      requestedBy: result[4]! as String,
+      priority: result[5]! as String,
+      dueAt: result[6]! as int,
+      state: result[7]! as String,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! CallbackTaskData || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(id, other.id) && _deepEquals(number, other.number) && _deepEquals(name, other.name) && _deepEquals(reason, other.reason) && _deepEquals(requestedBy, other.requestedBy) && _deepEquals(priority, other.priority) && _deepEquals(dueAt, other.dueAt) && _deepEquals(state, other.state);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'CallbackTaskData(id: $id, number: $number, name: $name, reason: $reason, requestedBy: $requestedBy, priority: $priority, dueAt: $dueAt, state: $state)';
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -1375,6 +1675,18 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is TelephonyEvent) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
+    }    else if (value is CallsStatus) {
+      buffer.putUint8(147);
+      writeValue(buffer, value.encode());
+    }    else if (value is RecentCall) {
+      buffer.putUint8(148);
+      writeValue(buffer, value.encode());
+    }    else if (value is PhoneContact) {
+      buffer.putUint8(149);
+      writeValue(buffer, value.encode());
+    }    else if (value is CallbackTaskData) {
+      buffer.putUint8(150);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -1419,6 +1731,14 @@ class _PigeonCodec extends StandardMessageCodec {
         return OutboundState.decode(readValue(buffer)!);
       case 146:
         return TelephonyEvent.decode(readValue(buffer)!);
+      case 147:
+        return CallsStatus.decode(readValue(buffer)!);
+      case 148:
+        return RecentCall.decode(readValue(buffer)!);
+      case 149:
+        return PhoneContact.decode(readValue(buffer)!);
+      case 150:
+        return CallbackTaskData.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -1596,6 +1916,64 @@ class TelephonyHostApi {
     return pigeonVar_replyValue as String?;
   }
 
+  /// Calls: RoleManager.ROLE_DIALER ("Set as default Phone app").
+  Future<bool> requestDefaultDialerRole() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.requestDefaultDialerRole$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as bool;
+  }
+
+  /// Android 14+: the "full screen notifications" settings page for this app.
+  Future<void> openFullScreenIntentSettings() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.openFullScreenIntentSettings$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// The system "new contact" screen, pre-filled with [number] (the person saves it).
+  Future<void> addContact(String number) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.addContact$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[number]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
   Future<StartupState> startup() async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.startup$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1728,6 +2106,25 @@ class TelephonyHostApi {
     )
     ;
     return pigeonVar_replyValue as LaunchTarget?;
+  }
+
+  Future<CallsStatus> callsStatus() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.callsStatus$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as CallsStatus;
   }
 
   Future<bool> hasDeviceKey() async {
@@ -2180,6 +2577,122 @@ class TelephonyHostApi {
     )
     ;
     return pigeonVar_replyValue! as Uint8List;
+  }
+
+  /// Places a call through TelecomManager (emergency numbers always; USSD/MMI handled by Telecom). Returns "placed",
+  /// "permission" or "empty". [origin]: manual | redial | from_sms | callback_task.
+  Future<String> placeCall(String number, int? subscriptionId, String origin, String? callbackTask) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.placeCall$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[number, subscriptionId, origin, callbackTask]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as String;
+  }
+
+  Future<List<RecentCall>> recentCalls(int limit, int offset) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.recentCalls$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[limit, offset]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return (pigeonVar_replyValue! as List<Object?>).cast<RecentCall>();
+  }
+
+  /// The phone's address book (names and numbers), for the keypad's T9 search and the Contacts tab.
+  Future<List<PhoneContact>> phoneContacts(int limit) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.phoneContacts$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[limit]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return (pigeonVar_replyValue! as List<Object?>).cast<PhoneContact>();
+  }
+
+  Future<List<CallbackTaskData>> callbackTasks() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.callbackTasks$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return (pigeonVar_replyValue! as List<Object?>).cast<CallbackTaskData>();
+  }
+
+  /// done | snoozed | dialed (reported to the server as callback.state).
+  Future<void> reportCallback(String id, String state) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.reportCallback$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[id, state]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  Future<void> deleteRecentCall(int id) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.cm_sms.TelephonyHostApi.deleteRecentCall$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[id]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   /// HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only. Enrollment only:

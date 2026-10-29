@@ -11,6 +11,10 @@ import android.provider.Telephony
 import android.util.Log
 import android.view.WindowManager
 import com.kilimanjaro.communicationmanager.sms.Oem
+import com.kilimanjaro.communicationmanager.sms.calls.CallbackTasks
+import com.kilimanjaro.communicationmanager.sms.calls.CallsFeature
+import com.kilimanjaro.communicationmanager.sms.calls.Dialer
+import com.kilimanjaro.communicationmanager.sms.calls.DialerData
 import com.kilimanjaro.communicationmanager.sms.data.SyncStore
 import com.kilimanjaro.communicationmanager.sms.security.DatabaseKey
 import com.kilimanjaro.communicationmanager.sms.security.DeviceKey
@@ -70,6 +74,26 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
         return DeviceState.permissions(context, DeviceState.uiPermissionNames)
     }
 
+    override suspend fun requestDefaultDialerRole(): Boolean {
+        val roles = context.getSystemService(RoleManager::class.java)
+        if (roles.isRoleHeld(RoleManager.ROLE_DIALER)) return true
+        val done = CompletableDeferred<Boolean>()
+        bridge?.requestRole(roles.createRequestRoleIntent(RoleManager.ROLE_DIALER), done) ?: return false
+        return done.await() || roles.isRoleHeld(RoleManager.ROLE_DIALER)
+    }
+
+    override fun openFullScreenIntentSettings() {
+        val intent = if (Build.VERSION.SDK_INT >= 34) Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:${context.packageName}"))
+            else Oem.appDetails(context)
+        runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    }
+
+    override fun addContact(number: String) {
+        val intent = Intent(Intent.ACTION_INSERT, android.provider.ContactsContract.Contacts.CONTENT_URI)
+            .putExtra(android.provider.ContactsContract.Intents.Insert.PHONE, number).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { (bridge?.activity ?: context).startActivity(intent) }
+    }
+
     override fun openBatteryOptimisationSettings() {
         Oem.open(context, "battery_optimisation")
     }
@@ -121,6 +145,12 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
     override fun serviceStatus(): ServiceStatus = DeviceState.serviceStatus(context)
     override fun oemSettings(): List<String> = Oem.available(context)
     override fun consumeLaunch(): LaunchTarget? = LaunchIntent.consume()
+    override fun callsStatus(): CallsStatus = CallsStatus(
+        enabled = CallsFeature.enabled(context), isDefaultDialer = CallsFeature.isDefaultDialer(context),
+        dialerRoleAvailable = context.getSystemService(RoleManager::class.java).isRoleAvailable(RoleManager.ROLE_DIALER),
+        canUseFullScreenIntent = CallsFeature.canUseFullScreenIntent(context), missingPermissions = CallsFeature.missingPermissions(context),
+    )
+
     override fun hasDeviceKey() = DeviceKey.exists()
     override fun deleteDeviceKey() = DeviceKey.delete()
 
@@ -188,6 +218,15 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
     }
 
     override suspend fun sign(message: ByteArray) = io { DeviceKey.sign(message) }
+
+    override suspend fun placeCall(number: String, subscriptionId: Long?, origin: String, callbackTask: String?): String = io {
+        Dialer.place(context, number, subscriptionId, origin, callbackTask).also { if (it == "placed" && callbackTask != null) CallbackTasks.report(context, callbackTask, "dialed") }
+    }
+    override suspend fun recentCalls(limit: Long, offset: Long) = io { DialerData.recent(context, limit.toInt(), offset.toInt()) }
+    override suspend fun phoneContacts(limit: Long) = io { DialerData.contacts(context, limit.toInt()) }
+    override suspend fun callbackTasks() = io { DialerData.callbacks(context) }
+    override suspend fun reportCallback(id: String, state: String) = io { CallbackTasks.report(context, id, state) }
+    override suspend fun deleteRecentCall(id: Long) = io { DialerData.delete(context, id) }
 
     override suspend fun http(request: HttpRequestData): HttpResponseData = io {
         SecureHttp.transport().send(request.method, request.url, request.headers, request.body).let { HttpResponseData(status = it.status.toLong(), body = it.body) }

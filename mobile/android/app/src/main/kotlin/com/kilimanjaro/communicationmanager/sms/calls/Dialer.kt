@@ -33,6 +33,12 @@ object Dialer {
         val clean = number.trim()
         if (clean.isEmpty()) return "empty"
         val telecom = context.getSystemService(TelecomManager::class.java)
+        if (clean == "voicemail") return try {
+            telecom.placeCall(Uri.fromParts("voicemail", "", null), Bundle())
+            "placed"
+        } catch (e: SecurityException) {
+            "permission"
+        }
         val emergency = CallsFeature.isEmergency(context, clean)
         if (!emergency && !CallPrivacy.isMmi(clean)) pending = Intent(clean, origin, callbackTask, System.currentTimeMillis())
         val extras = Bundle()

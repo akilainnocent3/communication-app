@@ -12,7 +12,9 @@ import 'features/compose/compose_screen.dart';
 import 'features/conversations/conversation_list_screen.dart';
 import 'features/enroll/enroll_screen.dart';
 import 'features/enroll/scanner_screen.dart';
+import 'features/onboarding/calls_onboarding_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/phone/phone_screen.dart';
 import 'features/settings/appearance_screen.dart';
 import 'features/settings/keep_flowing_screen.dart';
 import 'features/settings/lock_screen.dart';
@@ -38,6 +40,12 @@ GoRouter buildRouter(String initial) => GoRouter(
   initialLocation: initial,
   routes: [
     GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
+    GoRoute(path: '/onboarding/calls', builder: (_, _) => const CallsOnboardingScreen()),
+    GoRoute(path: '/phone', builder: (_, state) => PhoneScreen(number: state.uri.queryParameters['number'])),
+    GoRoute(path: '/phone/keypad', builder: (_, state) => PhoneScreen(number: state.uri.queryParameters['number'])),
+    GoRoute(path: '/phone/recents', builder: (_, _) => const PhoneScreen(tab: PhoneTab.recents)),
+    GoRoute(path: '/phone/contacts', builder: (_, _) => const PhoneScreen(tab: PhoneTab.contacts)),
+    GoRoute(path: '/phone/callbacks', builder: (_, _) => const PhoneScreen(tab: PhoneTab.callbacks)),
     GoRoute(
       path: '/enroll',
       builder: (_, state) => EnrollScreen(link: state.uri.queryParameters['link']),
@@ -105,7 +113,26 @@ class _SmsAppState extends ConsumerState<SmsApp> with WidgetsBindingObserver {
       if (event.type == 'sync_state' && event.state == 'revoked') ref.read(routerProvider).go('/removed');
       if (event.type == 'launch') _consumeLaunch();
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _consumeLaunch());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _consumeLaunch();
+      _checkCalls();
+    });
+  }
+
+  bool _callsOnboardingShown = false;
+
+  /// When the admin enables Calls, the phone asks (once per run) to become the Phone app. The heartbeat that carries
+  /// the capability may arrive while the app is open, so this also runs on every resume.
+  Future<void> _checkCalls() async {
+    if (_callsOnboardingShown || ref.read(servicesProvider).session == null) return;
+    try {
+      final status = await ref.read(dialerProvider).status();
+      if (!mounted || !status.enabled || status.isDefaultDialer) return;
+      _callsOnboardingShown = true;
+      ref.read(routerProvider).push('/onboarding/calls');
+    } on Object {
+      // Widget tests and phones without a dialer role: nothing to ask.
+    }
   }
 
   /// A notification, a conversation shortcut, an sms: intent, an enroll link or the sync notification opened the app.
@@ -119,8 +146,12 @@ class _SmsAppState extends ConsumerState<SmsApp> with WidgetsBindingObserver {
         router.push('/compose?to=${Uri.encodeComponent(target.value)}');
       case 'chat' when enrolled:
         router.push('/chat/${target.value}');
+      case 'route' when enrolled && target.value.startsWith('/phone'):
+        router.go(target.value);
       case 'route' when enrolled:
         router.push(target.value);
+      case 'dial' when enrolled:
+        router.go('/phone/keypad?number=${Uri.encodeComponent(target.value)}');
       case 'enroll' when !enrolled:
         router.go('/enroll?link=${Uri.encodeComponent(target.value)}');
     }
@@ -136,7 +167,10 @@ class _SmsAppState extends ConsumerState<SmsApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Permissions and the SMS role can be revoked while the app is in the background: re-check on every resume.
-    if (state == AppLifecycleState.resumed) ref.invalidate(roleCheckProvider);
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(roleCheckProvider);
+      _checkCalls();
+    }
   }
 
   @override

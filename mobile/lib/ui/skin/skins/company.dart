@@ -20,5 +20,6 @@ SkinTokens _tokens(Brightness brightness, ColorScheme s) {
     compose: ComposeButtonStyle.extendedFab, composeColor: s.primaryContainer, onComposeColor: s.onPrimaryContainer,
     composePlusButton: false, composeFieldRadius: 24, composeField: s.surfaceContainerHighest, sendFilled: true,
     titleSize: 22, largeTitleSize: 32, rowTitleSize: 16, snippetSize: 14, rowTitleWeight: FontWeight.w500,
+    keypadKey: KeypadKeyStyle.rounded, keypadKeySize: 70, callButton: const Color(0xFF0F766E), recentsRowHeight: 68,
   );
 }

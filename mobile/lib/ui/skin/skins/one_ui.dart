@@ -25,5 +25,6 @@ SkinTokens _tokens(Brightness brightness, ColorScheme scheme) {
     composePlusButton: true, composeFieldRadius: 22, composeField: dark ? const Color(0xFF232325) : Colors.white, sendFilled: false,
     swipeLeft: SwipeAction.delete, swipeRight: SwipeAction.read,
     titleSize: 20, largeTitleSize: 36, rowTitleSize: 16.5, snippetSize: 14, rowTitleWeight: FontWeight.w600,
+    keypadKey: KeypadKeyStyle.flat, keypadKeySize: 76, callButton: const Color(0xFF34C759), recentsRowHeight: 72,
   );
 }

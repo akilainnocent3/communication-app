@@ -689,4 +689,158 @@ class AppLocalizationsEn extends AppLocalizations {
   String backfillCopied(int count) {
     return '$count messages copied…';
   }
+
+  @override
+  String get phoneTitle => 'Phone';
+
+  @override
+  String get tabKeypad => 'Keypad';
+
+  @override
+  String get tabRecents => 'Recents';
+
+  @override
+  String get tabContacts => 'Contacts';
+
+  @override
+  String get tabCallbacks => 'Call-backs';
+
+  @override
+  String get favourites => 'Favourites';
+
+  @override
+  String get callAction => 'Call';
+
+  @override
+  String get messageAction => 'Message';
+
+  @override
+  String get addContact => 'Add contact';
+
+  @override
+  String get blockNumber => 'Block number';
+
+  @override
+  String get deleteFromRecents => 'Delete from recents';
+
+  @override
+  String get noRecents => 'No calls yet';
+
+  @override
+  String get noContacts => 'No contacts';
+
+  @override
+  String get noCallbacks =>
+      'No call-backs. When the office asks you to call someone, it appears here.';
+
+  @override
+  String get searchContacts => 'Search contacts';
+
+  @override
+  String get companyDirectory => 'Company directory';
+
+  @override
+  String get voicemail => 'Voicemail';
+
+  @override
+  String get callWith => 'Call with';
+
+  @override
+  String get paste => 'Paste';
+
+  @override
+  String requestedBy(String name) {
+    return 'Requested by $name';
+  }
+
+  @override
+  String get snoozeAction => 'Snooze 1 h';
+
+  @override
+  String get doneAction => 'Done';
+
+  @override
+  String get resultMissed => 'Missed';
+
+  @override
+  String get resultAnswered => 'Answered';
+
+  @override
+  String get resultRejected => 'Declined';
+
+  @override
+  String get resultBlocked => 'Blocked';
+
+  @override
+  String get resultVoicemail => 'Voicemail';
+
+  @override
+  String get resultNoAnswer => 'No answer';
+
+  @override
+  String get resultElsewhere => 'Answered elsewhere';
+
+  @override
+  String get incomingCall => 'Incoming';
+
+  @override
+  String get outgoingCall => 'Outgoing';
+
+  @override
+  String get privateNumber => 'Private number';
+
+  @override
+  String get callFailedPermission => 'Allow phone calls for OCM first.';
+
+  @override
+  String get dialerTitle => 'Make OCM your Phone app';
+
+  @override
+  String get dialerBody =>
+      'Your company enabled Calls on this phone. OCM becomes the phone\'s dialer: you call and answer as before, and calls are recorded in the company\'s call log (never the audio).';
+
+  @override
+  String get setDefaultDialer => 'Set as default Phone app';
+
+  @override
+  String get dialerFallback =>
+      'The dialog did not appear or was dismissed. Choose OCM as the Phone app in settings.';
+
+  @override
+  String get callPermissionsTitle => 'Allow calls';
+
+  @override
+  String get callPermissionsBody =>
+      'OCM needs these to place and answer calls, show your call history and who is calling.';
+
+  @override
+  String get fsiTitle => 'Show incoming calls';
+
+  @override
+  String get fsiBody =>
+      'Allow OCM to show the incoming-call screen over the lock screen, so you can answer at once.';
+
+  @override
+  String get allowInSettings => 'Allow in settings';
+
+  @override
+  String get whyDialer =>
+      'Android sends calls to one Phone app. Emergency calls always work, whatever happens to this app.';
+
+  @override
+  String get priorityHigh => 'High';
+
+  @override
+  String get priorityUrgent => 'Urgent';
+
+  @override
+  String callsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count calls',
+      one: '1 call',
+    );
+    return '$_temp0';
+  }
 }

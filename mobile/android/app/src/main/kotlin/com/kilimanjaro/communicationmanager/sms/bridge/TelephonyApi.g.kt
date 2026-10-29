@@ -1202,6 +1202,257 @@ data class TelephonyEvent (
     return "TelephonyEvent(type=$type, threadId=$threadId, providerId=$providerId, clientUuid=$clientUuid, state=$state)"
   }
 }
+
+/**
+ * Calls (the dialer). Only meaningful on phones the server enabled for Calls.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class CallsStatus (
+  val enabled: Boolean,
+  val isDefaultDialer: Boolean,
+  val dialerRoleAvailable: Boolean,
+  /** Android 14+: NotificationManager.canUseFullScreenIntent (the incoming-call screen over the lock screen). */
+  val canUseFullScreenIntent: Boolean,
+  val missingPermissions: List<String>
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): CallsStatus {
+      val enabled = pigeonVar_list[0] as Boolean
+      val isDefaultDialer = pigeonVar_list[1] as Boolean
+      val dialerRoleAvailable = pigeonVar_list[2] as Boolean
+      val canUseFullScreenIntent = pigeonVar_list[3] as Boolean
+      val missingPermissions = pigeonVar_list[4] as List<String>
+      return CallsStatus(enabled, isDefaultDialer, dialerRoleAvailable, canUseFullScreenIntent, missingPermissions)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      enabled,
+      isDefaultDialer,
+      dialerRoleAvailable,
+      canUseFullScreenIntent,
+      missingPermissions,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as CallsStatus
+    return TelephonyApiPigeonUtils.deepEquals(this.enabled, other.enabled) && TelephonyApiPigeonUtils.deepEquals(this.isDefaultDialer, other.isDefaultDialer) && TelephonyApiPigeonUtils.deepEquals(this.dialerRoleAvailable, other.dialerRoleAvailable) && TelephonyApiPigeonUtils.deepEquals(this.canUseFullScreenIntent, other.canUseFullScreenIntent) && TelephonyApiPigeonUtils.deepEquals(this.missingPermissions, other.missingPermissions)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.enabled)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.isDefaultDialer)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.dialerRoleAvailable)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.canUseFullScreenIntent)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.missingPermissions)
+    return result
+  }
+  override fun toString(): String {
+    return "CallsStatus(enabled=$enabled, isDefaultDialer=$isDefaultDialer, dialerRoleAvailable=$dialerRoleAvailable, canUseFullScreenIntent=$canUseFullScreenIntent, missingPermissions=$missingPermissions)"
+  }
+}
+
+/**
+ * One row of the system call log (newest first). USSD/MMI rows are never returned.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class RecentCall (
+  val id: Long,
+  val number: String,
+  val name: String? = null,
+  /** contact | directory | none */
+  val nameSource: String,
+  val direction: String,
+  val result: String,
+  val date: Long,
+  val durationSeconds: Long,
+  val subscriptionId: Long? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): RecentCall {
+      val id = pigeonVar_list[0] as Long
+      val number = pigeonVar_list[1] as String
+      val name = pigeonVar_list[2] as String?
+      val nameSource = pigeonVar_list[3] as String
+      val direction = pigeonVar_list[4] as String
+      val result = pigeonVar_list[5] as String
+      val date = pigeonVar_list[6] as Long
+      val durationSeconds = pigeonVar_list[7] as Long
+      val subscriptionId = pigeonVar_list[8] as Long?
+      return RecentCall(id, number, name, nameSource, direction, result, date, durationSeconds, subscriptionId)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      id,
+      number,
+      name,
+      nameSource,
+      direction,
+      result,
+      date,
+      durationSeconds,
+      subscriptionId,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as RecentCall
+    return TelephonyApiPigeonUtils.deepEquals(this.id, other.id) && TelephonyApiPigeonUtils.deepEquals(this.number, other.number) && TelephonyApiPigeonUtils.deepEquals(this.name, other.name) && TelephonyApiPigeonUtils.deepEquals(this.nameSource, other.nameSource) && TelephonyApiPigeonUtils.deepEquals(this.direction, other.direction) && TelephonyApiPigeonUtils.deepEquals(this.result, other.result) && TelephonyApiPigeonUtils.deepEquals(this.date, other.date) && TelephonyApiPigeonUtils.deepEquals(this.durationSeconds, other.durationSeconds) && TelephonyApiPigeonUtils.deepEquals(this.subscriptionId, other.subscriptionId)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.id)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.number)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.name)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.nameSource)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.direction)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.result)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.date)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.durationSeconds)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.subscriptionId)
+    return result
+  }
+  override fun toString(): String {
+    return "RecentCall(id=$id, number=$number, name=$name, nameSource=$nameSource, direction=$direction, result=$result, date=$date, durationSeconds=$durationSeconds, subscriptionId=$subscriptionId)"
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class PhoneContact (
+  val name: String,
+  val number: String,
+  val starred: Boolean,
+  val photoUri: String? = null,
+  /** The company directory's name for this number, when it has one. */
+  val directoryName: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PhoneContact {
+      val name = pigeonVar_list[0] as String
+      val number = pigeonVar_list[1] as String
+      val starred = pigeonVar_list[2] as Boolean
+      val photoUri = pigeonVar_list[3] as String?
+      val directoryName = pigeonVar_list[4] as String?
+      return PhoneContact(name, number, starred, photoUri, directoryName)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      name,
+      number,
+      starred,
+      photoUri,
+      directoryName,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PhoneContact
+    return TelephonyApiPigeonUtils.deepEquals(this.name, other.name) && TelephonyApiPigeonUtils.deepEquals(this.number, other.number) && TelephonyApiPigeonUtils.deepEquals(this.starred, other.starred) && TelephonyApiPigeonUtils.deepEquals(this.photoUri, other.photoUri) && TelephonyApiPigeonUtils.deepEquals(this.directoryName, other.directoryName)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.name)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.number)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.starred)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.photoUri)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.directoryName)
+    return result
+  }
+  override fun toString(): String {
+    return "PhoneContact(name=$name, number=$number, starred=$starred, photoUri=$photoUri, directoryName=$directoryName)"
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class CallbackTaskData (
+  val id: String,
+  val number: String,
+  val name: String,
+  val reason: String,
+  val requestedBy: String,
+  val priority: String,
+  val dueAt: Long,
+  val state: String
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): CallbackTaskData {
+      val id = pigeonVar_list[0] as String
+      val number = pigeonVar_list[1] as String
+      val name = pigeonVar_list[2] as String
+      val reason = pigeonVar_list[3] as String
+      val requestedBy = pigeonVar_list[4] as String
+      val priority = pigeonVar_list[5] as String
+      val dueAt = pigeonVar_list[6] as Long
+      val state = pigeonVar_list[7] as String
+      return CallbackTaskData(id, number, name, reason, requestedBy, priority, dueAt, state)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      id,
+      number,
+      name,
+      reason,
+      requestedBy,
+      priority,
+      dueAt,
+      state,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as CallbackTaskData
+    return TelephonyApiPigeonUtils.deepEquals(this.id, other.id) && TelephonyApiPigeonUtils.deepEquals(this.number, other.number) && TelephonyApiPigeonUtils.deepEquals(this.name, other.name) && TelephonyApiPigeonUtils.deepEquals(this.reason, other.reason) && TelephonyApiPigeonUtils.deepEquals(this.requestedBy, other.requestedBy) && TelephonyApiPigeonUtils.deepEquals(this.priority, other.priority) && TelephonyApiPigeonUtils.deepEquals(this.dueAt, other.dueAt) && TelephonyApiPigeonUtils.deepEquals(this.state, other.state)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.id)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.number)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.name)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.reason)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.requestedBy)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.priority)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.dueAt)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.state)
+    return result
+  }
+  override fun toString(): String {
+    return "CallbackTaskData(id=$id, number=$number, name=$name, reason=$reason, requestedBy=$requestedBy, priority=$priority, dueAt=$dueAt, state=$state)"
+  }
+}
 private open class TelephonyApiPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -1295,6 +1546,26 @@ private open class TelephonyApiPigeonCodec : StandardMessageCodec() {
           TelephonyEvent.fromList(it)
         }
       }
+      147.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          CallsStatus.fromList(it)
+        }
+      }
+      148.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RecentCall.fromList(it)
+        }
+      }
+      149.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PhoneContact.fromList(it)
+        }
+      }
+      150.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          CallbackTaskData.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -1372,6 +1643,22 @@ private open class TelephonyApiPigeonCodec : StandardMessageCodec() {
         stream.write(146)
         writeValue(stream, value.toList())
       }
+      is CallsStatus -> {
+        stream.write(147)
+        writeValue(stream, value.toList())
+      }
+      is RecentCall -> {
+        stream.write(148)
+        writeValue(stream, value.toList())
+      }
+      is PhoneContact -> {
+        stream.write(149)
+        writeValue(stream, value.toList())
+      }
+      is CallbackTaskData -> {
+        stream.write(150)
+        writeValue(stream, value.toList())
+      }
       else -> super.writeValue(stream, value)
     }
   }
@@ -1393,6 +1680,12 @@ interface TelephonyHostApi {
   fun setSecureScreen(secure: Boolean)
   /** System photo picker; the chosen image is copied to the app cache and its path returned (QR from a photo). */
   suspend fun pickImage(): String?
+  /** Calls: RoleManager.ROLE_DIALER ("Set as default Phone app"). */
+  suspend fun requestDefaultDialerRole(): Boolean
+  /** Android 14+: the "full screen notifications" settings page for this app. */
+  fun openFullScreenIntentSettings()
+  /** The system "new contact" screen, pre-filled with [number] (the person saves it). */
+  fun addContact(number: String)
   fun startup(): StartupState
   fun roleStatus(): RoleStatus
   fun permissions(): List<PermissionState>
@@ -1401,6 +1694,7 @@ interface TelephonyHostApi {
   /** Ids of the manufacturer settings screens that exist on this phone. */
   fun oemSettings(): List<String>
   fun consumeLaunch(): LaunchTarget?
+  fun callsStatus(): CallsStatus
   fun hasDeviceKey(): Boolean
   fun deleteDeviceKey()
   /** The native sync engine runs a cycle now (in the foreground service, or as expedited work). */
@@ -1431,6 +1725,18 @@ interface TelephonyHostApi {
   suspend fun blockedNumbers(): List<String>
   suspend fun createDeviceKey(attestationChallenge: ByteArray): KeyInfo
   suspend fun sign(message: ByteArray): ByteArray
+  /**
+   * Places a call through TelecomManager (emergency numbers always; USSD/MMI handled by Telecom). Returns "placed",
+   * "permission" or "empty". [origin]: manual | redial | from_sms | callback_task.
+   */
+  suspend fun placeCall(number: String, subscriptionId: Long?, origin: String, callbackTask: String?): String
+  suspend fun recentCalls(limit: Long, offset: Long): List<RecentCall>
+  /** The phone's address book (names and numbers), for the keypad's T9 search and the Contacts tab. */
+  suspend fun phoneContacts(limit: Long): List<PhoneContact>
+  suspend fun callbackTasks(): List<CallbackTaskData>
+  /** done | snoozed | dialed (reported to the server as callback.state). */
+  suspend fun reportCallback(id: String, state: String)
+  suspend fun deleteRecentCall(id: Long)
   /**
    * HTTPS through OkHttp with certificate pinning (SPKI pins from the build) and TLS 1.2+ only. Enrollment only:
    * everything after it is the native sync engine's.
@@ -1583,6 +1889,57 @@ interface TelephonyHostApi {
         }
       }
       run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.requestDefaultDialerRole$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.requestDefaultDialerRole())
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.openFullScreenIntentSettings$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.openFullScreenIntentSettings()
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.addContact$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val numberArg = args[0] as String
+            val wrapped: List<Any?> = try {
+              api.addContact(numberArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.startup$separatedMessageChannelSuffix", codec, taskQueue)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
@@ -1678,6 +2035,21 @@ interface TelephonyHostApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               listOf(api.consumeLaunch())
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.callsStatus$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.callsStatus())
             } catch (exception: Throwable) {
               TelephonyApiPigeonUtils.wrapError(exception)
             }
@@ -2121,6 +2493,125 @@ interface TelephonyHostApi {
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
                 listOf(api.sign(messageArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.placeCall$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val numberArg = args[0] as String
+            val subscriptionIdArg = args[1] as Long?
+            val originArg = args[2] as String
+            val callbackTaskArg = args[3] as String?
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.placeCall(numberArg, subscriptionIdArg, originArg, callbackTaskArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.recentCalls$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val limitArg = args[0] as Long
+            val offsetArg = args[1] as Long
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.recentCalls(limitArg, offsetArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.phoneContacts$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val limitArg = args[0] as Long
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.phoneContacts(limitArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.callbackTasks$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.callbackTasks())
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.reportCallback$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idArg = args[0] as String
+            val stateArg = args[1] as String
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.reportCallback(idArg, stateArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.cm_sms.TelephonyHostApi.deleteRecentCall$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idArg = args[0] as Long
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.deleteRecentCall(idArg)
+                listOf(null)
               } catch (exception: Throwable) {
                 TelephonyApiPigeonUtils.wrapError(exception)
               }
