@@ -223,6 +223,45 @@ handling only pre-fills; the notice's delete intent is explicit and immutable an
 One config bug found along the way was fixed: a `REDIS_URL` without a database path produced a malformed derived cache
 URL.
 
+## Calls
+
+Full design: [calls-mobile.md](calls-mobile.md). Controls on top of the shared phone controls above:
+
+| Control | Code |
+|---|---|
+| Object-level access per phone (`calls.DeviceAccess`: read / assign call-backs / annotate / export); 404 for calls, call-backs and phones the user cannot read; disabled platform refuses all | `modules/calls/services/access.py` |
+| Directory: customers visible only through phones the user can read (SMS or Calls), unless admin or directory manager; create, delete, merge and "caller ID on every phone" need `directory.manage_customers`; notes encrypted | `modules/directory/services/customers.py` |
+| Customer timeline: calls through Calls access, SMS through SMS access, sensitive SMS blanked | `modules/calls/api/views.py` |
+| Export needs `calls.export`, numbers masked unless `can_export` on that phone, audited; CSV cells that could be formulas are quoted (only phone numbers are left as they are) | `modules/calls/services/export.py` |
+| Device API scoped to `request.auth.device` (call keys, call-log ids, SIMs, call-back task UUIDs, annotations); events from a phone not enabled for Calls are refused; directory delta = only customers this phone has been in contact with or that an admin shared | `modules/calls/services/ingest.py`, `events.py`, `api/device.py` |
+| Enabling Calls on a phone, or an enrollment code that includes Calls, needs `calls.manage_settings` | `modules/calls/api/views.py`, `modules/sms/api/devices.py` |
+| Emergency calls always placed (no enrollment, permission or role check stands in the way); never blocked by screening; never recorded on the phone or accepted by the server | `mobile/…/calls/Dialer.kt`, `OcmCallScreeningService.kt`, `CallCore.kt`, `modules/calls/services/ingest.py` |
+| USSD/MMI codes, DTMF digits and USSD responses never stored, synced or logged | `CallPrivacy` in `CallCore.kt`; server refuses `*`/`#` numbers |
+| Only Telecom can bind the InCallService (`BIND_INCALL_SERVICE`) and the screening service (`BIND_SCREENING_SERVICE`); `ACTION_CALL` places a call only through the `CallIntentHandler` alias, which requires the sender to hold `CALL_PHONE`; every other entry point only pre-fills the keypad | `AndroidManifest.xml`, `MainActivity.kt`, `Dialer.placesAtOnce` |
+| No call audio is captured (decision 79) | [calls-recording.md](calls-recording.md) |
+
+Audited Calls actions: call detail opens, exports, annotation create/edit/delete, call-back create/update/cancel and
+bulk changes, settings, office hours, outcomes, tariffs, directory edits and merges, enabling or disabling Calls on a
+phone, access changes.
+
+### Security review of the Calls diff (2026-10-29)
+
+The whole Part A + Calls diff (`c4eaa7e..HEAD`: `modules/calls`, `modules/directory`, the devices changes, the admin
+Calls UI and the Android dialer) was reviewed with the same two-pass method. **One finding reached the bar and was
+fixed:**
+
+| Finding | Score | What was wrong | Fix |
+|---|---|---|---|
+| Any app could make OCM place calls and run MMI codes | 9 | `CALL_PHONE` was enforced only on the `CallIntentHandler` alias, but `MainActivity.handle()` placed a call for any `ACTION_CALL tel:` intent. Explicit intents ignore intent filters, so an app with no permissions could send `ACTION_CALL` straight to the exported `MainActivity` (or the Phone alias) and OCM, holding `CALL_PHONE`, called a premium number or ran `**21*<number>#` (unconditional call forwarding of the company line). Reproduced on an API 34 emulator: an active call with no tap | A call is placed only when the intent's component is the `CallIntentHandler` alias (Android enforces its permission on the sender); anything else pre-fills the keypad like `DIAL` (`Dialer.placesAtOnce`, `CallsTest.onlyTheProtectedAliasPlacesCallsFromOtherApps`; re-checked on the emulator: no `placeCall` for the unprotected paths, the protected path still calls) |
+
+Below the bar, fixed anyway: the CSV formula guard let `=1…`, `@1…` and `+1+…` through because it exempted any value
+whose second character was a digit; now only phone numbers are exempt (`test_csv_formula_injection_is_neutralised`).
+Verified sound: every admin view goes through the access helpers (404 for unreadable phones/calls, 403 for a missing
+flag); directory visibility and edits; export masking; device-API scoping of every key and UUID; capability and
+platform checks on ingest; `calls.manage_settings` for enabling Calls; system-only binding of both services;
+non-exported receivers and activities; explicit, immutable PendingIntents; allow-listed launch routes; no
+`dangerouslySetInnerHTML` in the Calls UI.
+
 ## Reporting
 
 Report suspected vulnerabilities privately to the system owner. Do not open a public issue.

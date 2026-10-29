@@ -158,6 +158,11 @@ def test_csv_formula_injection_is_neutralised():
     from modules.calls.services.export import to_csv
 
     assert b"'=HYPERLINK" in to_csv([["=HYPERLINK(\"x\")"]])
+    # A digit after the sign does not make a formula harmless; only phone numbers are left unquoted.
+    for formula in ("=1+cmd|' /C calc'!A0", "@1SUM(A1)", "+1+HYPERLINK(\"x\")", "-2+3"):
+        assert to_csv([[formula]]).decode().splitlines()[-1].strip('"').startswith("'"), formula
+    for number in ("+255 754 210 331", "+2557•••••331", "+255754210331"):
+        assert to_csv([[number]]).decode().splitlines()[-1] == number
 
 
 def test_directory_crud_merge_visibility_and_phone_delta(client_for, admin, manager, two_phones, calls_grant):

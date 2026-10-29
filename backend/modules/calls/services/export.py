@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 import zipfile
 from xml.sax.saxutils import escape
 
@@ -39,13 +40,19 @@ def rows(user, calls, tz) -> list[list]:
     return result
 
 
+# Cells starting with these are formulas in Excel/Sheets (CSV injection); only a phone number (+255 754 210 331, or
+# masked +2557•••••331) is left as it is.
+FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+PLAIN_NUMBER = re.compile(r"[+-]?\d[\d •]*")
+
+
 def to_csv(data: list[list]) -> bytes:
     buffer = io.StringIO()
     writer = csv.writer(buffer)
     writer.writerow(HEADERS)
     for row in data:
         # Spreadsheet formula injection: a cell starting with = + - @ is text, not a formula.
-        writer.writerow([f"'{v}" if isinstance(v, str) and v[:1] in ("=", "+", "-", "@") and not v[1:2].isdigit() else v for v in row])
+        writer.writerow([f"'{v}" if isinstance(v, str) and v[:1] in FORMULA_START and not PLAIN_NUMBER.fullmatch(v) else v for v in row])
     return buffer.getvalue().encode("utf-8-sig")
 
 

@@ -57,11 +57,13 @@ class MainActivity : FlutterFragmentActivity(), ActivityBridge {
     }
 
     /**
-     * ACTION_CALL reaches us only through the CallIntentHandler alias, which requires the caller to hold CALL_PHONE: the
-     * call is placed (as the system dialer would). Everything else pre-fills or routes.
+     * ACTION_CALL through the CallIntentHandler alias (the caller must hold CALL_PHONE) places the call, as the system
+     * dialer would. Everything else pre-fills or routes.
      */
     private fun handle(intent: Intent?) {
-        if (intent?.action == Intent.ACTION_CALL && intent.data?.scheme == "tel") {
+        // MainActivity itself is exported without a permission and explicit intents ignore intent filters: an ACTION_CALL
+        // addressed to it (or to the Phone launcher alias) only pre-fills the keypad, like DIAL.
+        if (intent != null && Dialer.placesAtOnce(intent.action, intent.data?.scheme, intent.component?.className, packageName)) {
             safely("call intent") { Dialer.place(applicationContext, intent.data!!.schemeSpecificPart.orEmpty()) }
             return
         }

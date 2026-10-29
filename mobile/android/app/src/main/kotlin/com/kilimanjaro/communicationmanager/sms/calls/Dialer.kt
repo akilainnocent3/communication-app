@@ -27,6 +27,14 @@ object Dialer {
         return intent.takeIf { now - it.at < 60_000 && number != null && digits(number) == digits(it.number) }
     }
 
+    /**
+     * Whether a launch intent may place a call without a tap: only ACTION_CALL tel: that arrived through the
+     * CallIntentHandler alias, whose CALL_PHONE permission Android enforces on the sender. The alias name survives in
+     * the intent's component; anything addressed to MainActivity or another alias did not pass that check.
+     */
+    fun placesAtOnce(action: String?, scheme: String?, componentClass: String?, packageName: String): Boolean =
+        action == android.content.Intent.ACTION_CALL && scheme == "tel" && componentClass == "$packageName.CallIntentHandler"
+
     /** Result codes for the UI: placed, or why not (the role and permission prompts are the UI's job). */
     @SuppressLint("MissingPermission")
     fun place(context: Context, number: String, subscriptionId: Long? = null, origin: String = "manual", callbackTask: String? = null): String {

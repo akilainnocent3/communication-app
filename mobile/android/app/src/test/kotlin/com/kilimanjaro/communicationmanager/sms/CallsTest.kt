@@ -155,6 +155,18 @@ class CallsTest {
     }
 
     @Test
+    fun onlyTheProtectedAliasPlacesCallsFromOtherApps() {
+        val pkg = "com.kilimanjaro.communicationmanager.sms"
+        assertTrue(Dialer.placesAtOnce("android.intent.action.CALL", "tel", "$pkg.CallIntentHandler", pkg))
+        // explicit intents straight to the exported activity or the Phone alias carry no CALL_PHONE check
+        assertFalse(Dialer.placesAtOnce("android.intent.action.CALL", "tel", "$pkg.MainActivity", pkg))
+        assertFalse(Dialer.placesAtOnce("android.intent.action.CALL", "tel", "$pkg.PhoneLauncher", pkg))
+        assertFalse(Dialer.placesAtOnce("android.intent.action.CALL", "tel", null, pkg))
+        assertFalse(Dialer.placesAtOnce("android.intent.action.DIAL", "tel", "$pkg.CallIntentHandler", pkg))
+        assertFalse(Dialer.placesAtOnce("android.intent.action.CALL", "sms", "$pkg.CallIntentHandler", pkg))
+    }
+
+    @Test
     fun screeningNeverBlocksEmergencyOrOutgoingCalls() {
         val blocked = { _: String -> true }
         assertTrue(OcmCallScreeningService.shouldBlock(true, "+255754210331", { false }, blocked))
