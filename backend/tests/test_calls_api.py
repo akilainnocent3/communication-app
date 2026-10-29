@@ -350,6 +350,9 @@ def test_ocm_phone_enrolls_on_its_own_and_links_to_the_sms_phone(client_for, adm
     assert heartbeat["capabilities"] == {"sms": False, "calls": True} and "not_default_sms_app" not in heartbeat["attention"]
     assert dialer.send_events(log_row()).json()["processed"] == 1
     assert dialer.send_events(dialer.message()).json()["rejected"][0]["code"] == "platform_not_enabled"
+    # OCM Phone is not an SMS phone: the SMS admin neither lists nor opens it.
+    assert [d["id"] for d in client.get("/api/v1/sms/devices/").json()] == [phone.device_id]
+    assert client.get(f"/api/v1/sms/devices/{dialer.device_id}/").status_code == 404
     listed = client.get("/api/v1/calls/devices/").json()
     assert [(d["id"], d["app"], d["companion"]["id"]) for d in listed] == [(dialer.device_id, "calls", phone.device_id)]
     # The admin can switch Calls off and on for OCM Phone.

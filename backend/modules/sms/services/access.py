@@ -35,17 +35,18 @@ def can_use_sms(user) -> bool:
 
 
 def accessible_devices(user, perm: str = READ) -> QuerySet[Device]:
-    """Phones the user may see. Revoked phones stay readable (their history is kept) but never accept sends."""
+    """Phones the user may see: OCM Messages devices only (OCM Phone devices belong to Calls, decision 80). Revoked
+    phones stay readable (their history is kept) but never accept sends."""
     if not can_use_sms(user):
         return Device.objects.none()
-    qs = Device.objects.select_related("office", "assigned_to")
+    qs = Device.objects.filter(app="sms").select_related("office", "assigned_to")
     if is_sms_admin(user):
         return qs
     return qs.filter(sms_access__user=user, **{f"sms_access__{FLAGS[perm]}": True}).distinct()
 
 
 def permissions_for(user, device: Device) -> dict[str, bool]:
-    if not can_use_sms(user):
+    if not can_use_sms(user) or device.app != "sms":
         return {key: False for key in FLAGS}
     if is_sms_admin(user):
         return {key: True for key in FLAGS}
