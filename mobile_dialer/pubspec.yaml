@@ -1,0 +1,47 @@
+name: ocm_phone
+description: "OCM Phone: the company default Phone app for Android (separate from OCM Messages)."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  crypto: ^3.0.8
+  drift: ^2.35.3
+  dynamic_color: ^2.1.0
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.1.1
+  intl: ^0.20.3
+  mobile_scanner: ^7.4.2
+  sqlite3: ^3.8.0
+  uuid: ^4.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.35.2
+  build_runner: ^2.17.1
+  pigeon: ^29.0.11
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+# The local sync database is encrypted with SQLCipher. On Android, Dart loads libsqlcipher.so from
+# net.zetetic:sqlcipher-android, the same library the native Kotlin layer opens the file with. A second
+# libsqlcipher.so from the build hook would replace it in the APK, and that one has no JNI functions, so native code
+# could not open the database. Host tests (flutter test) use the hook's SQLCipher build.
+hooks:
+  user_defines:
+    sqlite3:
+      source:
+        android: system
+        default: sqlcipher
+      name:
+        android: sqlcipher

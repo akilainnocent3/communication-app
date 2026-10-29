@@ -48,6 +48,10 @@ def test_device_access_and_callback_views(client_for, admin, manager, calls_phon
     assert [t["id"] for t in client.get("/api/v1/calls/callbacks/?view=done").json()] == [task["id"]]
     assert client.post("/api/v1/calls/callbacks/bulk/", {"ids": [task["id"]], "action": "assign"}, format="json").status_code == 400
     assert phone.get("calls/config/").json()["outcomes"]
+    from modules.sms.models import QuickReply
+
+    QuickReply.objects.create(title="Busy", body="I'm in a meeting, I'll call you back.")
+    assert [r["body"] for r in phone.get("calls/config/").json()["quick_replies"]] == ["I'm in a meeting, I'll call you back."]
 
 
 def test_customer_delete_and_simulator_view(client_for, admin, office, calls_phone):

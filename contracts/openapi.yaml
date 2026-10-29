@@ -6299,12 +6299,20 @@ components:
           items:
             type: object
             additionalProperties: {}
+        quick_replies:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: For "reply with SMS" on the incoming-call screen (sent by OCM
+            Messages).
         server_time:
           type: integer
       required:
       - outcome_required_after_seconds
       - outcomes
       - post_call_card
+      - quick_replies
       - server_time
       - sims
     Capabilities:

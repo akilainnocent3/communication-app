@@ -1,0 +1,351 @@
+{
+  "@@locale": "en",
+  "appTitle": "OCM Phone",
+  "companyApp": "OCM Phone",
+  "onboardingTitle": "Make this the phone's SMS app",
+  "onboardingBody": "This company phone's text messages are managed by your company. To receive and send SMS, this app must be the default SMS app.",
+  "setDefault": "Set as default SMS app",
+  "permissionsTitle": "Allow access",
+  "permissionsBody": "The app needs these permissions to receive, store and send text messages, show who is writing, and notify you.",
+  "permissionSms": "Text messages (receive, read, send)",
+  "permissionContacts": "Contacts (names of people who write to you)",
+  "permissionPhone": "Phone and SIM (which SIM a message uses)",
+  "permissionNotifications": "Notifications (new messages)",
+  "grant": "Allow",
+  "continueLabel": "Continue",
+  "batteryTitle": "Keep call records flowing",
+  "batteryBody": "Some phones stop apps in the background. Turn off battery optimisation for this app so call records and call-backs are never delayed.",
+  "batterySamsung": "On Samsung: Settings → Battery → Background usage limits → Never sleeping apps → add OCM.",
+  "batteryOpen": "Open battery settings",
+  "enrollTitle": "Connect to your company",
+  "enrollBody": "Scan the QR code your administrator shows you, tap the link they sent, or type the 8-character code.",
+  "scanQr": "Scan QR code",
+  "enterCode": "Enter code",
+  "codeLabel": "Enrollment code",
+  "serverLabel": "Company server",
+  "untrustedServer": "This QR code points to a server this app is not allowed to use. Ask your administrator.",
+  "noticeTitle": "Monitoring notice",
+  "noticeAccept": "I understand and accept",
+  "noticeDecline": "Not now",
+  "enrolling": "Connecting this phone…",
+  "enrolled": "This phone is connected as {code}.",
+  "@enrolled": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "removedTitle": "This phone was removed by your administrator",
+  "removedBody": "Its connection to the company has been deleted. Calls are no longer recorded. You can keep using OCM Phone as your Phone app, or choose another one.",
+  "pausedBanner": "Syncing is paused by your administrator.",
+  "notDefaultBanner": "This app is not the default SMS app. Messages can't be received or sent.",
+  "fixNow": "Fix",
+  "conversations": "Messages",
+  "archived": "Archived",
+  "spamBlocked": "Spam & blocked",
+  "starred": "Starred",
+  "searchHint": "Search conversations",
+  "startChat": "Start chat",
+  "noConversations": "No conversations yet",
+  "noConversationsBody": "Text messages you send and receive appear here.",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markRead": "Mark as read",
+  "markUnread": "Mark as unread",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "mute": "Mute",
+  "unmute": "Unmute",
+  "archive": "Archive",
+  "unarchive": "Unarchive",
+  "delete": "Delete",
+  "block": "Block",
+  "unblock": "Unblock",
+  "moveToSpam": "Move to spam",
+  "deleteConfirm": "Delete {count, plural, =1{this conversation} other{{count} conversations}} from this phone?",
+  "@deleteConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "undo": "Undo",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "messageHint": "Text message",
+  "send": "Send",
+  "segments": "{segments} SMS · {remaining} left",
+  "@segments": {
+    "placeholders": {
+      "segments": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "mmsWillSend": "Sends as MMS",
+  "sentByAdmin": "Sent by admin",
+  "sentByAdminNamed": "Sent by admin · {name}",
+  "@sentByAdminNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminReplied": "Admin replied to {name}",
+  "@adminReplied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "statusSending": "Sending…",
+  "statusSent": "Sent",
+  "statusDelivered": "Delivered",
+  "statusFailed": "Not sent. Tap to retry",
+  "statusQueued": "Queued",
+  "copy": "Copy",
+  "copyCode": "Copy code",
+  "codeCopied": "Code copied",
+  "forward": "Forward",
+  "share": "Share",
+  "star": "Star",
+  "unstar": "Unstar",
+  "details": "Details",
+  "detailsSent": "Sent",
+  "detailsReceived": "Received",
+  "detailsSim": "SIM",
+  "detailsStatus": "Status",
+  "detailsFrom": "From",
+  "toHint": "Name or number",
+  "newConversation": "New conversation",
+  "scheduleSend": "Schedule send",
+  "scheduledFor": "Scheduled for {time}",
+  "@scheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "attach": "Attach",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "files": "Files",
+  "quickReplies": "Quick replies",
+  "chooseSim": "Choose SIM",
+  "settings": "Settings",
+  "defaultSim": "Default SIM",
+  "deliveryReports": "Delivery reports",
+  "mmsAutoDownload": "Auto-download MMS",
+  "mmsWifiOnly": "Wi-Fi only",
+  "mmsAlways": "Always",
+  "mmsNever": "Never",
+  "hideOnLockScreen": "Hide message text on the lock screen",
+  "appLock": "Lock with fingerprint or PIN",
+  "secureScreen": "Block screenshots",
+  "textSize": "Text size",
+  "appearance": "Appearance",
+  "syncStatus": "Sync status",
+  "syncNow": "Sync now",
+  "server": "Server",
+  "deviceCode": "Device code",
+  "lastSync": "Last sync",
+  "pendingUploads": "Waiting to upload",
+  "queueWaiting": "Call records waiting to upload",
+  "connectivity": "Connection",
+  "online": "Online",
+  "offline": "Offline",
+  "never": "Never",
+  "about": "About",
+  "aboutBody": "Calls made and received on this company phone are recorded in your company's OCM (Office Communication Management): the number, time, duration and result, never the conversation. Authorised administrators can see these records and ask you to call customers back. All access is logged.",
+  "unlock": "Unlock",
+  "locked": "OCM is locked",
+  "backfillProgress": "Copying message history: {done} of {total}",
+  "@backfillProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "flashMessage": "Flash message",
+  "startupErrorTitle": "OCM could not start",
+  "startupErrorBody": "Your calls and contacts are safe on this phone. Try again; if this keeps happening, restart the phone or contact your administrator.",
+  "tryAgain": "Try again",
+  "sendRefused": "Message not sent. Check that OCM Messages is the default SMS app and a SIM card is active, then try again.",
+  "unreadConversations": "{count, plural, =1{1 unread conversation} other{{count} unread conversations}}",
+  "@unreadConversations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messagesSection": "Messages",
+  "moreResults": "More results",
+  "noResults": "No results",
+  "contacts": "Contacts",
+  "selectText": "Select text",
+  "done": "Done",
+  "appearanceHint": "Style, theme, text size",
+  "keepFlowingTitle": "Keep call records flowing",
+  "keepFlowingHint": "Stop the phone from pausing this app in the background",
+  "keepFlowingBody": "Phones save battery by pausing apps in the background. Allow this app to run so call records reach your company at once and call-backs arrive on time.",
+  "style": "Style",
+  "matchMyPhone": "Match my phone",
+  "skinOneUi": "One UI style",
+  "skinPixel": "Pixel / Material You style",
+  "skinHios": "HiOS / XOS style",
+  "skinHyperOs": "HyperOS / MIUI style",
+  "skinColorOs": "ColorOS style",
+  "skinCompany": "Company",
+  "theme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "bubbleColour": "Bubble colour",
+  "listDensity": "List density",
+  "densityComfortable": "Comfortable",
+  "densityCompact": "Compact",
+  "swipeActions": "Swipe actions",
+  "swipeRight": "Swipe right",
+  "swipeLeft": "Swipe left",
+  "none": "None",
+  "showContactPhotos": "Show contact photos",
+  "checkBattery": "Battery optimisation is off for this app",
+  "checkBackground": "Background use is not restricted",
+  "checkStandby": "Android is not holding the app back",
+  "allow": "Allow",
+  "open": "Open",
+  "oemSamsung": "Samsung: add to \"Never sleeping apps\"",
+  "oemXiaomi": "Xiaomi: allow Autostart",
+  "oemTranssion": "Tecno / Infinix / itel: allow auto-start in Phone Master, and lock the app in recent apps",
+  "oemOppo": "Oppo / Realme: allow auto-launch",
+  "oemOneplus": "OnePlus: allow auto-launch",
+  "oemHuawei": "Huawei: manage app launch manually and allow all",
+  "oemCannotCheck": "The phone does not tell apps whether this is on: check it once.",
+  "forceStopWarning": "Never use \"Force stop\" on this app: Android then stops it until it is opened again, and calls are not recorded meanwhile.",
+  "syncService": "Sync service",
+  "running": "Running",
+  "notRunning": "Not running",
+  "welcomeTitle": "OCM Phone, your company's Phone app",
+  "welcomeBody": "Call and answer as usual. Your company sees the call records of this company phone and can ask you to call customers back.",
+  "getStarted": "Get started",
+  "whyDefault": "Android lets only the default SMS app receive messages, save them and send them. Your old Messages app keeps working as a normal app.",
+  "roleFallback": "The dialog did not appear or was closed. Choose this app in Settings → Default apps → SMS app.",
+  "openDefaultApps": "Open Default apps",
+  "whyPermissions": "SMS: to read, save and send messages. Contacts: to show names instead of numbers (names are never uploaded except for numbers you message). Phone: to use the right SIM.",
+  "notificationsTitle": "Know when messages arrive",
+  "whyNotifications": "New messages, failed sends and admin replies show as notifications. Their text is hidden on the lock screen.",
+  "notNow": "Not now",
+  "whyFlowing": "Without this some phones stop the app minutes after the screen turns off, and messages reach your company hours late.",
+  "permissionDeniedForGood": "Permission was refused. Allow it in the app settings.",
+  "openSettings": "Open settings",
+  "why": "Why?",
+  "torch": "Torch",
+  "notAnEnrollCode": "That is not an OCM Phone enrollment code. Scan the code from Admin → Calls → Phones → Enroll OCM Phone.",
+  "noQrInPhoto": "No QR code found in that photo.",
+  "pointAtQr": "Point the camera at the administrator's QR code",
+  "scanFromPhoto": "Scan from photo",
+  "cameraRationale": "The camera is used only to read your administrator's QR code. Nothing is recorded.",
+  "whyEnroll": "Connecting records this phone's calls (number, time, duration, never the conversation) for your company. You will see the monitoring notice before anything is connected.",
+  "orTypeCode": "or type the code",
+  "shortCodeLabel": "Code",
+  "noConnection": "No connection to the server. Check the internet and try again.",
+  "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
+  "enrolledTitle": "Connected",
+  "enrolledBody": "Calls are now recorded for your company. Next, make OCM Phone your Phone app.",
+  "openMessages": "Open messages",
+  "backfillDone": "Message history copied",
+  "backfillCopied": "{count} messages copied…",
+  "@backfillCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneTitle": "Phone",
+  "tabKeypad": "Keypad",
+  "tabRecents": "Recents",
+  "tabContacts": "Contacts",
+  "tabCallbacks": "Call-backs",
+  "favourites": "Favourites",
+  "callAction": "Call",
+  "messageAction": "Message",
+  "addContact": "Add contact",
+  "blockNumber": "Block number",
+  "deleteFromRecents": "Delete from recents",
+  "noRecents": "No calls yet",
+  "noContacts": "No contacts",
+  "noCallbacks": "No call-backs. When the office asks you to call someone, it appears here.",
+  "searchContacts": "Search contacts",
+  "companyDirectory": "Company directory",
+  "voicemail": "Voicemail",
+  "callWith": "Call with",
+  "paste": "Paste",
+  "requestedBy": "Requested by {name}",
+  "@requestedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "snoozeAction": "Snooze 1 h",
+  "doneAction": "Done",
+  "resultMissed": "Missed",
+  "resultAnswered": "Answered",
+  "resultRejected": "Declined",
+  "resultBlocked": "Blocked",
+  "resultVoicemail": "Voicemail",
+  "resultNoAnswer": "No answer",
+  "resultElsewhere": "Answered elsewhere",
+  "incomingCall": "Incoming",
+  "outgoingCall": "Outgoing",
+  "privateNumber": "Private number",
+  "callFailedPermission": "Allow phone calls for OCM first.",
+  "dialerTitle": "Make OCM your Phone app",
+  "dialerBody": "Your company enabled Calls on this phone. OCM becomes the phone's dialer: you call and answer as before, and calls are recorded in the company's call log (never the audio).",
+  "setDefaultDialer": "Set as default Phone app",
+  "dialerFallback": "The dialog did not appear or was dismissed. Choose OCM as the Phone app in settings.",
+  "callPermissionsTitle": "Allow calls",
+  "callPermissionsBody": "OCM needs these to place and answer calls, show your call history and who is calling.",
+  "fsiTitle": "Show incoming calls",
+  "fsiBody": "Allow OCM to show the incoming-call screen over the lock screen, so you can answer at once.",
+  "allowInSettings": "Allow in settings",
+  "whyDialer": "Android sends calls to one Phone app. Emergency calls always work, whatever happens to this app.",
+  "priorityHigh": "High",
+  "priorityUrgent": "Urgent",
+  "callsCount": "{count, plural, =1{1 call} other{{count} calls}}",
+  "@callsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wrongAppCode": "This code is for OCM Messages. Open OCM Messages and scan it there, or ask for an OCM Phone code.",
+  "openKeypad": "Open the keypad",
+  "choosePhoneApp": "Choose another Phone app",
+  "enrollBanner": "Calls on this phone are not recorded for your company yet.",
+  "enrollNow": "Connect",
+  "notDefaultDialerBanner": "OCM Phone is not your Phone app. Incoming calls are not shown here."
+}

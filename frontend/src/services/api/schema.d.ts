@@ -3003,6 +3003,10 @@ export interface components {
             sims: {
                 [key: string]: unknown;
             }[];
+            /** @description For "reply with SMS" on the incoming-call screen (sent by OCM Messages). */
+            quick_replies: {
+                [key: string]: unknown;
+            }[];
             server_time: number;
         };
         Capabilities: {

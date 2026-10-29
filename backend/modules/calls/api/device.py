@@ -34,10 +34,21 @@ class CallsConfigSerializer(serializers.Serializer):
     post_call_card = serializers.BooleanField()
     outcome_required_after_seconds = serializers.IntegerField()
     sims = serializers.ListField(child=serializers.DictField())
+    quick_replies = serializers.ListField(child=serializers.DictField(), help_text="For \"reply with SMS\" on the incoming-call screen (sent by OCM Messages).")
     server_time = serializers.IntegerField()
 
 
 class CallsConfigView(CallsDeviceAPIView):
+    def _quick_replies(self) -> list[dict]:
+        """The company's quick replies, and the SMS phone's own on the same handset (OCM Messages sends the reply)."""
+        from django.db.models import Q
+
+        from modules.sms.models import QuickReply
+
+        devices = [self.device.pk] + ([self.device.companion_id] if self.device.companion_id else [])
+        replies = QuickReply.objects.filter(Q(device__isnull=True) | Q(device_id__in=devices)).order_by("title")[:100]
+        return [{"id": r.pk, "title": r.title, "body": r.body} for r in replies]
+
     @extend_schema(responses=CallsConfigSerializer, operation_id="device_calls_config")
     def get(self, request):
         config = CallSettings.load()
@@ -45,6 +56,7 @@ class CallsConfigView(CallsDeviceAPIView):
             "outcomes": [{"id": o.pk, "name": o.name, "colour": o.colour} for o in CallOutcome.objects.filter(is_active=True)],
             "post_call_card": config.post_call_card, "outcome_required_after_seconds": config.outcome_required_after_seconds,
             "sims": [{"subscription_id": s.subscription_id, "label": s.label, "colour": s.colour} for s in self.device.sim_lines.filter(is_active=True)],
+            "quick_replies": self._quick_replies(),
             "server_time": int(time.time()),
         })
 
