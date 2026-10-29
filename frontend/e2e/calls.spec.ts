@@ -111,6 +111,20 @@ test("calls live board, directory and tools", async ({ page }, testInfo) => {
     expect(width, `${path} scrolls horizontally`).toBeLessThanOrEqual(0);
   }
   await shot(page, testInfo, "calls-tools");
+
+  // OCM Phone is its own app with its own code, optionally linked to the SMS phone on the same handset.
+  await page.goto("/calls/devices");
+  await expect(page.locator(`[data-calls-device="${ARUSHA}"] [data-companion]`)).toContainText(ARUSHA, { timeout: 30_000 });
+  await page.getByRole("button", { name: "Enroll OCM Phone" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Enroll OCM Phone" });
+  const handset = dialog.getByLabel("Same handset as (optional)");
+  await expect(handset.locator("option", { hasText: ARUSHA })).toHaveCount(1, { timeout: 15_000 });
+  await handset.selectOption((await handset.locator("option", { hasText: ARUSHA }).getAttribute("value"))!);
+  await expect(dialog.getByLabel("Phone name")).toHaveValue(ARUSHA);
+  await dialog.getByRole("button", { name: "Create enrollment code" }).click();
+  await expect(dialog.locator("#enroll-link")).toHaveValue(/^ocmphone:\/\/enroll\?/, { timeout: 15_000 });
+  await shot(page, testInfo, "calls-enroll");
+  await dialog.getByRole("button", { name: "Revoke code" }).click();
   expect(errors).toEqual([]);
 });
 

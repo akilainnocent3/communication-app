@@ -221,6 +221,10 @@ class CallSimulator:
         return handled
 
     def tick(self, force: bool = False) -> int:
+        if not self.phone.sim.online or self.device.status != DeviceStatus.ACTIVE:
+            return 0
+        if self.device.app == "calls" and (force or time.time() - self.phone.sim.state.get("last_heartbeat", 0) > 240):
+            self.phone.heartbeat()
         handled = self.finish_due(force)
         handled += self.work_callbacks(force)
         if not force and self.rng.random() < 1 / 30:
@@ -233,6 +237,14 @@ def enable(device: Device) -> None:
     capabilities = {**(device.capabilities or {}), "calls": True}
     Device.objects.filter(pk=device.pk).update(capabilities=capabilities, is_default_dialer=True)
     device.capabilities, device.is_default_dialer = capabilities, True
+
+
+def create_for(sms_device: Device, user=None) -> Device:
+    """A simulated OCM Phone on the same handset as a simulated SMS phone: its own enrollment and key, linked as companion."""
+    from modules.sms.services.simulator import create
+
+    lines = list(sms_device.sim_lines.all())
+    return create(name=sms_device.name, office=sms_device.office, user=user, dual_sim=len(lines) > 1, app="calls", companion=sms_device)
 
 
 def simulator_for(device: Device, rng=None) -> CallSimulator:

@@ -168,9 +168,15 @@ class SimulatedPhone:
     def heartbeat(self) -> None:
         sims = [{"subscription_id": line.subscription_id, "slot": line.slot, "carrier": line.carrier, "country_iso": line.country_iso, "number": line.number, "is_default": line.is_default}
                 for line in self.device.sim_lines.all()]
+        if self.device.app == "calls":
+            role = {"is_default_dialer": True, "full_screen_intent_allowed": True, "call_state": "idle",
+                    "permissions": {name: True for name in ("READ_CALL_LOG", "CALL_PHONE", "ANSWER_PHONE_CALLS", "READ_PHONE_STATE", "READ_CONTACTS", "POST_NOTIFICATIONS")}}
+        else:
+            role = {"is_default_sms_app": True,
+                    "permissions": {name: True for name in ("RECEIVE_SMS", "READ_SMS", "SEND_SMS", "RECEIVE_MMS", "READ_CONTACTS", "READ_PHONE_STATE", "POST_NOTIFICATIONS")}}
         self.call("post", "heartbeat/", {
             "battery": random.randint(35, 98), "charging": random.random() < 0.3, "network_type": random.choice(["wifi", "cellular"]), "signal": random.randint(2, 4),
-            "is_default_sms_app": True, "permissions": {name: True for name in ("RECEIVE_SMS", "READ_SMS", "SEND_SMS", "RECEIVE_MMS", "READ_CONTACTS", "READ_PHONE_STATE", "POST_NOTIFICATIONS")},
+            **role,
             "battery_optimised": False, "pending_outbox": 0, "app_version": APP_VERSION, "android_version": "14", "sims": sims,
         })
         self.sim.state["last_heartbeat"] = time.time()
@@ -287,13 +293,15 @@ class SimulatedPhone:
 # --- Entry points ------------------------------------------------------------------------------------------------
 
 
-def create(*, name: str, office, user=None, dual_sim: bool = False, backfill_days: int = 30, seed: int = 7) -> Device:
-    """Enroll a simulated phone through the real endpoints and upload its message history."""
+def create(*, name: str, office, user=None, dual_sim: bool = False, backfill_days: int = 30, seed: int = 7, app: str = "sms", companion: Device | None = None) -> Device:
+    """Enroll a simulated phone through the real endpoints and upload its message history. `app="calls"` enrolls a
+    simulated OCM Phone (the dialer app) instead, optionally linked to the SMS phone on the same handset."""
     from rest_framework.test import APIClient
 
     if not settings.SMS_ENABLE_SIMULATOR:
         raise RuntimeError("SMS_ENABLE_SIMULATOR is off on this server; simulated phones are not allowed.")
-    invite, token = enrollment.create_invite(user, name=name, office=office, options={"backfill_days": backfill_days, "mark_read_on_open": True})
+    invite, token = enrollment.create_invite(user, name=name, office=office, options={"backfill_days": backfill_days, "mark_read_on_open": True},
+                                             platform=app, companion=companion)
     key = ec.generate_private_key(ec.SECP256R1())
     spki = key.public_key().public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
     timestamp, nonce = int(time.time()), secrets.token_urlsafe(18)
@@ -305,18 +313,19 @@ def create(*, name: str, office, user=None, dual_sim: bool = False, backfill_day
     response = APIClient(HTTP_HOST=_host()).post("/api/v1/device/enroll/", {
         "token": token, "public_key": base64.b64encode(spki).decode(), "signature": signature, "timestamp": timestamp, "nonce": nonce,
         "app_version": _app_version(), "device": {"manufacturer": "Simulated", "model": "Pixel Demo", "android_version": "14", "sdk_int": 34},
-        "sims": sims, "notice_accepted": True, "notice_text": SmsSettings.load().monitoring_notice,
+        "sims": sims, "notice_accepted": True, "notice_text": SmsSettings.load().monitoring_notice, "app": app,
     }, format="json")
     if response.status_code != 201:
         raise RuntimeError(f"simulated enrollment refused: {response.status_code} {response.json()}")
     device = Device.objects.get(pk=response.json()["device_id"])
-    Device.objects.filter(pk=device.pk).update(is_simulated=True, is_default_sms_app=True)
+    Device.objects.filter(pk=device.pk).update(is_simulated=True, **({"is_default_dialer": True} if app == "calls" else {"is_default_sms_app": True}))
     device.refresh_from_db()
     pem = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()).decode()
     sim = SimulatedDevice.objects.create(device=device, encrypted_private_key=encrypt_text(pem), state={"token": response.json()["access_token"], "token_expires": time.time() + response.json()["expires_in"]})
     phone = SimulatedPhone(sim)
     phone.heartbeat()
-    phone.backfill(backfill_days, seed=seed)
+    if app == "sms":
+        phone.backfill(backfill_days, seed=seed)
     return device
 
 
@@ -350,7 +359,7 @@ def control(device: Device, action: str) -> None:
 
 def tick_all(force: bool = False) -> int:
     handled = 0
-    for sim in SimulatedDevice.objects.select_related("device").filter(online=True, device__status=DeviceStatus.ACTIVE):
+    for sim in SimulatedDevice.objects.select_related("device").filter(online=True, device__status=DeviceStatus.ACTIVE, device__app="sms"):
         try:
             handled += SimulatedPhone(sim).tick(force=force)
         except RuntimeError as exc:

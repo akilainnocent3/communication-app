@@ -237,6 +237,14 @@ class CarrierTariff(models.Model):
 class CallSettings(models.Model):
     """Singleton for platform-wide Calls settings."""
 
+    monitoring_notice = models.TextField(
+        default=(
+            "This is a company phone. Every call made or received with OCM Phone is recorded in the company's OCM (Office Communication "
+            "Management): the number, time, duration and result, never the conversation itself. Authorised administrators can see "
+            "these records and ask you to call customers back. All access is logged."
+        ),
+        help_text="Shown and accepted on the phone before OCM Phone enrolls.",
+    )
     unreturned_hours = models.PositiveSmallIntegerField(default=4, help_text="A missed call is unreturned if nobody reaches the number within this time.")
     outcome_required_after_seconds = models.PositiveIntegerField(default=0, help_text="0 = the post-call card is optional.")
     post_call_card = models.BooleanField(default=True)

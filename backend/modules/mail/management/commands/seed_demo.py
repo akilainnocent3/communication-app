@@ -126,15 +126,25 @@ class Command(BaseCommand):
         self._seed_calls(admin, manager, viewer, arusha, hq)
 
     def _seed_calls(self, admin, manager, viewer, arusha, hq):
-        """Both demo phones are Calls phones too: 45 days of call history, demo access rows, a tariff and a callback."""
+        """Both demo handsets also run OCM Phone (its own simulated device, linked to the SMS phone): 45 days of call
+        history, demo access rows, a tariff and a callback."""
         from modules.calls.models import CallRecord, CarrierTariff, DeviceAccess as CallsAccess
         from modules.calls.services import callbacks, simulator as calls_simulator
+        from modules.devices.models import Device
 
+        phones = []
+        for sms_phone in (arusha, hq):
+            if not sms_phone:
+                phones.append(None)
+                continue
+            dialer = Device.objects.filter(companion=sms_phone, app="calls").first() or calls_simulator.create_for(sms_phone, admin)
+            phones.append(dialer)
+        arusha, hq = phones
         for index, device in enumerate(d for d in (arusha, hq) if d):
             if CallRecord.objects.filter(device=device).exists():
                 continue
             count = calls_simulator.seed(device, days=45, seed_value=21 + index)
-            self.stdout.write(f"  {device.code} {device.name}: {count} calls")
+            self.stdout.write(f"  {device.code} {device.name} (OCM Phone): {count} calls")
         if arusha:
             CallsAccess.objects.update_or_create(user=manager, device=arusha, defaults={"can_read": True, "can_assign_callbacks": True, "can_annotate": True, "can_export": False})
         if hq:

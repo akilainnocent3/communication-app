@@ -119,20 +119,23 @@ def test_disabled_calls_platform_keeps_events_on_the_phone(cphone):
 
     sync_platform_rows()
     Platform.objects.filter(key="calls").update(is_enabled=False)
-    blocked = cphone.send_events(log_row())
+    blocked = cphone.send_events(log_row(log_id=1), log_row(log_id=2))
     assert blocked.status_code == 403 and blocked.json()["code"] == "platform_disabled"
-    # SMS before the call event still goes through; the call event and everything after it wait on the phone.
-    mixed = cphone.send_events(cphone.message(), log_row(), cphone.message()).json()
-    assert mixed["processed"] == 1 and mixed["disabled_platform"] == "calls" and mixed["acked_seq"] == cphone.seq - 2
     assert CallRecord.objects.count() == 0
+    Platform.objects.filter(key="calls").update(is_enabled=True)
+    cphone.seq -= 2  # the phone kept both events and sends them again
+    assert cphone.send_events(log_row(log_id=1), log_row(log_id=2)).json()["processed"] == 2
 
 
-def test_directory_customers_from_calls_and_sms(cphone):
-    cphone.send_events(log_row(number="0754210331", log_id=1), cphone.message(address="+255754210331"), log_row(number="M-PESA", log_id=2))
+def test_directory_customers_from_calls_and_sms(cphone, enrolled):
+    sms_phone = enrolled(name="Front desk SMS")
+    cphone.send_events(log_row(number="0754210331", log_id=1), log_row(number="M-PESA", log_id=2))
+    sms_phone.send_events(sms_phone.message(address="+255754210331"))
     customer = Customer.objects.get(key="+255754210331")
     assert customer.first_seen_call and customer.first_seen_sms
     assert CallRecord.objects.get(provider_call_log_id=1).customer == customer
     assert CustomerDevice.objects.filter(customer=customer, device_id=cphone.device_id).exists()
+    assert CustomerDevice.objects.filter(customer=customer, device_id=sms_phone.device_id).exists()
     assert not Customer.objects.filter(key="M-PESA").exists()  # sender IDs are services, not customers
 
 
@@ -140,10 +143,11 @@ def test_backfill_progress_and_heartbeat_fields(cphone):
     cphone.send_events({"type": "call_log.backfill", "payload": {"phase": "running", "done": 10, "total": 50}})
     device = Device.objects.get(pk=cphone.device_id)
     assert device.sync_progress["calls"] == {"phase": "running", "done": 10, "total": 50}
-    response = cphone.post("heartbeat/", {"is_default_sms_app": True, "is_default_dialer": False, "full_screen_intent_allowed": False,
+    response = cphone.post("heartbeat/", {"is_default_dialer": False, "full_screen_intent_allowed": False,
                                           "permissions": {"READ_CALL_LOG": False}, "call_state": "idle"})
-    assert response.json()["capabilities"] == {"sms": True, "calls": True}
+    assert response.json()["capabilities"] == {"sms": False, "calls": True}
     assert {"not_default_dialer", "call_permissions_missing", "fsi_denied"} <= set(response.json()["attention"])
+    assert "not_default_sms_app" not in response.json()["attention"]
 
 
 def test_annotation_from_phone_is_idempotent(cphone):

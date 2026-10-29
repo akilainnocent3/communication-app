@@ -36,11 +36,18 @@ class EnrollInfoView(PublicDeviceAPIView):
         invite = enrollment.invite_for_token(request.query_params.get("token", ""))
         if not invite:
             raise ApiError("invalid_token", "This enrollment code is not valid. Ask your administrator for a new one.", status.HTTP_404_NOT_FOUND)
-        from modules.sms.models import SmsSettings
+        platform = enrollment.invite_platform(invite)
+        if platform == "calls":
+            from modules.calls.models import CallSettings
 
+            notice = CallSettings.load().monitoring_notice
+        else:
+            from modules.sms.models import SmsSettings
+
+            notice = SmsSettings.load().monitoring_notice
         return Response({
             "state": invite.state, "company_name": settings.COMPANY_NAME, "device_name": invite.name, "office": invite.office.name,
-            "notice": SmsSettings.load().monitoring_notice, "expires_at": invite.expires_at, "server_time": int(time.time()),
+            "notice": notice, "platform": platform, "expires_at": invite.expires_at, "server_time": int(time.time()),
         })
 
 

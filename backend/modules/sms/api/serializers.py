@@ -260,8 +260,6 @@ class EnrollmentCreateSerializer(serializers.Serializer):
     signature_enabled = serializers.BooleanField(required=False, default=False)
     signature = serializers.CharField(max_length=40, required=False, allow_blank=True, default="")
     mark_read_on_open = serializers.BooleanField(required=False, default=True)
-    platforms = serializers.ListField(child=serializers.ChoiceField(choices=["sms", "calls"]), required=False, default=list, max_length=2,
-                                      help_text='Phone platforms to enroll for; default ["sms"]. "calls" needs calls.manage_settings.')
 
 
 class EnrollmentSerializer(serializers.Serializer):

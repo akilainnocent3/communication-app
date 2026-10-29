@@ -28,9 +28,15 @@ class Device(models.Model):
     office = models.ForeignKey("identity.Office", on_delete=models.PROTECT, related_name="devices")
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="assigned_devices")
     status = models.CharField(max_length=16, choices=DeviceStatus.choices, default=DeviceStatus.ACTIVE, db_index=True)
-    # Which phone platforms run on this phone. One enrollment, one key: Calls is switched on later from the admin, and
-    # the app then runs its dialer onboarding. Data of a platform the phone is not enabled for is refused on ingest.
+    # The platform of the app that enrolled: OCM Messages → {"sms": true}, OCM Phone (the dialer) → {"calls": true}. Each
+    # app has its own enrollment and Keystore key (decision 80). An admin can switch a platform off; data of a platform
+    # the phone is not enabled for is refused on ingest.
     capabilities = models.JSONField(default=default_capabilities, blank=True)
+    app = models.CharField(max_length=8, choices=[("sms", "OCM Messages"), ("calls", "OCM Phone")], default="sms", db_index=True,
+                           help_text="The app that enrolled with this identity; it never changes.")
+    # The other OCM app on the same handset (OCM Messages ↔ OCM Phone), set when the dialer enrolls with a code made for
+    # an SMS phone. The automatic missed-call SMS goes out through it.
+    companion = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
 
     # Identity: SubjectPublicKeyInfo (DER, base64) of the Keystore EC P-256 key and its SHA-256.
     public_key = models.TextField()
@@ -127,7 +133,9 @@ class EnrollmentInvite(models.Model):
     office = models.ForeignKey("identity.Office", on_delete=models.CASCADE, related_name="+")
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     options = models.JSONField(default=dict, blank=True)
-    platforms = models.JSONField(default=list, blank=True, help_text='Phone platforms the phone enrolls for, e.g. ["sms"] or ["sms", "calls"].')
+    platforms = models.JSONField(default=list, blank=True, help_text='The app this code enrolls: ["sms"] (OCM Messages) or ["calls"] (OCM Phone).')
+    companion = models.ForeignKey(Device, null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
+                                  help_text="OCM Phone codes: the SMS phone on the same handset, linked on enrollment.")
     expires_at = models.DateTimeField()
     used_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)

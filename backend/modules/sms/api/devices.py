@@ -218,21 +218,31 @@ class SimulatorView(APIView):
 def _enrollment_payload(invite, token: str, short_code: str) -> dict:
     from modules.mail.services.connect import qr_svg
 
-    uri = enrollment.enroll_uri(token)
+    uri = enrollment.enroll_uri(token, enrollment.invite_platform(invite))
     return {**EnrollmentSerializer(invite).data, "code": token, "uri": uri, "qr_svg": qr_svg(uri), "short_code": enrollment.format_short_code(short_code)}
 
 
 class EnrollmentListView(APIView):
+    """Enrollment codes for one app (OCM Messages here; Calls subclasses it for OCM Phone)."""
+
     permission_classes = [IsAuthenticated, CanManageDevices]
+    platform = "sms"
+    create_serializer = EnrollmentCreateSerializer
 
     @extend_schema(responses=EnrollmentSerializer(many=True), operation_id="sms_enrollments_list")
     def get(self, request):
-        rows = EnrollmentInvite.objects.filter(platforms__contains=["sms"]).select_related("office", "created_by", "device", "device__office")[:30]
+        rows = EnrollmentInvite.objects.filter(platforms__contains=[self.platform]).select_related("office", "created_by", "device", "device__office")[:30]
         return Response(EnrollmentSerializer(rows, many=True).data)
+
+    def options_for(self, values) -> dict:
+        return {k: values[k] for k in ("signature_enabled", "signature", "mark_read_on_open", "backfill_days")}
+
+    def companion_for(self, request, values):
+        return None
 
     @extend_schema(request=EnrollmentCreateSerializer, responses={201: EnrollmentCreatedSerializer}, operation_id="sms_enrollments_create")
     def post(self, request):
-        data = EnrollmentCreateSerializer(data=request.data)
+        data = self.create_serializer(data=request.data)
         data.is_valid(raise_exception=True)
         values = data.validated_data
         office = Office.objects.filter(pk=values["office"]).first()
@@ -243,21 +253,18 @@ class EnrollmentListView(APIView):
             assigned = User.objects.filter(pk=values["assigned_to"], is_active=True).first()
             if not assigned:
                 raise ApiError("validation_error", "Choose an active user.", errors={"assigned_to": ["Unknown user."]})
-        options = {k: values[k] for k in ("signature_enabled", "signature", "mark_read_on_open", "backfill_days")}
-        platforms = enrollment.clean_platforms(["sms", *values.get("platforms", [])])  # enrolled here = an SMS phone
-        if "calls" in platforms and not request.user.has_perm("calls.manage_settings"):
-            raise ApiError("permission_denied", "Only admins who manage Calls can enroll a phone for Calls.", status.HTTP_403_FORBIDDEN)
-        invite, token = enrollment.create_invite(request.user, name=values["name"], office=office, assigned_to=assigned, options=options,
-                                                 platforms=platforms, request=request)
+        invite, token = enrollment.create_invite(request.user, name=values["name"], office=office, assigned_to=assigned, options=self.options_for(values),
+                                                 platform=self.platform, companion=self.companion_for(request, values), request=request)
         short_code = enrollment.issue_short_code(invite, request.user, request=request)
         return Response(_enrollment_payload(invite, token, short_code), status=status.HTTP_201_CREATED)
 
 
 class _EnrollmentBase(APIView):
     permission_classes = [IsAuthenticated, CanManageDevices]
+    platform = "sms"
 
     def _invite(self, pk):
-        invite = EnrollmentInvite.objects.filter(pk=pk, platforms__contains=["sms"]).select_related("office", "created_by", "device", "device__office").first()
+        invite = EnrollmentInvite.objects.filter(pk=pk, platforms__contains=[self.platform]).select_related("office", "created_by", "device", "device__office").first()
         if not invite:
             raise ApiError("not_found", "This enrollment was not found.", status.HTTP_404_NOT_FOUND)
         return invite

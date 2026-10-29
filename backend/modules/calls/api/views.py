@@ -26,6 +26,7 @@ from modules.devices.services.phone import mask
 from modules.directory.models import Customer
 from modules.directory.services import customers as directory
 from modules.identity.models import Office
+from modules.sms.api import devices as sms_device_views
 
 from ..models import (
     MISSED_RESULTS, CallAnnotation, CallbackTask, CallOutcome, CallRecord, CallSettings, CarrierTariff, DeviceAccess, Direction, OfficeHours,
@@ -391,7 +392,7 @@ def device_payload(device: Device) -> dict:
 
 
 class CallDeviceListView(CallsView):
-    @extend_schema(parameters=[OpenApiParameter("candidates", bool, description="SMS phones that can be enabled for Calls")],
+    @extend_schema(parameters=[OpenApiParameter("candidates", bool, description="SMS phones (OCM Messages) a new OCM Phone code can be linked to: same handset")],
                    responses=s.CallDeviceSerializer(many=True), operation_id="calls_devices_list")
     def get(self, request):
         if _bool(request.query_params.get("candidates")):
@@ -399,15 +400,15 @@ class CallDeviceListView(CallsView):
                 return Response([])
             from modules.sms.services.access import accessible_devices as sms_devices
 
-            rows = sms_devices(request.user).exclude(status=DeviceStatus.REVOKED).exclude(capabilities__calls=True)
+            rows = sms_devices(request.user).filter(app="sms", status=DeviceStatus.ACTIVE)
         else:
             rows = access.accessible_devices(request.user).exclude(status=DeviceStatus.REVOKED)
-        return Response([device_payload(d) for d in rows.select_related("office", "assigned_to")])
+        return Response([device_payload(d) for d in rows.select_related("office", "assigned_to", "companion")])
 
 
 class CallDeviceEnableView(APIView):
-    """Switch Calls on or off for a phone. The phone learns it from its next heartbeat (and a push) and runs the dialer
-    onboarding; switching off keeps the history."""
+    """Switch Calls on or off for an OCM Phone device (the dialer app). The phone learns it from its next heartbeat (and a
+    push); switching off stops the upload and keeps the history. OCM Messages devices cannot take calls (decision 80)."""
 
     permission_classes = [IsAuthenticated, CanManageCalls]
 
@@ -418,6 +419,8 @@ class CallDeviceEnableView(APIView):
         device = (sms_devices(request.user) | access.accessible_devices(request.user)).filter(pk=access._uuid(pk)).select_related("office", "assigned_to").first()
         if not device:
             raise ApiError("not_found", "This phone was not found.", status.HTTP_404_NOT_FOUND)
+        if device.app != "calls":
+            raise ApiError("wrong_app", "This phone runs OCM Messages. Install OCM Phone on it and enroll it with an OCM Phone code.", status.HTTP_409_CONFLICT)
         data = s.CallEnableSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         enabled = data.validated_data["enabled"]
@@ -434,6 +437,65 @@ class CallDeviceEnableView(APIView):
             transaction.on_commit(lambda: push_task.delay(str(device.pk), "config"))
         locked.refresh_from_db()
         return Response(device_payload(locked))
+
+
+# --- OCM Phone enrollment (the dialer app enrolls on its own; decision 80) ---------------------------------------------
+
+class CallEnrollmentListView(sms_device_views.EnrollmentListView):
+    """Codes for OCM Phone. Optionally linked to the SMS phone on the same handset, so the missed-call SMS and the admin
+    know the two apps belong together."""
+
+    permission_classes = [IsAuthenticated, CanManageCalls]
+    platform = "calls"
+    create_serializer = s.CallEnrollmentCreateSerializer
+
+    @extend_schema(responses=sms_device_views.EnrollmentSerializer(many=True), operation_id="calls_enrollments_list")
+    def get(self, request):
+        return super().get(request)
+
+    @extend_schema(request=s.CallEnrollmentCreateSerializer, responses={201: sms_device_views.EnrollmentCreatedSerializer}, operation_id="calls_enrollments_create")
+    def post(self, request):
+        return super().post(request)
+
+    def options_for(self, values) -> dict:
+        return {"backfill_days": values.get("backfill_days")}
+
+    def companion_for(self, request, values):
+        if not values.get("companion"):
+            return None
+        from modules.sms.services.access import accessible_devices as sms_devices
+
+        companion = sms_devices(request.user).filter(pk=values["companion"], app="sms", status=DeviceStatus.ACTIVE).first()
+        if not companion:
+            raise ApiError("validation_error", "Choose an active SMS phone.", errors={"companion": ["Unknown SMS phone."]})
+        return companion
+
+
+class CallEnrollmentDetailView(sms_device_views.EnrollmentDetailView):
+    permission_classes = [IsAuthenticated, CanManageCalls]
+    platform = "calls"
+
+    @extend_schema(responses=sms_device_views.EnrollmentSerializer, operation_id="calls_enrollments_retrieve")
+    def get(self, request, pk):
+        return super().get(request, pk)
+
+
+class CallEnrollmentShortCodeView(sms_device_views.EnrollmentShortCodeView):
+    permission_classes = [IsAuthenticated, CanManageCalls]
+    platform = "calls"
+
+    @extend_schema(request=None, responses=sms_device_views.EnrollmentShortCodeSerializer, operation_id="calls_enrollments_short_code")
+    def post(self, request, pk):
+        return super().post(request, pk)
+
+
+class CallEnrollmentRevokeView(sms_device_views.EnrollmentRevokeView):
+    permission_classes = [IsAuthenticated, CanManageCalls]
+    platform = "calls"
+
+    @extend_schema(request=None, responses=sms_device_views.EnrollmentSerializer, operation_id="calls_enrollments_revoke")
+    def post(self, request, pk):
+        return super().post(request, pk)
 
 
 class CallDeviceAccessView(APIView):

@@ -12,6 +12,7 @@ from django.utils import timezone
 from modules.audit.models import AuditEvent
 from modules.calls.models import CallbackTask, CallOutcome, CallRecord, CallSettings, CallStatHourly, OfficeHours, Result
 from modules.calls.services import hours, rollups, stats
+from modules.devices.models import Device
 from modules.directory.models import Customer
 from modules.platforms.models import Platform
 from tests.calls_helpers import live, log_row, now_ms
@@ -226,10 +227,12 @@ def test_office_hours_with_time_zones_and_holidays(office):
     assert hours.is_after_hours(datetime(2026, 11, 8, 10, tzinfo=eat), None)
 
 
-def test_auto_sms_after_missed_call(calls_phone):
+def test_auto_sms_after_missed_call(calls_phone, enrolled):
     from modules.sms.models import Message
 
-    phone = calls_phone()
+    sms_phone = enrolled(name="Front desk")
+    lonely = calls_phone(name="No SMS app")
+    phone = calls_phone(companion=sms_phone)  # OCM Phone on the same handset as OCM Messages
     config = CallSettings.load()
     phone.send_events(live(result="missed", at=now_ms(-1)))
     assert not Message.objects.filter(origin="auto").exists()  # off by default
@@ -238,7 +241,10 @@ def test_auto_sms_after_missed_call(calls_phone):
     phone.send_events(live(result="missed", at=now_ms(-1)))
     message = Message.objects.get(origin="auto")
     assert message.status == "queued" and message.address == "+255754210331"
-    assert [m["client_uuid"] for m in phone.post("outbox/claim/", {"limit": 10}).json()["messages"]] == [str(message.client_uuid)]
+    # Queued on the SMS phone of the same handset, which claims and sends it; the dialer has no SMS outbox.
+    assert str(message.conversation.device_id) == sms_phone.device_id
+    assert [m["client_uuid"] for m in sms_phone.post("outbox/claim/", {"limit": 10}).json()["messages"]] == [str(message.client_uuid)]
+    lonely.send_events(live(result="missed", at=now_ms(-1), number="+255765330912"))  # no OCM Messages on that handset: nothing sent
     phone.send_events(live(result="missed", at=now_ms(-1)))  # cool-down: one per number per day
     phone.send_events(log_row(result="missed", at=now_ms(-600), number="+255713402118"))  # history: never
     phone.send_events(live(result="missed", at=now_ms(-1), number="15300"))  # short code: never
@@ -318,14 +324,49 @@ def test_live_board_and_badges(client_for, admin, two_phones):
     assert badges["unreturned"] == 2
 
 
-def test_enable_calls_on_an_sms_phone(client_for, admin, phone):
+def test_ocm_phone_enrolls_on_its_own_and_links_to_the_sms_phone(client_for, admin, office, phone):
+    """Decision 80: OCM Phone is its own app with its own code, key and device; OCM Messages never takes calls."""
+    from tests.phone import Phone
+
     client = client_for(admin)
     assert [d["id"] for d in client.get("/api/v1/calls/devices/?candidates=1").json()] == [phone.device_id]
-    enabled = client.post(f"/api/v1/calls/devices/{phone.device_id}/enable/", {"enabled": True}, format="json").json()
-    assert enabled["calls_enabled"] and "not_default_dialer" in [a["code"] for a in enabled["attention"]]
-    assert phone.post("heartbeat/", {"is_default_sms_app": True}).json()["capabilities"]["calls"] is True
-    assert phone.send_events(log_row()).json()["processed"] == 1
-    assert AuditEvent.objects.filter(action="calls.device_enable").exists()
+    assert client.post(f"/api/v1/calls/devices/{phone.device_id}/enable/", {"enabled": True}, format="json").json()["code"] == "wrong_app"
+    assert phone.send_events(log_row()).json()["rejected"][0]["code"] == "platform_not_enabled"
+
+    created = client.post("/api/v1/calls/enrollments/", {"name": "Front desk", "office": office.pk, "companion": phone.device_id}, format="json")
+    assert created.status_code == 201 and created.json()["uri"].startswith("ocmphone://enroll?") and created.json()["platforms"] == ["calls"]
+    token = created.json()["code"]
+    info = Phone().client.get(f"/api/v1/device/enroll/info/?token={token}").json()
+    assert info["platform"] == "calls" and "never the conversation" in info["notice"]
+    # The SMS app cannot use an OCM Phone code (and the attempt does not burn it).
+    wrong = Phone().enroll(token)
+    assert wrong.status_code == 409 and wrong.json()["code"] == "wrong_app"
+    dialer = Phone()
+    assert dialer.enroll(token, app="calls").status_code == 201
+    device = Device.objects.get(pk=dialer.device_id)
+    assert device.app == "calls" and device.capabilities == {"sms": False, "calls": True}
+    assert str(device.companion_id) == phone.device_id and str(Device.objects.get(pk=phone.device_id).companion_id) == dialer.device_id
+    heartbeat = dialer.post("heartbeat/", {"is_default_dialer": True}).json()
+    assert heartbeat["capabilities"] == {"sms": False, "calls": True} and "not_default_sms_app" not in heartbeat["attention"]
+    assert dialer.send_events(log_row()).json()["processed"] == 1
+    assert dialer.send_events(dialer.message()).json()["rejected"][0]["code"] == "platform_not_enabled"
+    listed = client.get("/api/v1/calls/devices/").json()
+    assert [(d["id"], d["app"], d["companion"]["id"]) for d in listed] == [(dialer.device_id, "calls", phone.device_id)]
+    # The admin can switch Calls off and on for OCM Phone.
+    assert not client.post(f"/api/v1/calls/devices/{dialer.device_id}/enable/", {"enabled": False}, format="json").json()["calls_enabled"]
+    assert AuditEvent.objects.filter(action="calls.device_disable").exists()
+
+
+def test_sms_codes_are_for_ocm_messages_only(client_for, admin, office):
+    from tests.phone import Phone
+
+    created = client_for(admin).post("/api/v1/sms/enrollments/", {"name": "Desk", "office": office.pk, "platforms": ["sms", "calls"]}, format="json").json()
+    assert created["platforms"] == ["sms"] and created["uri"].startswith("cmsms://enroll?")
+    assert Phone().enroll(created["code"], app="calls").json()["code"] == "wrong_app"
+
+
+def test_only_calls_admins_make_ocm_phone_codes(client_for, manager, office):
+    assert client_for(manager).post("/api/v1/calls/enrollments/", {"name": "Desk", "office": office.pk}, format="json").status_code == 403
 
 
 def test_retention_purge(calls_phone, settings):

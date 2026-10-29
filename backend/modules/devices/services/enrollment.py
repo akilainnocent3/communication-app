@@ -50,9 +50,13 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def enroll_uri(token: str) -> str:
+# Each app registers its own link scheme, so a code opens the app it was made for.
+APP_SCHEMES = {"sms": "cmsms", "calls": "ocmphone"}
+
+
+def enroll_uri(token: str, platform: str = "sms") -> str:
     """What the QR code encodes. The app refuses servers outside its build-time allow-list and non-HTTPS URLs."""
-    return f"cmsms://enroll?{urlencode({'server': settings.SMS_DEVICE_API_URL, 'token': token})}"
+    return f"{APP_SCHEMES[platform]}://enroll?{urlencode({'server': settings.SMS_DEVICE_API_URL, 'token': token})}"
 
 
 def clean_options(options: dict | None) -> dict:
@@ -66,22 +70,29 @@ def clean_options(options: dict | None) -> dict:
     return result
 
 
-@transaction.atomic
-def clean_platforms(platforms) -> list[str]:
+def invite_platform(invite: EnrollmentInvite) -> str:
+    """The app an invite enrolls: one platform per code (older rows may list more; the first wins)."""
     from ..models import PLATFORMS
 
-    chosen = [p for p in PLATFORMS if p in set(platforms or [])]
-    return chosen or ["sms"]
+    return next((p for p in (invite.platforms or []) if p in PLATFORMS), "sms")
 
 
-def create_invite(user, *, name: str, office, assigned_to=None, options: dict | None = None, platforms=("sms",), request=None) -> tuple[EnrollmentInvite, str]:
+@transaction.atomic
+def create_invite(user, *, name: str, office, assigned_to=None, options: dict | None = None, platform: str = "sms", companion=None,
+                  request=None) -> tuple[EnrollmentInvite, str]:
+    from ..models import PLATFORMS
+
+    if platform not in PLATFORMS:
+        raise ValueError(platform)
     token = secrets.token_urlsafe(32)
     invite = EnrollmentInvite.objects.create(
         token_hash=hash_token(token), name=name.strip()[:120], office=office, assigned_to=assigned_to, options=clean_options(options),
-        platforms=clean_platforms(platforms), expires_at=timezone.now() + timedelta(hours=settings.SMS_ENROLL_TTL_HOURS), created_by=user,
+        platforms=[platform], companion=companion if platform == "calls" else None,
+        expires_at=timezone.now() + timedelta(hours=settings.SMS_ENROLL_TTL_HOURS), created_by=user,
     )
     record("device.invite_create", request=request, actor=user, target_type="enrollment", target_id=invite.pk,
-           metadata={"name": invite.name, "office": office.pk, "expires_at": invite.expires_at.isoformat(), "platforms": invite.platforms})
+           metadata={"name": invite.name, "office": office.pk, "expires_at": invite.expires_at.isoformat(), "platforms": invite.platforms,
+                     "companion": companion.code if invite.companion_id else None})
     return invite, token
 
 
@@ -215,6 +226,10 @@ def enroll(data: dict, request=None) -> tuple[Device, str, int]:
     candidate = invite_for_token(token)
     if candidate is None:
         raise _fail(None, "invalid_token", "This enrollment code is not valid. Ask your administrator for a new one.", request, 404)
+    if invite_platform(candidate) != data.get("app", "sms"):
+        # Not a failed attempt: the person opened the other OCM app. The code stays usable.
+        name = "OCM Phone" if invite_platform(candidate) == "calls" else "OCM Messages"
+        raise EnrollmentError("wrong_app", f"This code is for the {name} app. Open {name} and scan it there.", 409)
     if not is_supported(data.get("app_version", "")):
         raise _fail(candidate, "upgrade_required", "This app version is too old. Install the latest version and try again.", request, 426)
     try:
@@ -252,7 +267,7 @@ def enroll(data: dict, request=None) -> tuple[Device, str, int]:
             facts = data.get("device") or {}
             device = Device.objects.create(
                 code=_unique_code(), name=invite.name, office=invite.office, assigned_to=invite.assigned_to, status=DeviceStatus.ACTIVE,
-                capabilities={p: p in (invite.platforms or ["sms"]) for p in ("sms", "calls")},
+                app=invite_platform(invite), capabilities={p: p == invite_platform(invite) for p in ("sms", "calls")},
                 public_key=data["public_key"].strip(), key_fingerprint=fp, hardware_backed=attestation.hardware_backed,
                 attestation=attestation.as_dict(), integrity=verdict,
                 manufacturer=str(facts.get("manufacturer", ""))[:80], model=str(facts.get("model", ""))[:80],
@@ -262,6 +277,11 @@ def enroll(data: dict, request=None) -> tuple[Device, str, int]:
                 sync_progress={"phase": "waiting", "done": 0, "total": 0},
             )
             save_sims(device, data.get("sims") or [])
+            companion = Device.objects.select_for_update().filter(pk=invite.companion_id, status=DeviceStatus.ACTIVE).first() if invite.companion_id else None
+            if companion:
+                device.companion = companion
+                device.save(update_fields=["companion"])
+                Device.objects.filter(pk=companion.pk).update(companion=device)
             invite.used_at = timezone.now()
             invite.device = device
             invite.save(update_fields=["used_at", "device"])

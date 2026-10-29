@@ -25,6 +25,7 @@ class EnrollInfoSerializer(serializers.Serializer):
     device_name = serializers.CharField()
     office = serializers.CharField()
     notice = serializers.CharField()
+    platform = serializers.ChoiceField(choices=["sms", "calls"], help_text="The app this code is for: sms (OCM Messages) or calls (OCM Phone).")
     expires_at = serializers.DateTimeField()
     server_time = serializers.IntegerField()
 
@@ -42,6 +43,8 @@ class EnrollRequestSerializer(serializers.Serializer):
     sims = SimSerializer(many=True, required=False, default=list, max_length=4)
     notice_accepted = serializers.BooleanField()
     notice_text = serializers.CharField(max_length=4000, required=False, allow_blank=True, default="")
+    app = serializers.ChoiceField(choices=["sms", "calls"], required=False, default="sms",
+                                  help_text="Which OCM app is enrolling: sms (OCM Messages) or calls (OCM Phone). Must match the code.")
 
 
 class TokenResponseSerializer(serializers.Serializer):
@@ -71,7 +74,7 @@ class HeartbeatSerializer(serializers.Serializer):
     charging = serializers.BooleanField(required=False, default=False)
     network_type = serializers.ChoiceField(choices=["wifi", "cellular", "ethernet", "none", "other", ""], required=False, default="")
     signal = serializers.IntegerField(min_value=-1, max_value=4, required=False, allow_null=True, default=None)
-    is_default_sms_app = serializers.BooleanField()
+    is_default_sms_app = serializers.BooleanField(required=False, default=False, help_text="OCM Messages: holds the SMS role. OCM Phone leaves it out.")
     is_default_dialer = serializers.BooleanField(required=False, default=False)
     full_screen_intent_allowed = serializers.BooleanField(required=False, allow_null=True)
     call_state = serializers.ChoiceField(choices=["idle", "ringing", "active", "held", ""], required=False, default="")

@@ -30,6 +30,17 @@ export const en = {
     media: { name: "Media", description: "Social media inboxes" },
   },
   calls: {
+    enroll: {
+      button: "Enroll OCM Phone",
+      title: "Enroll OCM Phone",
+      intro: "OCM Phone is the company's Phone app, separate from OCM Messages. Install it on the phone, then scan this code with it.",
+      scan: "Scan this QR code with the OCM Phone app, type the short code in OCM Phone, or send the link to the phone and tap it.",
+      waiting: "Waiting for OCM Phone to enroll…",
+      enrolled: (code: string) => `Enrolled ✓ ${code} is copying its call history now.`,
+      companion: "Same handset as (optional)",
+      companionHint: "The SMS phone running OCM Messages on this handset. Missed-call SMS are sent through it.",
+      none: "No SMS phone",
+    },
     allHint: (count: number, onCall: number) => `${count} phones · ${onCall} on a call`,
     unified: "Every Calls phone",
     direction: { in: "Incoming", out: "Outgoing" },
@@ -57,7 +68,7 @@ export const en = {
     callbackHelp: "The phone shows a notification and adds it to its call-back list. The staff member taps Call — OCM never dials a customer by itself.",
     noRecording: "Calls are not recorded. Android does not let any app record the call audio; see docs/calls-recording.md.",
     empty: {
-      noDevices: { title: "No Calls phones yet", body: "Enable Calls on an enrolled company phone. It then asks to become the phone's default Phone app." },
+      noDevices: { title: "No Calls phones yet", body: "Install OCM Phone on a company phone and enroll it here. It then asks to become the phone's default Phone app." },
       calls: { title: "No calls here", body: "Calls appear a few seconds after they end on the phone." },
       callbacks: { title: "No call-backs", body: "Create one from a missed call, the dashboard or a customer's page." },
       customers: { title: "No customers yet", body: "Everyone who calls or texts a company phone from a real number appears here." },

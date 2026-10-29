@@ -170,6 +170,7 @@ export type CarrierTariff = S["CarrierTariff"];
 export type OfficeHours = S["OfficeHours"];
 export type CallSettings = S["CallSettings"];
 export type CallDevice = S["CallDevice"];
+export type CallEnrollmentCreateRequest = S["CallEnrollmentCreateRequest"];
 export type CallDeviceAccess = S["CallDeviceAccess"];
 export type Customer = S["Customer"];
 export type CustomerPage = S["CustomerPage"];

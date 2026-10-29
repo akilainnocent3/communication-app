@@ -253,10 +253,22 @@ class CallSettingsSerializer(serializers.Serializer):
     effective_retention_days = serializers.IntegerField(read_only=True)
 
 
+class CallEnrollmentCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=120)
+    office = serializers.IntegerField()
+    assigned_to = serializers.IntegerField(required=False, allow_null=True, default=None)
+    backfill_days = serializers.IntegerField(min_value=0, max_value=730, required=False, allow_null=True, default=None,
+                                             help_text="Days of call history copied when OCM Phone enrolls.")
+    companion = serializers.UUIDField(required=False, allow_null=True, default=None,
+                                      help_text="The SMS phone (OCM Messages) on the same handset, if any.")
+
+
 class CallDeviceSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     code = serializers.CharField()
     name = serializers.CharField()
+    app = serializers.CharField(help_text="sms (OCM Messages) or calls (OCM Phone).")
+    companion = serializers.SerializerMethodField(help_text="The other OCM app's device on the same handset.")
     office = serializers.CharField(source="office.name")
     colour = serializers.CharField(source="office.colour")
     status = serializers.CharField()
@@ -272,6 +284,10 @@ class CallDeviceSerializer(serializers.Serializer):
 
     def get_calls_enabled(self, obj) -> bool:
         return obj.has("calls")
+
+    @extend_schema_field(serializers.DictField(allow_null=True))
+    def get_companion(self, obj):
+        return {"id": str(obj.companion_id), "name": obj.companion.name, "code": obj.companion.code} if obj.companion_id else None
 
     def get_online(self, obj) -> bool:
         from modules.devices.services.health import is_online

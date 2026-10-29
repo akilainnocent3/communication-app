@@ -35,6 +35,8 @@ def skip_reason(call: CallRecord, config: CallSettings, now=None) -> str | None:
         return "not_fresh"
     if call.returned_at is not None:
         return "returned"
+    if sms_device(call) is None:
+        return "no_sms_phone"
     if config.auto_sms_after_hours_only and not call.is_after_hours:
         return "office_hours"
     if call.customer_id and call.customer.auto_sms_opt_out:
@@ -47,6 +49,19 @@ def skip_reason(call: CallRecord, config: CallSettings, now=None) -> str | None:
     return None
 
 
+def sms_device(call: CallRecord):
+    """The phone that sends the SMS: OCM Messages on the same handset as the OCM Phone that missed the call (its
+    companion), or the call's own device when it is an SMS phone (simulated or older data)."""
+    from modules.devices.models import DeviceStatus
+
+    device = call.device
+    if not device.has("sms"):
+        device = device.companion if device.companion_id else None
+    if device is None or device.status != DeviceStatus.ACTIVE or not device.has("sms"):
+        return None
+    return device
+
+
 def maybe_send(call: CallRecord) -> bool:
     config = CallSettings.load()
     reason = skip_reason(call, config)
@@ -57,8 +72,9 @@ def maybe_send(call: CallRecord) -> bool:
     body = config.auto_sms_template.replace("{company}", settings.COMPANY_NAME)
     try:
         with transaction.atomic():
-            entry = AutoSmsLog.objects.create(number_e164=call.number_e164, device=call.device, call=call)
-            message = queue_automatic(call.device, call.number_e164, body, reason="missed_call")
+            sender = sms_device(call)
+            entry = AutoSmsLog.objects.create(number_e164=call.number_e164, device=sender, call=call)
+            message = queue_automatic(sender, call.number_e164, body, reason="missed_call")
             AutoSmsLog.objects.filter(pk=entry.pk).update(message_id=message.pk)
     except IntegrityError:
         return False  # already sent for this call

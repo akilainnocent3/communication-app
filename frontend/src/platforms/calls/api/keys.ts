@@ -26,6 +26,7 @@ export const callsKeys = {
   stats: (device: CallsScope, days: number, sim?: number) => ["calls", "stats", device, days, sim ?? null] as const,
   badges: (device: CallsScope) => ["calls", "badges", device] as const,
   devices: (candidates = false) => ["calls", "devices", candidates] as const,
+  enrollment: (id: number) => ["calls", "enrollments", id] as const,
   access: (id: string) => ["calls", "access", id] as const,
   customers: (q: string, tag?: string) => ["calls", "customers", q, tag ?? null] as const,
   customer: (id: number) => ["calls", "customer", id] as const,

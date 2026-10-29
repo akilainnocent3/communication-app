@@ -61,8 +61,11 @@ def test_customer_delete_and_simulator_view(client_for, admin, office, calls_pho
     assert client.delete(f"/api/v1/calls/customers/{customer.pk}/").status_code == 204
     assert CallRecord.objects.get().customer_id is None and AuditEvent.objects.filter(action="directory.delete").exists()
     assert client.post(f"/api/v1/calls/devices/{phone.device_id}/simulator/", {"action": "missed"}, format="json").status_code == 400  # a real phone
-    device = simulator.create(name="Demo", office=office, user=admin, backfill_days=1)
-    client.post(f"/api/v1/calls/devices/{device.pk}/enable/", {"enabled": True}, format="json")
+    from modules.calls.services import simulator as calls_simulator
+
+    sms_device = simulator.create(name="Demo", office=office, user=admin, backfill_days=1)
+    device = calls_simulator.create_for(sms_device, admin)  # a simulated OCM Phone on the same handset
+    assert device.app == "calls" and device.companion_id == sms_device.pk
     assert client.post(f"/api/v1/calls/devices/{device.pk}/simulator/", {"action": "missed"}, format="json").status_code == 204
     assert CallRecord.objects.filter(device=device, result="missed").exists()
     client.post(f"/api/v1/calls/devices/{device.pk}/enable/", {"enabled": False}, format="json")

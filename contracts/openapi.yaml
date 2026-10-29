@@ -781,7 +781,8 @@ paths:
         name: candidates
         schema:
           type: boolean
-        description: SMS phones that can be enabled for Calls
+        description: 'SMS phones (OCM Messages) a new OCM Phone code can be linked
+          to: same handset'
       tags:
       - calls
       security:
@@ -862,8 +863,8 @@ paths:
     post:
       operationId: calls_devices_enable
       description: |-
-        Switch Calls on or off for a phone. The phone learns it from its next heartbeat (and a push) and runs the dialer
-        onboarding; switching off keeps the history.
+        Switch Calls on or off for an OCM Phone device (the dialer app). The phone learns it from its next heartbeat (and a
+        push); switching off stops the upload and keeps the history. OCM Messages devices cannot take calls (decision 80).
       parameters:
       - in: path
         name: id
@@ -925,6 +926,115 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/calls/enrollments/:
+    get:
+      operationId: calls_enrollments_list
+      description: |-
+        Codes for OCM Phone. Optionally linked to the SMS phone on the same handset, so the missed-call SMS and the admin
+        know the two apps belong together.
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Enrollment'
+          description: ''
+    post:
+      operationId: calls_enrollments_create
+      description: |-
+        Codes for OCM Phone. Optionally linked to the SMS phone on the same handset, so the missed-call SMS and the admin
+        know the two apps belong together.
+      tags:
+      - calls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallEnrollmentCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CallEnrollmentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CallEnrollmentCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentCreated'
+          description: ''
+  /api/v1/calls/enrollments/{id}/:
+    get:
+      operationId: calls_enrollments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+          description: ''
+  /api/v1/calls/enrollments/{id}/revoke/:
+    post:
+      operationId: calls_enrollments_revoke
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+          description: ''
+  /api/v1/calls/enrollments/{id}/short-code/:
+    post:
+      operationId: calls_enrollments_short_code
+      description: A new short code for an active invite (the previous one stops working);
+        codes last 15 minutes, invites 24 h.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - calls
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentShortCode'
+          description: ''
   /api/v1/calls/export/:
     get:
       operationId: calls_export
@@ -1529,7 +1639,6 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/HeartbeatRequest'
-        required: true
       security:
       - deviceToken: []
       responses:
@@ -4335,6 +4444,8 @@ paths:
   /api/v1/sms/enrollments/:
     get:
       operationId: sms_enrollments_list
+      description: Enrollment codes for one app (OCM Messages here; Calls subclasses
+        it for OCM Phone).
       tags:
       - sms
       security:
@@ -4350,6 +4461,8 @@ paths:
           description: ''
     post:
       operationId: sms_enrollments_create
+      description: Enrollment codes for one app (OCM Messages here; Calls subclasses
+        it for OCM Phone).
       tags:
       - sms
       requestBody:
@@ -5060,6 +5173,14 @@ components:
       required:
       - code
       - label
+    AppEnum:
+      enum:
+      - sms
+      - calls
+      type: string
+      description: |-
+        * `sms` - sms
+        * `calls` - calls
     Assignee:
       type: object
       properties:
@@ -5437,6 +5558,15 @@ components:
           type: string
         name:
           type: string
+        app:
+          type: string
+          description: sms (OCM Messages) or calls (OCM Phone).
+        companion:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+          description: The other OCM app's device on the same handset.
         office:
           type: string
         colour:
@@ -5474,12 +5604,14 @@ components:
           additionalProperties: {}
           readOnly: true
       required:
+      - app
       - attention
       - call_state
       - calls_backfill
       - calls_enabled
       - code
       - colour
+      - companion
       - full_screen_intent_allowed
       - holder
       - id
@@ -5562,6 +5694,32 @@ components:
           type: boolean
       required:
       - enabled
+    CallEnrollmentCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        office:
+          type: integer
+        assigned_to:
+          type: integer
+          nullable: true
+        backfill_days:
+          type: integer
+          maximum: 730
+          minimum: 0
+          nullable: true
+          description: Days of call history copied when OCM Phone enrolls.
+        companion:
+          type: string
+          format: uuid
+          nullable: true
+          description: The SMS phone (OCM Messages) on the same handset, if any.
+      required:
+      - name
+      - office
     CallEvent:
       type: object
       properties:
@@ -7527,6 +7685,14 @@ components:
           type: string
         notice:
           type: string
+        platform:
+          allOf:
+          - $ref: '#/components/schemas/PlatformEnum'
+          description: |-
+            The app this code is for: sms (OCM Messages) or calls (OCM Phone).
+
+            * `sms` - sms
+            * `calls` - calls
         expires_at:
           type: string
           format: date-time
@@ -7538,6 +7704,7 @@ components:
       - expires_at
       - notice
       - office
+      - platform
       - server_time
       - state
     EnrollRequestRequest:
@@ -7588,6 +7755,15 @@ components:
           type: string
           default: ''
           maxLength: 4000
+        app:
+          allOf:
+          - $ref: '#/components/schemas/AppEnum'
+          default: sms
+          description: |-
+            Which OCM app is enrolling: sms (OCM Messages) or calls (OCM Phone). Must match the code.
+
+            * `sms` - sms
+            * `calls` - calls
       required:
       - app_version
       - nonce
@@ -7718,13 +7894,6 @@ components:
         mark_read_on_open:
           type: boolean
           default: true
-        platforms:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlatformsEnum'
-          description: Phone platforms to enroll for; default ["sms"]. "calls" needs
-            calls.manage_settings.
-          maxItems: 2
       required:
       - name
       - office
@@ -7973,6 +8142,8 @@ components:
           nullable: true
         is_default_sms_app:
           type: boolean
+          default: false
+          description: 'OCM Messages: holds the SMS role. OCM Phone leaves it out.'
         is_default_dialer:
           type: boolean
           default: false
@@ -8029,8 +8200,6 @@ components:
           items:
             $ref: '#/components/schemas/SimRequest'
           nullable: true
-      required:
-      - is_default_sms_app
     HeartbeatResponse:
       type: object
       properties:
@@ -9525,6 +9694,14 @@ components:
       - name
       - order
       - permission
+    PlatformEnum:
+      enum:
+      - sms
+      - calls
+      type: string
+      description: |-
+        * `sms` - sms
+        * `calls` - calls
     PlatformUpdateItemRequest:
       type: object
       properties:
@@ -9541,14 +9718,6 @@ components:
       - is_enabled
       - key
       - order
-    PlatformsEnum:
-      enum:
-      - sms
-      - calls
-      type: string
-      description: |-
-        * `sms` - sms
-        * `calls` - calls
     PriorityEnum:
       enum:
       - low

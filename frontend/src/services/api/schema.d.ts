@@ -415,8 +415,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * @description Switch Calls on or off for a phone. The phone learns it from its next heartbeat (and a push) and runs the dialer
-         *     onboarding; switching off keeps the history.
+         * @description Switch Calls on or off for an OCM Phone device (the dialer app). The phone learns it from its next heartbeat (and a
+         *     push); switching off stops the upload and keeps the history. OCM Messages devices cannot take calls (decision 80).
          */
         post: operations["calls_devices_enable"];
         delete?: never;
@@ -436,6 +436,79 @@ export interface paths {
         put?: never;
         /** @description Demo phones only (SMS_ENABLE_SIMULATOR, refused in production): ring an incoming call, a missed one, or run a tick. */
         post: operations["calls_devices_simulator"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/enrollments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Codes for OCM Phone. Optionally linked to the SMS phone on the same handset, so the missed-call SMS and the admin
+         *     know the two apps belong together.
+         */
+        get: operations["calls_enrollments_list"];
+        put?: never;
+        /**
+         * @description Codes for OCM Phone. Optionally linked to the SMS phone on the same handset, so the missed-call SMS and the admin
+         *     know the two apps belong together.
+         */
+        post: operations["calls_enrollments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/enrollments/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["calls_enrollments_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/enrollments/{id}/revoke/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["calls_enrollments_revoke"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/enrollments/{id}/short-code/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description A new short code for an active invite (the previous one stops working); codes last 15 minutes, invites 24 h. */
+        post: operations["calls_enrollments_short_code"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2116,8 +2189,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Enrollment codes for one app (OCM Messages here; Calls subclasses it for OCM Phone). */
         get: operations["sms_enrollments_list"];
         put?: never;
+        /** @description Enrollment codes for one app (OCM Messages here; Calls subclasses it for OCM Phone). */
         post: operations["sms_enrollments_create"];
         delete?: never;
         options?: never;
@@ -2483,6 +2558,12 @@ export interface components {
             code: string;
             label: string;
         };
+        /**
+         * @description * `sms` - sms
+         *     * `calls` - calls
+         * @enum {string}
+         */
+        AppEnum: "sms" | "calls";
         Assignee: {
             id: number;
             email: string;
@@ -2615,6 +2696,12 @@ export interface components {
             id: string;
             code: string;
             name: string;
+            /** @description sms (OCM Messages) or calls (OCM Phone). */
+            app: string;
+            /** @description The other OCM app's device on the same handset. */
+            readonly companion: {
+                [key: string]: unknown;
+            } | null;
             office: string;
             colour: string;
             status: string;
@@ -2667,6 +2754,18 @@ export interface components {
         };
         CallEnableRequest: {
             enabled: boolean;
+        };
+        CallEnrollmentCreateRequest: {
+            name: string;
+            office: number;
+            assigned_to?: number | null;
+            /** @description Days of call history copied when OCM Phone enrolls. */
+            backfill_days?: number | null;
+            /**
+             * Format: uuid
+             * @description The SMS phone (OCM Messages) on the same handset, if any.
+             */
+            companion?: string | null;
         };
         CallEvent: {
             kind: string;
@@ -3407,6 +3506,13 @@ export interface components {
             device_name: string;
             office: string;
             notice: string;
+            /**
+             * @description The app this code is for: sms (OCM Messages) or calls (OCM Phone).
+             *
+             *     * `sms` - sms
+             *     * `calls` - calls
+             */
+            platform: components["schemas"]["PlatformEnum"];
             /** Format: date-time */
             expires_at: string;
             server_time: number;
@@ -3426,6 +3532,14 @@ export interface components {
             notice_accepted: boolean;
             /** @default  */
             notice_text: string;
+            /**
+             * @description Which OCM app is enrolling: sms (OCM Messages) or calls (OCM Phone). Must match the code.
+             *
+             *     * `sms` - sms
+             *     * `calls` - calls
+             * @default sms
+             */
+            app: components["schemas"]["AppEnum"];
         };
         EnrollResponse: {
             access_token: string;
@@ -3472,8 +3586,6 @@ export interface components {
             signature: string;
             /** @default true */
             mark_read_on_open: boolean;
-            /** @description Phone platforms to enroll for; default ["sms"]. "calls" needs calls.manage_settings. */
-            platforms?: components["schemas"]["PlatformsEnum"][];
         };
         EnrollmentCreated: {
             id: number;
@@ -3564,6 +3676,10 @@ export interface components {
             /** @default  */
             network_type: components["schemas"]["NetworkTypeEnum"] | components["schemas"]["BlankEnum"];
             signal?: number | null;
+            /**
+             * @description OCM Messages: holds the SMS role. OCM Phone leaves it out.
+             * @default false
+             */
             is_default_sms_app: boolean;
             /** @default false */
             is_default_dialer: boolean;
@@ -4159,17 +4275,17 @@ export interface components {
             is_enabled: boolean;
             order: number;
         };
-        PlatformUpdateItemRequest: {
-            key: string;
-            is_enabled: boolean;
-            order: number;
-        };
         /**
          * @description * `sms` - sms
          *     * `calls` - calls
          * @enum {string}
          */
-        PlatformsEnum: "sms" | "calls";
+        PlatformEnum: "sms" | "calls";
+        PlatformUpdateItemRequest: {
+            key: string;
+            is_enabled: boolean;
+            order: number;
+        };
         /**
          * @description * `low` - low
          *     * `normal` - normal
@@ -5464,7 +5580,7 @@ export interface operations {
     calls_devices_list: {
         parameters: {
             query?: {
-                /** @description SMS phones that can be enabled for Calls */
+                /** @description SMS phones (OCM Messages) a new OCM Phone code can be linked to: same handset */
                 candidates?: boolean;
             };
             header?: never;
@@ -5581,6 +5697,113 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    calls_enrollments_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"][];
+                };
+            };
+        };
+    };
+    calls_enrollments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallEnrollmentCreateRequest"];
+                "multipart/form-data": components["schemas"]["CallEnrollmentCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CallEnrollmentCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentCreated"];
+                };
+            };
+        };
+    };
+    calls_enrollments_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"];
+                };
+            };
+        };
+    };
+    calls_enrollments_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"];
+                };
+            };
+        };
+    };
+    calls_enrollments_short_code: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentShortCode"];
+                };
             };
         };
     };
@@ -6121,7 +6344,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["HeartbeatRequest"];
                 "multipart/form-data": components["schemas"]["HeartbeatRequest"];

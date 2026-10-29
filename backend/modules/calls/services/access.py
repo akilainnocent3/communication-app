@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from rest_framework import status
 
 from common.errors import ApiError
@@ -38,7 +38,9 @@ def can_use_calls(user) -> bool:
 
 
 def calls_devices() -> QuerySet[Device]:
-    return Device.objects.filter(capabilities__calls=True)
+    """OCM Phone devices (also when Calls is switched off for one: its history stays readable), plus older phones that
+    reported calls before Calls became its own app."""
+    return Device.objects.filter(Q(app="calls") | Q(capabilities__calls=True))
 
 
 def accessible_devices(user, perm: str = READ) -> QuerySet[Device]:

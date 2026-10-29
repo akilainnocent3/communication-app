@@ -166,14 +166,16 @@ def device_grant():
 
 @pytest.fixture
 def calls_phone(admin, office):
-    """An enrolled phone with SMS and Calls (tests.phone.Phone)."""
+    """An enrolled OCM Phone (the dialer app: Calls only), optionally on the same handset as an SMS phone (tests.phone.Phone)."""
+    from modules.devices.models import Device
     from modules.devices.services.enrollment import create_invite
     from tests.phone import Phone
 
-    def build(name="Front desk", target_office=None):
-        _, token = create_invite(admin, name=name, office=target_office or office, platforms=["sms", "calls"])
+    def build(name="Front desk", target_office=None, companion=None):
+        companion_device = Device.objects.get(pk=companion.device_id) if companion is not None else None
+        _, token = create_invite(admin, name=name, office=target_office or office, platform="calls", companion=companion_device)
         phone = Phone()
-        assert phone.enroll(token).status_code == 201
+        assert phone.enroll(token, app="calls").status_code == 201
         return phone
 
     return build
