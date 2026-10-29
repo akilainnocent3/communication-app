@@ -43,6 +43,8 @@ flowchart LR
 | `modules/mail` | The Gmail platform: models, providers, services, API, Celery tasks |
 | `modules/devices` | Company phones, shared by phone platforms: enrollment invites, Keystore identity + key attestation, proof-of-possession device tokens, `DeviceTokenAuthentication`, heartbeat and health alerts, commands, FCM push, suspend/revoke |
 | `modules/sms` | The SMS platform: encrypted conversations/messages/MMS parts, sync events, outbound queue (leases, at-most-once), access (`DeviceAccess`), analytics, retention, simulated phones |
+| `modules/directory` | The company directory shared by SMS and Calls: `Customer` per number (E.164, or the raw sender for short codes), organisation, tags, owner, encrypted notes, first/last seen per channel, merge; caller-ID names for phones |
+| `modules/calls` | The Calls platform: `CallRecord` (call log + live events merged), `CallEvent` timeline, outcomes and encrypted annotations, call-back tasks, office hours, tariffs, settings, hourly rollups, analytics, live board, export, retention, simulated calls |
 
 ## Platform registry
 
@@ -55,7 +57,7 @@ flowchart TB
   end
   subgraph Frontend
     DEF["platforms/gmail/definition.tsx<br/>nav, badges, ContextSwitcher, commands"] --> PL["registry.ts PLATFORMS"]
-    CS["coming-soon.tsx<br/>SMS · Calls · Media"] --> PL
+    CS["coming-soon.tsx<br/>Media"] --> PL
     PL --> VIS["visiblePlatforms(server list)"]
     API --> VIS
     VIS --> SW[Header platform switcher]
@@ -200,6 +202,45 @@ sequenceDiagram
 Celery beat adds: `sms.dispatch_due` (5 s, wakes phones whose undo/schedule window ended), `sms.expire_outbound`
 (1 min), `devices.refresh_health` (1 min, offline/attention), `devices.prune` (hourly: heartbeats, tokens, invites,
 commands), `sms.retention_purge` (6 h), `sms.media_cleanup` (hourly), `sms.simulator_tick` (5 s, demo only).
+
+## Calls: phone → server, call-backs, rollups
+
+The phone side is in [calls-mobile.md](calls-mobile.md). Calls reuse the devices pipeline: `POST /device/sync/events`
+carries five Calls event types (`call.upsert`, `call.event`, `call.annotation`, `callback.state`,
+`call_log.backfill`) next to the SMS ones, in one ordered, idempotent batch (decision 66).
+
+```mermaid
+sequenceDiagram
+  participant T as Telecom
+  participant S as OcmInCallService
+  participant L as CallLog observer
+  participant O as SyncStore outbox
+  participant D as devices: sync/events
+  participant I as calls.ingest
+  participant R as CallStatHourly
+  T->>S: onCallAdded / state changes / onCallRemoved
+  S->>O: call.upsert (call_key) + call.event
+  T-->>L: CallLog row written
+  L->>O: call.upsert (call_log_id)
+  O->>D: batch (≤ 200, seq)
+  D->>I: upsert_call: find by call_key / call_log_id / number+time+SIM
+  I->>I: customer (directory), after-hours, returns_call, call-back task
+  I->>R: subtract old contribution, add new (same transaction, phone row lock)
+  I-->>D: acked_seq
+```
+
+Call-back loop: the admin creates a task (`POST /calls/callbacks/`) → FCM `{"type":"callbacks"}` (no content) or the
+next sync cycle → the phone fetches `GET /device/calls/callbacks/`, notifies once and reports `notified` → the staff
+member taps *Call* → `callback.state dialed` and a `call.upsert` with `origin=callback_task` → the task is *done* when
+a call to that number connects; open tasks past due expire (`calls.expire_callbacks`).
+
+Rollups: dashboards read `CallStatHourly` (UTC hour × phone × SIM × office × direction × result × after-hours) and
+`CallerDaily`, maintained incrementally on ingest and rebuilt for the last 3 days nightly (`calls.repair_rollups`);
+tests check rollups equal the raw aggregation (decision 68). Only the unreturned-missed metrics and the medians read
+call rows, through indexes.
+
+Celery beat adds: `calls.retention_purge` (6 h), `calls.repair_rollups` (02:40), `calls.expire_callbacks` (10 min),
+`calls.simulator_tick` (10 s, demo only).
 
 ## Frontend
 

@@ -1,5 +1,6 @@
 package com.kilimanjaro.communicationmanager.sms
 
+import android.app.NotificationManager
 import android.media.AudioManager
 import android.telecom.TelecomManager
 import androidx.test.core.app.ApplicationProvider
@@ -129,6 +130,28 @@ class CallsTest {
         assertEquals(Ringer.Plan(sound = false, vibrate = true), Ringer.plan(AudioManager.RINGER_MODE_VIBRATE, dndAllows = true, vibrateWhenRinging = false))
         assertEquals(Ringer.Plan(sound = false, vibrate = false), Ringer.plan(AudioManager.RINGER_MODE_SILENT, dndAllows = true, vibrateWhenRinging = true))
         assertEquals(Ringer.Plan(sound = false, vibrate = false), Ringer.plan(AudioManager.RINGER_MODE_NORMAL, dndAllows = false, vibrateWhenRinging = true))
+    }
+
+    @Test
+    fun doNotDisturbLetsThroughOnlyTheCallersThePersonChose() {
+        val all = NotificationManager.INTERRUPTION_FILTER_ALL
+        val priority = NotificationManager.INTERRUPTION_FILTER_PRIORITY
+        val none = NotificationManager.INTERRUPTION_FILTER_NONE
+        val starred = NotificationManager.Policy.PRIORITY_SENDERS_STARRED
+        val contacts = NotificationManager.Policy.PRIORITY_SENDERS_CONTACTS
+        val anyone = NotificationManager.Policy.PRIORITY_SENDERS_ANY
+        assertTrue(Ringer.dndAllows(all, null, callsAllowed = false, senders = -1, isContact = false, isStarred = false))
+        // Android 13+: the system decides
+        assertTrue(Ringer.dndAllows(priority, true, callsAllowed = false, senders = -1, isContact = false, isStarred = false))
+        assertFalse(Ringer.dndAllows(priority, false, callsAllowed = true, senders = anyone, isContact = true, isStarred = true))
+        // Android 10–12: the public policy
+        assertTrue(Ringer.dndAllows(priority, null, callsAllowed = true, senders = starred, isContact = true, isStarred = true))
+        assertFalse(Ringer.dndAllows(priority, null, callsAllowed = true, senders = starred, isContact = true, isStarred = false))
+        assertTrue(Ringer.dndAllows(priority, null, callsAllowed = true, senders = contacts, isContact = true, isStarred = false))
+        assertFalse(Ringer.dndAllows(priority, null, callsAllowed = true, senders = contacts, isContact = false, isStarred = false))
+        assertTrue(Ringer.dndAllows(priority, null, callsAllowed = true, senders = anyone, isContact = false, isStarred = false))
+        assertFalse(Ringer.dndAllows(priority, null, callsAllowed = false, senders = anyone, isContact = true, isStarred = true))
+        assertFalse(Ringer.dndAllows(none, null, callsAllowed = true, senders = anyone, isContact = true, isStarred = true))
     }
 
     @Test

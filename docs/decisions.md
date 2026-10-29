@@ -244,3 +244,37 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
     like an admin message, sharing the phone's rate limit and daily cap, refusing short codes, premium numbers and
     blocked numbers. On top: only for calls that ended in the last 30 minutes (never history), one per number per day
     and a cool-down by default, never to an opted-out customer, never once the call was returned.
+73. **One app holds both roles; the Phone entry exists only on Calls phones.** `ROLE_SMS` and `ROLE_DIALER` share one
+    enrollment, Keystore key, sync engine and SQLCipher store, so a phone is one device in the admin and revocation wipes
+    both at once. *OCM Phone* and the `ACTION_CALL` handler are activity-aliases that start disabled and are enabled from
+    the heartbeat's `capabilities.calls`; a phone that is not a Calls phone never offers a dialer it cannot use, and
+    disabling Calls makes the role unqualified, so Android returns it to the system dialer. `ACTION_CALL` (dials at once)
+    is a separate alias behind `CALL_PHONE`, so no app without that permission can dial through OCM.
+74. **The call screen is native (plain Views); Flutter draws only Keypad, Recents, Contacts and Call-backs.** An incoming
+    call is the case where the process is most often dead, so a pre-warmed Flutter engine cannot be guaranteed, and a
+    cold engine (load `libflutter.so` + the AOT snapshot, first frame) does not fit the ≤ 300 ms budget on a low-end
+    phone. Compose would cost ~2–3 MB per ABI plus first-composition warm-up. `InCallActivity` builds its views in code
+    (no XML inflation), `OcmInCallService` and `Ringer` never touch Flutter, and the state the screen shows is written to
+    the outbox by `CallTracker` before any UI work. Measurements: [sms-mobile-performance.md](sms-mobile-performance.md).
+75. **The phone sends the live call and the call-log row separately; the server merges.** Telecom writes the call log,
+    not the dialer, and some calls are never seen by the dialer (before enrollment, while another app was default).
+    Sending both raw (`call_key` from `CallTracker`, `call_log_id` from `CallLogMapper`) keeps the phone simple and
+    makes the merge testable in one place: lookup by either key, else number + start window + SIM; unique constraints
+    on both keys make every retry idempotent. A log row refines a generic live "missed" but never overwrites live
+    timestamps.
+76. **The app rings and follows Do Not Disturb conservatively.** With `IN_CALL_SERVICE_RINGING` the dialer owns the
+    ringtone. Silent mode → nothing; vibrate → vibration; normal → the contact's ringtone (or default) and vibration if
+    the system setting is on. Under DND it rings only when the system would: `matchesCallFilter` on Android 13+, and on
+    10–12 the public notification policy (calls category on, and the caller is anyone / a contact / a starred contact as
+    the person chose; repeat callers are not detected). When in doubt it stays silent; the call still shows and can be
+    answered.
+77. **A single SIM is named on every call.** With one SIM the app passes its subscription to Telecom, so the record
+    carries its `SimLine` from the first event; dual-SIM phones always ask (label and colour from the admin). Emergency
+    calls never get a SIM override: Telecom picks the best network.
+78. **Screening uses the block list only; no spam source in v1.** `CallScreeningService` rejects numbers on the phone's
+    block list (shared with SMS and the admin's *block*) and still lets the system log them as *blocked*, so the admin
+    sees blocked attempts. There is no trustworthy Tanzanian spam database to subscribe to, so nothing is flagged as
+    spam. Emergency numbers and outgoing calls are never screened.
+79. **No call audio, ever, from the phone.** Android 10+ reserves the voice-call audio source for system apps and Play
+    bans Accessibility recording; mic/speaker tricks are unreliable and undisclosed. The only acceptable route is a
+    cloud PBX recording server-side with an announcement ([calls-recording.md](calls-recording.md)).

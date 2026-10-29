@@ -198,7 +198,7 @@ docker compose up -d
 ```bash
 # Prepend a new key: SMS_DATA_KEYS=<new>,<old>
 docker compose up -d
-docker compose exec backend python manage.py rotate_sms_keys   # bodies, snippets, MMS files
+docker compose exec backend python manage.py rotate_sms_keys   # SMS bodies, snippets, MMS files, call notes, call-back reasons, directory notes
 # Remove the old key from SMS_DATA_KEYS, then:
 docker compose up -d
 ```
@@ -209,6 +209,15 @@ docker compose up -d
 2. Optional, for near-instant delivery: create a Firebase project, put `google-services.json` in the app build,
    set `FCM_PROJECT_ID` and mount the service account (`FCM_SERVICE_ACCOUNT_FILE`, never baked into the image).
 3. In the admin: **SMS → Enroll phone**, scan the QR code with the app.
+
+## 7d. Phones (Calls)
+
+1. Enroll the phone (7c) or use an SMS phone. In the admin: **Calls → Phones → Enable**. The phone shows *OCM Phone*
+   and asks to become the default phone app at its next heartbeat.
+2. On the phone: accept *Set as default Phone app*, the call permissions and, on Android 14+, the incoming-call screen.
+3. Set office hours, outcomes, tariffs and (optionally) the missed-call SMS under **Calls → Tools**.
+
+Calls need no extra service or secret: they use the same device API, Redis, Celery and `SMS_DATA_KEYS`.
 
 ### Separate domains for the admin and the phone API
 
@@ -279,7 +288,7 @@ the admin API off the internet and keeps a single proxy hop, which `X-Forwarded-
 | `GOOGLE_OAUTH_REDIRECT_URI` | `${PUBLIC_APP_URL}/api/v1/mail/oauth/callback/` | Must match Google Cloud exactly |
 | `GOOGLE_OAUTH_SCOPES` | openid, email, mail.google.com, gmail.settings.basic | Comma separated |
 | `SECURE_HSTS_SECONDS` | `2592000` | Prod only |
-| `SMS_DATA_KEYS` | dev-only value | **Required in prod.** Fernet keys for SMS bodies and MMS files, newest first, not shared with `MAIL_TOKEN_KEYS` |
+| `SMS_DATA_KEYS` | dev-only value | **Required in prod.** Fernet keys for all device-derived data (SMS bodies and MMS files, call notes, call-back reasons, directory notes), newest first, not shared with `MAIL_TOKEN_KEYS` |
 | `SMS_DEVICE_API_URL` | `PUBLIC_APP_URL` | https URL phones use, encoded in the enrollment QR; must be in the app's `ALLOWED_SERVER_HOSTS` |
 | `SMS_MEDIA_ROOT` | `backend/private/sms-media` (`/data/sms-media` in compose) | Encrypted MMS files, private |
 | `SMS_MAX_MMS_BYTES` | `2097152` | Per MMS part |
@@ -299,4 +308,5 @@ the admin API off the internet and keeps a single proxy hop, which `X-Forwarded-
 | `SMS_SHOW_ADMIN_NAME_ON_PHONE` | `true` | "Sent by admin · Name" on the phone |
 | `SMS_DEVICE_POLL_SECONDS` | `20` | Phone poll interval without FCM |
 | `SMS_ENABLE_SIMULATOR` | `true` (dev) / `false` (prod) | Simulated demo phones; prod refuses `true` |
+| `CALLS_RETENTION_DAYS` | `365` | Server copy of calls, events and notes; `0` keeps them forever. Calls → Settings may set a shorter period |
 | `FCM_PROJECT_ID` / `FCM_SERVICE_ACCOUNT_FILE` | — | Optional push wake-ups; the file is a mounted secret |

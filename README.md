@@ -4,7 +4,10 @@ A company admin platform for managing every communication channel from one place
 open the mailbox of any office and work in it like in Gmail (read, reply, label, search, delete, schedule, assign,
 take internal notes). **SMS**: company Android phones run the Communication Manager SMS app as their default SMS
 app; their text messages are copied (encrypted) to the admin, where admins read every conversation, see analytics
-and reply — the phone sends the reply as a normal carrier SMS. Calls and Media show as "Coming soon".
+and reply — the phone sends the reply as a normal carrier SMS. **Calls**: the same app becomes the phones' default
+Phone app; every call is copied (number, times, result; never audio) and admins get the call log, a live board,
+unreturned missed calls, call-back tasks the staff member places with one tap, a shared customer directory and
+analytics. Media shows as "Coming soon".
 
 - Connect a Google mailbox with *open a link → choose account → Allow*. Office staff do not need App Passwords
   or 2-Step Verification.
@@ -85,8 +88,11 @@ cd mobile && flutter analyze && flutter test                               # Dar
 | [docs/deployment.md](docs/deployment.md) | Single-VPS deploy with Docker, Nginx and HTTPS; full environment variable list |
 | [docs/architecture.md](docs/architecture.md) | Platform registry, provider layer, sync flow, request path |
 | [docs/security.md](docs/security.md) | Auth, permissions, HTML sanitising, token encryption, audit log |
-| [docs/adding-a-platform.md](docs/adding-a-platform.md) | How to add Calls or Media (SMS followed it) |
+| [docs/adding-a-platform.md](docs/adding-a-platform.md) | How to add a platform (SMS and Calls followed it) |
 | [docs/sms-mobile.md](docs/sms-mobile.md) | SMS platform: phones, enrollment, sync protocol, outbound queue, security, PDPA, distribution |
+| [docs/calls-mobile.md](docs/calls-mobile.md) | Calls platform: the dialer, emergency and USSD guarantees, call merge, call-backs, onboarding |
+| [docs/calls-recording.md](docs/calls-recording.md) | Why v1 records no call audio; the cloud-PBX path; Tanzanian legal points for counsel |
+| [docs/play-store.md](docs/play-store.md) | Google Play declarations (SMS and phone handler), data safety, reviewer access |
 | [mobile/README.md](mobile/README.md) | Building, signing and distributing the Android app |
 | [docs/decisions.md](docs/decisions.md) | Defaults chosen during the build and why |
 | [docs/status.md](docs/status.md) | What was built, how it was verified, known limitations, next steps |
