@@ -212,10 +212,12 @@ docker compose up -d
 
 ## 7d. Phones (Calls)
 
-1. Enroll the phone (7c) or use an SMS phone. In the admin: **Calls → Phones → Enable**. The phone shows *OCM Phone*
-   and asks to become the default phone app at its next heartbeat.
-2. On the phone: accept *Set as default Phone app*, the call permissions and, on Android 14+, the incoming-call screen.
-3. Set office hours, outcomes, tariffs and (optionally) the missed-call SMS under **Calls → Tools**.
+1. Install OCM Phone (`mobile_dialer/README.md`), a separate app from OCM Messages.
+2. In the admin: **Calls → Phones → Enroll OCM Phone**. Pick the SMS phone on the same handset if it runs OCM Messages
+   (the missed-call SMS is sent through it), then scan the QR with OCM Phone.
+3. On the phone: accept the notice, *Set as default Phone app*, the call permissions and, on Android 14+, the
+   incoming-call screen.
+4. Set office hours, outcomes, tariffs and (optionally) the missed-call SMS under **Calls → Tools**.
 
 Calls need no extra service or secret: they use the same device API, Redis, Celery and `SMS_DATA_KEYS`.
 

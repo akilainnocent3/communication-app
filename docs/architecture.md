@@ -41,7 +41,7 @@ flowchart LR
 | `modules/platforms` | `PlatformRegistry` + `Platform` model (enable, disable and order platforms) |
 | `modules/audit` | Append-only `AuditEvent`, list API and CSV export |
 | `modules/mail` | The Gmail platform: models, providers, services, API, Celery tasks |
-| `modules/devices` | Company phones, shared by phone platforms: enrollment invites, Keystore identity + key attestation, proof-of-possession device tokens, `DeviceTokenAuthentication`, heartbeat and health alerts, commands, FCM push, suspend/revoke |
+| `modules/devices` | Company phones, shared by phone platforms: one device per app (`Device.app`: OCM Messages or OCM Phone, linked per handset by `companion`), enrollment invites per app, Keystore identity + key attestation, proof-of-possession device tokens, `DeviceTokenAuthentication`, heartbeat and health alerts, commands, FCM push, suspend/revoke |
 | `modules/sms` | The SMS platform: encrypted conversations/messages/MMS parts, sync events, outbound queue (leases, at-most-once), access (`DeviceAccess`), analytics, retention, simulated phones |
 | `modules/directory` | The company directory shared by SMS and Calls: `Customer` per number (E.164, or the raw sender for short codes), organisation, tags, owner, encrypted notes, first/last seen per channel, merge; caller-ID names for phones |
 | `modules/calls` | The Calls platform: `CallRecord` (call log + live events merged), `CallEvent` timeline, outcomes and encrypted annotations, call-back tasks, office hours, tariffs, settings, hourly rollups, analytics, live board, export, retention, simulated calls |
@@ -205,7 +205,8 @@ commands), `sms.retention_purge` (6 h), `sms.media_cleanup` (hourly), `sms.simul
 
 ## Calls: phone → server, call-backs, rollups
 
-The phone side is in [calls-mobile.md](calls-mobile.md). Calls reuse the devices pipeline: `POST /device/sync/events`
+The phone side is OCM Phone, a separate app from OCM Messages with its own device identity ([calls-mobile.md](calls-mobile.md),
+decision 80). Calls reuse the devices pipeline: `POST /device/sync/events`
 carries five Calls event types (`call.upsert`, `call.event`, `call.annotation`, `callback.state`,
 `call_log.backfill`) next to the SMS ones, in one ordered, idempotent batch (decision 66).
 

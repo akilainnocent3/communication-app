@@ -66,11 +66,16 @@ jobs:
       - run: npm run build
 
   mobile:
+    # Both Android apps: OCM Messages (mobile/, the SMS app) and OCM Phone (mobile_dialer/, the Phone app).
     if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [mobile, mobile_dialer]
     defaults:
       run:
-        working-directory: mobile
+        working-directory: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -82,14 +87,16 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('mobile/android/**/*.gradle.kts', 'mobile/android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: gradle-${{ matrix.app }}-${{ hashFiles(format('{0}/android/**/*.gradle.kts', matrix.app), format('{0}/android/gradle/wrapper/gradle-wrapper.properties', matrix.app)) }}
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+      - name: Gradle wrapper and Flutter config (gradlew is generated, not committed)
+        run: flutter build apk --config-only
       - name: Kotlin unit tests (Robolectric)
         run: ./gradlew :app:testPlayDebugUnitTest --console=plain
-        working-directory: mobile/android
-      - name: Release builds, both flavors (debug-signed: no key.properties in CI)
+        working-directory: ${{ matrix.app }}/android
+      - name: "Release builds, both flavors (debug-signed: no key.properties in CI)"
         run: |
           flutter build apk --release --flavor private --split-per-abi --dart-define=ALLOWED_SERVER_HOSTS=ci.invalid --dart-define=APP_VERSION=ci
           flutter build appbundle --release --flavor play --dart-define=ALLOWED_SERVER_HOSTS=ci.invalid --dart-define=APP_VERSION=ci

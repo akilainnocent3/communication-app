@@ -4,8 +4,8 @@ A company admin platform for managing every communication channel from one place
 open the mailbox of any office and work in it like in Gmail (read, reply, label, search, delete, schedule, assign,
 take internal notes). **SMS**: company Android phones run the Communication Manager SMS app as their default SMS
 app; their text messages are copied (encrypted) to the admin, where admins read every conversation, see analytics
-and reply — the phone sends the reply as a normal carrier SMS. **Calls**: the same app becomes the phones' default
-Phone app; every call is copied (number, times, result; never audio) and admins get the call log, a live board,
+and reply — the phone sends the reply as a normal carrier SMS. **Calls**: a separate app, OCM Phone, becomes the
+phones' default Phone app; every call is copied (number, times, result; never audio) and admins get the call log, a live board,
 unreturned missed calls, call-back tasks the staff member places with one tap, a shared customer directory and
 analytics. Media shows as "Coming soon".
 
@@ -19,7 +19,8 @@ analytics. Media shows as "Coming soon".
   long-lived secret ([docs/sms-mobile.md](docs/sms-mobile.md)). The app is Android only (iOS allows no SMS apps).
 
 Stack: Django 5.2 + DRF, Celery, PostgreSQL 16, Redis, Next.js 16 (React 19, Tailwind v4, TanStack Query), and a
-Flutter + Kotlin Android app (`mobile/`). The server runs on one small VPS.
+two Flutter + Kotlin Android apps: OCM Messages (`mobile/`, the SMS app) and OCM Phone (`mobile_dialer/`, the Phone app).
+The server runs on one small VPS.
 
 ## Run locally (one command)
 
@@ -76,8 +77,10 @@ python manage.py makemigrations --check --dry-run
 python manage.py spectacular --file ../contracts/openapi.yaml --validate
 cd frontend && npm run typecheck && npm run lint && npm run gen:api
 npx playwright test                                                        # needs both dev servers running
-cd mobile && flutter analyze && flutter test                               # Dart unit + widget tests
-(cd mobile/android && ./gradlew :app:testPlayDebugUnitTest)                # Kotlin unit tests
+cd mobile && flutter analyze && flutter test                               # OCM Messages: Dart unit + widget tests
+(cd mobile/android && ./gradlew :app:testPlayDebugUnitTest)                # OCM Messages: Kotlin unit tests
+cd mobile_dialer && flutter analyze && flutter test                        # OCM Phone: the same two checks
+(cd mobile_dialer/android && ./gradlew :app:testPlayDebugUnitTest)
 ```
 
 ## Documentation
@@ -93,6 +96,7 @@ cd mobile && flutter analyze && flutter test                               # Dar
 | [docs/calls-mobile.md](docs/calls-mobile.md) | Calls platform: the dialer, emergency and USSD guarantees, call merge, call-backs, onboarding |
 | [docs/calls-recording.md](docs/calls-recording.md) | Why v1 records no call audio; the cloud-PBX path; Tanzanian legal points for counsel |
 | [docs/play-store.md](docs/play-store.md) | Google Play declarations (SMS and phone handler), data safety, reviewer access |
-| [mobile/README.md](mobile/README.md) | Building, signing and distributing the Android app |
+| [mobile/README.md](mobile/README.md) | Building, signing and distributing OCM Messages (the SMS app) |
+| [mobile_dialer/README.md](mobile_dialer/README.md) | Building and distributing OCM Phone (the Phone app) |
 | [docs/decisions.md](docs/decisions.md) | Defaults chosen during the build and why |
 | [docs/status.md](docs/status.md) | What was built, how it was verified, known limitations, next steps |

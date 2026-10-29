@@ -244,7 +244,7 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
     like an admin message, sharing the phone's rate limit and daily cap, refusing short codes, premium numbers and
     blocked numbers. On top: only for calls that ended in the last 30 minutes (never history), one per number per day
     and a cool-down by default, never to an opted-out customer, never once the call was returned.
-73. **One app holds both roles; the Phone entry exists only on Calls phones.** `ROLE_SMS` and `ROLE_DIALER` share one
+73. *(Superseded by 80.)* **One app holds both roles; the Phone entry exists only on Calls phones.** `ROLE_SMS` and `ROLE_DIALER` share one
     enrollment, Keystore key, sync engine and SQLCipher store, so a phone is one device in the admin and revocation wipes
     both at once. *OCM Phone* and the `ACTION_CALL` handler are activity-aliases that start disabled and are enabled from
     the heartbeat's `capabilities.calls`; a phone that is not a Calls phone never offers a dialer it cannot use, and
@@ -278,3 +278,26 @@ Defaults chosen without asking, with the reason. Newest at the bottom.
 79. **No call audio, ever, from the phone.** Android 10+ reserves the voice-call audio source for system apps and Play
     bans Accessibility recording; mic/speaker tricks are unreliable and undisclosed. The only acceptable route is a
     cloud PBX recording server-side with an announcement ([calls-recording.md](calls-recording.md)).
+80. **OCM Phone is its own app; OCM Messages stays SMS only.** Decision 73 was reversed at the owner's request: the dialer
+    is a separate Flutter app (`mobile_dialer/`, `com.kilimanjaro.communicationmanager.phone`), and `mobile/` returns to
+    the SMS app as it was before the dialer. Each app has its own enrollment code and link scheme (`cmsms://`,
+    `ocmphone://`), Keystore key, SQLCipher store, sync engine and `Device` row (`Device.app`). The app says which one it
+    is on enroll and the server refuses a code made for the other app (`wrong_app`, 409, not counted as a failure, so
+    the code survives a mistaken scan). Each app declares only its own role's permissions, which keeps both Play
+    declarations narrow. The admin links the two devices of one handset (`Device.companion`, chosen when the OCM Phone
+    code is made). The automatic missed-call SMS goes out through the companion OCM Messages, and without one nothing
+    is sent. *Reply with SMS* on the call screen uses Telecom's respond-via-message, which the default SMS app sends,
+    and *Message* opens the SMS app. Existing devices became OCM Messages devices with Calls off (their call history
+    stays). The cost is two installs and two enrollments per phone; the gain is that each app can be installed, updated,
+    removed and reviewed on its own.
+81. **OCM Phone keeps no persistent foreground service.** Play's `remoteMessaging` type fits a messaging app, not a
+    dialer, and `dataSync` is capped at 6 h a day on Android 15. A dialer is in the foreground exactly when it has
+    something to report: during a call (`phoneCall`, Telecom-bound) it writes to the outbox and uploads as soon as the
+    call ends. A WorkManager content-URI trigger on the call log covers rows written while the app is not running, and a
+    15-minute job plus FCM bring call-back tasks. Without a persistent notification, the monitoring disclosure appears
+    in onboarding, in Settings → About and on every ongoing-call notification ("Recorded in company call records").
+82. **The keypad never waits for enrollment or a lock.** Once OCM Phone holds the Phone role, it is the phone's dialer, so
+    the Phone screens work before enrollment and after a revoke (a banner offers to connect), and the removed screen
+    offers the keypad and "choose another Phone app". OCM Phone has no app lock: a lock in front of the keypad could
+    stand between the holder and an emergency number. The phone's own screen lock protects the call history.
+

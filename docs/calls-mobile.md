@@ -1,15 +1,16 @@
 # Calls platform: the dialer on company phones
 
-The Calls platform makes the OCM app the **default phone app** of company Android phones that the admin enables for
-Calls. Every call the phone makes or receives is copied (number, times, result, SIM; never audio) to OCM, where admins
-see the call log, a live board of phones, unreturned missed calls, call-back tasks and analytics. The person holding
-the phone talks; the admin never places a carrier call. Admin-initiated calls are **call-back tasks** the staff member
-places with one tap.
+The Calls platform puts **OCM Phone**, a separate Flutter app, on company Android phones as their **default Phone app**.
+Every call the phone makes or receives is copied (number, times, result, SIM; never audio) to OCM, where admins see the
+call log, a live board of phones, unreturned missed calls, call-back tasks and analytics. The person holding the phone
+talks; the admin never places a carrier call. Admin-initiated calls are **call-back tasks** the staff member places with
+one tap. OCM Messages (the SMS app, `mobile/`) is unchanged; a company phone usually runs both.
 
 | Piece | Where |
 |---|---|
-| Dialer (Kotlin, native in-call screen) | `mobile/android/…/sms/calls/` |
-| Phone screens (Keypad, Recents, Contacts, Call-backs) and Calls onboarding | `mobile/lib/features/phone/`, `features/onboarding/calls_onboarding_screen.dart` |
+| OCM Phone app ([README](../mobile_dialer/README.md)) | `mobile_dialer/` |
+| Dialer core (Kotlin: InCallService, native call screen, ringer, screening, call log) | `mobile_dialer/android/…/phone/dialer/` |
+| Phone screens (Keypad, Recents, Contacts, Call-backs), onboarding, enrollment (Flutter) | `mobile_dialer/lib/features/` |
 | Phone identity, enrollment, tokens, heartbeat, push, the event pipeline | `backend/modules/devices/` (shared with SMS) |
 | Call records, events, outcomes, annotations, call-backs, settings, rollups, admin + device API | `backend/modules/calls/` |
 | Company directory (customers by number, shared by SMS and Calls) | `backend/modules/directory/` |
@@ -17,16 +18,18 @@ places with one tap.
 
 ## Facts that shape the design
 
-- **One app, one identity.** The same OCM app holds `ROLE_SMS` and `ROLE_DIALER`. One enrollment, one Keystore key, one
-  native sync engine, one SQLCipher `SyncStore`. Two launcher entries are activity-aliases of `MainActivity`:
-  *OCM Messages* (always) and *OCM Phone* (enabled only on Calls phones by `CallsFeature.setEnabled`, from the
-  `capabilities` in every heartbeat response).
+- **Two apps, two identities (decision 80).** OCM Phone (`com.kilimanjaro.communicationmanager.phone`) and OCM Messages
+  (`…sms`) are separate apps: each has its own enrollment code (`ocmphone://enroll` / `cmsms://enroll`), Keystore key,
+  encrypted store, sync engine and device row in the admin (`Device.app`). The admin may link the two devices of one
+  handset (`Device.companion`) when creating the OCM Phone code. The automatic missed-call SMS then goes out through
+  OCM Messages on that handset. Neither app declares the other's permissions or components.
 - **Becoming the default phone app.** The role needs a `DIAL` handler (with and without `tel:`), `VIEW tel:` and an
   `InCallService` bound with `BIND_INCALL_SERVICE`. `OcmInCallService` declares `IN_CALL_SERVICE_UI=true` and
   `IN_CALL_SERVICE_RINGING=true`, so the app draws the call screen and plays the ringtone itself. `DIAL`/`VIEW` only
-  pre-fill the keypad. `ACTION_CALL` (dials at once) is a separate alias protected by `CALL_PHONE`, so an app without
-  that permission cannot dial through OCM. When the admin disables Calls the aliases are disabled; the role then no
-  longer qualifies and Android hands it back to the system dialer.
+  pre-fill the keypad. `ACTION_CALL` (dials at once) is a separate alias protected by `CALL_PHONE`, and only an intent
+  that arrived through that alias places a call (`Dialer.placesAtOnce`), so an app without that permission cannot dial
+  through OCM Phone. Switching Calls off for a phone in the admin only stops the copy; OCM Phone stays a working
+  Phone app, also before enrollment and after a revoke (the keypad must always be there).
 - **Telecom owns the call log.** Unlike SMS (the app owns the message store), the system writes `CallLog.Calls` for
   every call. The app reads it (`CallLogSync`: one backfill within the enrollment window, then a debounced
   `ContentObserver`) and adds richer live data from `InCallService` callbacks (`CallTracker`). The server merges both
@@ -90,8 +93,8 @@ sequenceDiagram
   Note over E,D: CallLog row arrives later (ContentObserver) → call.upsert with call_log_id → merged into the same record
 ```
 
-The call screen never waits for Flutter (decision 74). Answer, decline, *reply with SMS* (the SMS module's quick
-replies), mute, keypad, audio route (earpiece / speaker / Bluetooth / wired via `CallAudioState`), hold, add call,
+The call screen never waits for Flutter (decision 74). Answer, decline, *reply with SMS* (the company's quick
+replies from the Calls config; Telecom hands the text to the default SMS app, OCM Messages, which sends it), mute, keypad, audio route (earpiece / speaker / Bluetooth / wired via `CallAudioState`), hold, add call,
 merge, swap, end, call waiting and proximity screen-off (`PROXIMITY_SCREEN_OFF_WAKE_LOCK`) are all in
 `InCallActivity`. On Android 14+ the full-screen intent needs `canUseFullScreenIntent()`; the onboarding sends the
 person to the setting when it is off, and the heartbeat reports it (`fsi_denied`).
@@ -147,17 +150,26 @@ sequenceDiagram
 
 ## Onboarding
 
-When a heartbeat says `capabilities.calls = true`, the app opens the Calls onboarding once per run (and re-checks on
-every resume): *Set as default Phone app* (`ROLE_DIALER` request; fallback: default-apps settings), call permissions
-(`READ_CALL_LOG`, `WRITE_CALL_LOG`, `CALL_PHONE`, `ANSWER_PHONE_CALLS`, `READ_PHONE_STATE`, `READ_CONTACTS`,
-`BLUETOOTH_CONNECT`), *incoming-call screen* (full-screen intent, Android 14+), then the existing *keep running in the
-background* screen. A phone that already did the SMS onboarding sees only these steps. The heartbeat reports
-`is_default_dialer`, call permissions, full-screen-intent state and the live call state; the admin sees
-`not_default_dialer`, `call_permissions_missing` and `fsi_denied` as attention items.
+First run: enroll (scan the *Enroll OCM Phone* QR, tap the link or type the short code; accept the calls monitoring
+notice), then *Set as default Phone app* (`ROLE_DIALER` request; fallback: default-apps settings), call permissions
+(`READ_CALL_LOG`, `WRITE_CALL_LOG`, `CALL_PHONE`, `ANSWER_PHONE_CALLS`, `READ_PHONE_STATE`, `READ_PHONE_NUMBERS`,
+`READ_CONTACTS`, `WRITE_CONTACTS`, `BLUETOOTH_CONNECT`, `POST_NOTIFICATIONS`), *incoming-call screen* (full-screen
+intent, Android 14+) and *keep running in the background*. Steps already done are skipped; each re-checks on return
+from the system dialog. A banner on the Phone screens shows when the phone is not enrolled or OCM Phone is not the
+Phone app. The heartbeat reports `is_default_dialer`, call permissions, full-screen-intent state and the live call
+state; the admin sees `not_default_dialer`, `call_permissions_missing` and `fsi_denied` as attention items.
+
+## Background (decision 81)
+
+OCM Phone keeps no persistent foreground service: during a call Telecom keeps it in the foreground (`phoneCall`) and
+the call is uploaded as soon as it ends (expedited WorkManager work). Rows Telecom writes to the call log while the app
+is not running start a WorkManager job through a content-URI trigger. A 15-minute periodic job and FCM wake-ups
+(`{"type": "callbacks"}`) bring call-back tasks. The monitoring disclosure appears in onboarding, Settings → About, and
+on the ongoing-call notification ("Recorded in company call records").
 
 ## Phone screens (Flutter)
 
-Keypad / Recents / Contacts / Call-backs, skinned with the same tokens as Messages (`SkinTokens`: key shape and size,
+Keypad / Recents / Contacts / Call-backs, skinned with the same skin system as OCM Messages (`SkinTokens`: key shape and size,
 letters, call-button colour, recents row height):
 
 - **Keypad:** T9 search by name words and by number (local `07…` or `+255…`); paste (long-press the number); long-press
@@ -165,7 +177,7 @@ letters, call-button colour, recents row height):
 - **SIM:** one SIM is named on the call (the record carries its line); dual-SIM phones ask, showing the label and colour
   the admin gave each SIM.
 - **Recents:** the system call log, grouped by number + missed/not + day, directory names marked; details, call back,
-  message, add contact, block, delete.
+  message (opens the SMS app), add contact, block, delete.
 - **Contacts:** the address book with favourites and search; company-directory names marked.
 - **Call-backs:** the admin's tasks with Call / Snooze / Done.
 - **Post-call card:** outcome chips and an optional note (synced as `call.annotation`); skippable unless the admin made
@@ -180,10 +192,12 @@ letters, call-button colour, recents row height):
 | Incoming-call screen from a cold process | ≤ 300 ms to first frame | [sms-mobile-performance.md](sms-mobile-performance.md) |
 | Recents from cache | ≤ 150 ms | same |
 | Keypad search | instant (pure Dart over the cached address book) | unit test |
-| APK growth from Calls | ≤ 4 MB per ABI | arm64 release: 16.0 MB with Calls (budget 25 MB) |
+| APK size | OCM Messages unchanged; OCM Phone ≤ 25 MB per ABI | OCM Phone arm64 release: 14.9 MB |
 
 ## Tests
 
+- Kotlin (Robolectric, `NativeSyncEngineTest`): the dialer's sync engine over real HTTP (outbox, tokens, revocation,
+  capabilities) never calls an SMS endpoint.
 - Kotlin (Robolectric, `CallsTest`): tracker state machine (ringing → active → hold → ended, results per cause),
   call-log mapping, emergency and USSD never recorded, screening never blocks emergency numbers, ringer plan.
 - Dart (`test/phone_test.dart`): T9, recents grouping, keypad, voicemail and `+`, dual-SIM choice, redial origin,
