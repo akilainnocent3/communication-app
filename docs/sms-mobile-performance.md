@@ -52,7 +52,7 @@ Budget: release APK for arm64-v8a **≤ 25 MB**.
 |---|---:|---|
 | Before: universal release APK, 2026-10-28 07:22 (before decision 47) | ~32.8 MB (estimate) | sum of the entries an arm64 split would contain, from `unzip -v` of the universal APK; everything stored uncompressed, including ML Kit's bundled `libbarhopper_v3.so` (4.9 MB) |
 | After: unbundled ML Kit model (decision 47) + compressed native libraries (decision 58) | ~15.5 MB (estimate) | the same entries without `libbarhopper_v3.so`, native libraries deflated with `gzip -6` |
-| After, built with `flutter build apk --release --split-per-abi` | **not measured** | `ls -l build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` |
+| Built 2026-10-29 with Calls (1.1.0+3), `flutter build apk --release --split-per-abi`, both flavors | **16.0 MB** (play and private) | `ls -l build/app/outputs/flutter-apk/app-arm64-v8a-*-release.apk`; armeabi-v7a 15.2 MB, x86_64 16.4 MB. Calls added ~0.5 MB against the ~15.5 MB estimate (budget for Calls: ≤ 4 MB) |
 
 What the arm64 libraries weigh (from the universal build): `libflutter.so` 11.8 MB (5.5 MB deflated), `libapp.so`
 (the Dart code) 6.6 MB (2.5 MB), `libsqlcipher.so` 5.2 MB (2.3 MB), `classes.dex` 4.1 MB (stored).
@@ -70,6 +70,39 @@ Reference: emulator with 2 GB RAM, API 34, x86_64, seeded with 300 conversations
 | Memory, UI open | ≤ 120 MB PSS | not measured | not measured | `adb shell dumpsys meminfo com.kilimanjaro.communicationmanager.sms` |
 | Memory, service only (UI swiped away) | ≤ 40 MB PSS | not measured | not measured | the same, after swiping the app from recents |
 | Incoming SMS → visible in the admin | ≤ 5 s | not measured | not measured | `adb emu sms send`, watch the admin conversation list |
+
+## Calls: incoming-call screen from a cold process (2026-10-29)
+
+Method: release build (`private`, x86_64), OCM made the default dialer with `cmd role add-role-holder`, app
+force-stopped, screen off (standby), then `adb emu gsm call <number>`. Times from logcat: Telecom `CREATED` → the
+system's `START …InCallActivity` → `Displayed …InCallActivity` (first frame). Emulators: 2 cores, 2 GB RAM, software GPU
+(`swiftshader_indirect`), headless. Five runs each.
+
+| Dialer, emulator | Call → call screen started | Started → first frame | Total |
+|---|---:|---:|---:|
+| OCM, API 34 | 285–335 ms | 858–990 ms | 1.15–1.33 s |
+| Google Phone (system dialer), API 34, same emulator | 802–918 ms | 917–1 138 ms | 1.8–2.05 s |
+| OCM, API 29 | 410–1 160 ms | 163–342 ms (986 ms on the first, coldest run) | 0.6–2.1 s |
+
+Reading it: OCM's own part (process start, `OcmInCallService.onCallAdded`, starting the activity) is ~300 ms on API 34,
+about a third of what Google's dialer takes on the same emulator. The rest is the first frame of a new process, and
+main-thread stack samples show it waiting in `HardwareRenderer` while the RenderThread creates its first EGL context
+through the emulator's GL pipe (`eglMakeCurrent` → `qemu_pipe_read`): emulator GPU emulation, not app code. With the
+screen kept on, the first frame was slower (1.2–2.3 s), again inside EGL initialisation. **The ≤ 300 ms budget
+(decision 74) can only be confirmed on a real low-end phone** (Tecno/Itel class, hardware GPU): measure with
+`adb logcat | grep -E "CREATED|InCallActivity"` the same way.
+
+Checked on the same emulators (not timings): an emergency number (112) is placed by an unenrolled OCM through
+`CallIntentHandler` and Telecom shows the **system** in-call UI for it (API 29 `com.android.incallui`, API 34 Google
+Phone in emergency mode); an explicit `ACTION_CALL` sent to `MainActivity` or the Phone alias places no call (Telecom
+logs no outgoing call) since the fix in docs/security.md.
+
+| Calls budget | Target | Result |
+|---|---|---|
+| Incoming-call screen, cold, low-end phone | ≤ 300 ms | emulator 1.15–1.33 s total, OCM's own part ~300 ms; **real phone not measured** |
+| Recents from cache | ≤ 150 ms | not measured (needs an enrolled Calls phone with a call log) |
+| Keypad search | instant | pure Dart over the cached address book (`t9Search`, unit-tested) |
+| APK growth from Calls | ≤ 4 MB per ABI | ~0.5 MB (arm64 16.0 MB) |
 
 ## Background matrix
 

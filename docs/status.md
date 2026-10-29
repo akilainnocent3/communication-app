@@ -1,7 +1,56 @@
 # Status — final report
 
-**All six milestones are built and verified** (2026-10-10). Gmail is a working platform. SMS, Calls and
-Media show as "Coming soon". With no Google credentials, the whole product runs on the fake provider.
+Gmail, SMS and **Calls** are working platforms; Media shows as "Coming soon". With no Google credentials, the whole
+product runs on the fake provider and simulated phones. The latest report is first.
+
+## Deployment hardening (Part A) and Calls (Part B) — status (2026-10-29)
+
+### Part A — deployment readiness
+
+| Item | Result |
+|---|---|
+| A1 Redis eviction | Two Redis roles: broker + security store on `noeviction` + AOF, cache on `allkeys-lru`; security state fails closed (503) with tests (decision 59) |
+| A2 Branding and Play | OCM label and icons, *OCM Messages* / *OCM Phone* aliases, `isMonitoringTool`, always-visible monitoring notice, `play` / `private` flavors, [play-store.md](play-store.md) (decisions 62–65) |
+| A3 Frontend image | Next.js standalone, non-root runtime image; verified with `docker compose up --build` |
+| A4 Ops | Health check on `/api/v1/health/`, log limits on every service, Nginx template (`${CM_DOMAIN}`, login rate limit, security headers, gzip for static assets only), `deploy/backup.sh` + `restore.sh` and the offline-keys rule in deployment.md |
+| A5 CI | `.github/workflows/ci.yml`: backend (Postgres, coverage gate, migrations, OpenAPI diff), frontend, mobile (analyze, test, Kotlin, both flavors, APK size); Playwright nightly |
+| A6 Flaky E2E | Cause fixed: polled lists hold their order under the pointer (decision 61), no retries |
+| A7 Phone checks | Flutter/Kotlin checks and both flavor builds green (below); arm64 **16.0 MB**. Phone budgets and background matrix: see open items |
+| A8 Security pass | Review of the SMS + devices surface recorded 2026-10-28 in [security.md](security.md); no finding reached the bar |
+
+### Part B — Calls
+
+Backend `modules/calls` + `modules/directory`, admin under `/calls`, and the dialer in the OCM app
+([calls-mobile.md](calls-mobile.md), decisions 66–79). No call audio is recorded ([calls-recording.md](calls-recording.md)).
+
+| Check | Result (2026-10-29) |
+|---|---|
+| `pytest` (Gmail + SMS + devices + Calls + directory) | **284 passed** |
+| Coverage, `modules/calls` + `modules/directory` | **94 %** (gate 85 %) |
+| `makemigrations --check`, `spectacular --validate` | clean; `contracts/openapi.yaml` current |
+| `tsc --noEmit`, ESLint | 0 errors |
+| `flutter analyze`, `flutter test` | no issues; **69 passed** (incl. Phone goldens for every skin, light and dark) |
+| Kotlin Robolectric (`testPlayDebugUnitTest`, `testPrivateDebugUnitTest`) | **36 passed** per flavor (12 Calls tests) |
+| `flutter build apk --release --split-per-abi`, both flavors | arm64 **16.0 MB**, armeabi-v7a 15.2 MB, x86_64 16.4 MB (budget 25 MB; Calls added ~0.5 MB) |
+| Playwright, 4 projects, full suite (Gmail + SMS + Calls) | 4 full runs: run 1 had 1 failure (SMS journey, desktop-light, right after a fresh `seed_demo`; trace lost, not reproduced in 6 isolated runs or a reseeded full-project run); **runs 2, 3 and 4 green in a row: 42 passed, 2 skipped** (keyboard tests on mobile, by design). No retries added |
+| Security review of the Calls diff | one finding (score 9), **fixed**: any app could make OCM place calls / run MMI codes through an explicit `ACTION_CALL` to `MainActivity`; reproduced and re-checked on an emulator. CSV formula guard tightened. Details in [security.md](security.md) |
+| Emulator (API 29, API 34) | OCM as default dialer: cold incoming-call screen 1.15–1.33 s on API 34 (Google's dialer 1.8–2.05 s on the same emulator; the rest is emulator EGL start-up); 112 placed by an unenrolled OCM and handed to the system in-call UI; USSD never logged. [sms-mobile-performance.md](sms-mobile-performance.md) |
+
+Fixed in this session: the Phone UI tests (T9 typo, single-SIM calls now carry their SIM, keypad and recents fit
+narrow windows); the ringer now honours DND priority callers on Android 10–12 (decision 76); the `ACTION_CALL` hole
+above.
+
+Open items, in order:
+1. **Real phones** (Samsung, Tecno/Itel low-end): incoming-call screen ≤ 300 ms from a cold process, ringer under
+   DND, Bluetooth routing, dual-SIM picker, OEM battery killers. The emulator cannot measure the 300 ms budget (software
+   GPU).
+2. **Enrolled-phone measurements**: SMS phone budgets, the background matrix (API 29–36), Recents ≤ 150 ms, SMS →
+   admin ≤ 5 s, and the emulator walkthrough screenshots (`docs/screenshots/sms-mobile-*`, `calls-mobile-*`). These need
+   the app enrolled against a server it accepts: the release build only accepts `communicationapi.schoolsoft.online`, so
+   either enroll a test phone there or build with a staging host that has a valid HTTPS certificate.
+3. Admin: the enroll dialog does not yet offer a *Calls* checkbox (the API accepts `platforms`); enable Calls from
+   **Calls → Phones** after enrolling.
+4. Skin reference screenshots in `docs/design/references/` (SMS open item 3).
 
 ## SMS platform — status (2026-10-28)
 
