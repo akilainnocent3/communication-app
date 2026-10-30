@@ -1150,6 +1150,11 @@ interface TelephonyHostApi {
   fun syncNow()
   /** Revoked by the administrator: delete the key, the sync database and stored settings. */
   fun wipe()
+  /**
+   * The keypad's short tone for [key] (0–9, *, #), as the phone's own dialer plays it: only with the system "Dial pad
+   * tones" setting on and the ringer in normal mode.
+   */
+  fun playDialTone(key: String)
   suspend fun sims(): List<SimInfo>
   /** A small JPEG (longest side ≤ [maxPx]) of a contact photo; null if not an image. */
   suspend fun thumbnail(uri: String, maxPx: Long): ByteArray?
@@ -1532,6 +1537,24 @@ interface TelephonyHostApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.wipe()
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.ocm_phone.TelephonyHostApi.playDialTone$separatedMessageChannelSuffix", codec, taskQueue)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val keyArg = args[0] as String
+            val wrapped: List<Any?> = try {
+              api.playDialTone(keyArg)
               listOf(null)
             } catch (exception: Throwable) {
               TelephonyApiPigeonUtils.wrapError(exception)

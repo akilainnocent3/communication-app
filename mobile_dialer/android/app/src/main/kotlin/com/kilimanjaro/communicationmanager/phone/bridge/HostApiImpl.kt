@@ -13,6 +13,8 @@ import com.kilimanjaro.communicationmanager.phone.dialer.CallbackTasks
 import com.kilimanjaro.communicationmanager.phone.dialer.CallsFeature
 import com.kilimanjaro.communicationmanager.phone.dialer.Dialer
 import com.kilimanjaro.communicationmanager.phone.dialer.DialerData
+import com.kilimanjaro.communicationmanager.phone.dialer.KeypadTone
+import com.kilimanjaro.communicationmanager.phone.safely
 import com.kilimanjaro.communicationmanager.phone.security.DatabaseKey
 import com.kilimanjaro.communicationmanager.phone.security.DeviceKey
 import com.kilimanjaro.communicationmanager.phone.security.SecureHttp
@@ -143,6 +145,7 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
     }
 
     override fun wipe() = Revocation.wipe(context)
+    override fun playDialTone(key: String) = safely("dial tone") { KeypadTone.play(context, key) }
 
     // --- Dispatchers.IO ------------------------------------------------------------------------------------------
 

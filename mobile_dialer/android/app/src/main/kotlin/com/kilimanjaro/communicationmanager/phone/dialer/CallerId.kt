@@ -12,23 +12,39 @@ import org.json.JSONObject
 object CallerId {
     data class Identity(val name: String?, val source: String) // source: contact | directory | none
 
-    @Volatile private var directory: Map<String, String>? = null
+    /**
+     * The company directory, indexed by exact number and by its last 9 digits, so recents and the address book (up to
+     * thousands of numbers) look a name up in O(1) instead of scanning the directory for each.
+     */
+    class Directory(private val exact: Map<String, String>) {
+        private val byTail = HashMap<String, String>(exact.size).apply {
+            for ((number, name) in exact) tail(number).takeIf { it.length == 9 }?.let { putIfAbsent(it, name) }
+        }
+
+        fun name(number: String): String? {
+            exact[number]?.let { return it }
+            val tail = tail(number)
+            if (tail.length < 7) return null
+            if (tail.length == 9) return byTail[tail]
+            // Short numbers (7–8 digits) are rare: match the end of any directory number.
+            return exact.entries.firstOrNull { it.key.filter(Char::isDigit).endsWith(tail) }?.value
+        }
+
+        private companion object {
+            fun tail(number: String) = number.filter(Char::isDigit).takeLast(9)
+        }
+    }
+
+    @Volatile private var directory: Directory? = null
 
     fun forget() { directory = null }
 
-    private fun load(context: Context): Map<String, String> = directory ?: runCatching {
-        val raw = SyncStore.get(context)?.value("cache.directory") ?: "{}"
-        val json = JSONObject(raw)
-        json.keys().asSequence().associateWith { json.getString(it) }
-    }.getOrDefault(emptyMap()).also { directory = it }
+    private fun load(context: Context): Directory = directory ?: runCatching {
+        val json = JSONObject(SyncStore.get(context)?.value("cache.directory") ?: "{}")
+        Directory(json.keys().asSequence().associateWith { json.getString(it) })
+    }.getOrDefault(Directory(emptyMap())).also { directory = it }
 
-    fun directoryName(context: Context, number: String): String? {
-        val names = load(context)
-        names[number]?.let { return it }
-        val tail = number.filter { it.isDigit() }.takeLast(9)
-        if (tail.length < 7) return null
-        return names.entries.firstOrNull { it.key.filter(Char::isDigit).endsWith(tail) }?.value
-    }
+    fun directoryName(context: Context, number: String): String? = load(context).name(number)
 
     fun identify(context: Context, number: String?): Identity {
         if (number.isNullOrBlank()) return Identity(null, "none")

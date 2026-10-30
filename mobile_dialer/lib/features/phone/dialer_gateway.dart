@@ -13,6 +13,8 @@ abstract class DialerGateway {
   Future<void> addContact(String number);
   /// Opens the phone's SMS app (OCM Messages on company phones) to write to [number].
   Future<void> message(String number);
+  /// The keypad's tone for [key], when the phone's "Dial pad tones" setting is on.
+  Future<void> dialTone(String key);
 }
 
 class PlatformDialerGateway implements DialerGateway {
@@ -39,4 +41,6 @@ class PlatformDialerGateway implements DialerGateway {
   Future<void> addContact(String number) => api.addContact(number);
   @override
   Future<void> message(String number) => api.messageNumber(number);
+  @override
+  Future<void> dialTone(String key) => api.playDialTone(key);
 }

@@ -1559,6 +1559,26 @@ class TelephonyHostApi {
     ;
   }
 
+  /// The keypad's short tone for [key] (0–9, *, #), as the phone's own dialer plays it: only with the system "Dial pad
+  /// tones" setting on and the ringer in normal mode.
+  Future<void> playDialTone(String key) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.ocm_phone.TelephonyHostApi.playDialTone$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[key]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
   Future<List<SimInfo>> sims() async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.ocm_phone.TelephonyHostApi.sims$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(

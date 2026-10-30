@@ -25,6 +25,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.HorizontalScrollView
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -167,9 +169,9 @@ class InCallActivity : Activity() {
 
     private fun incomingControls(call: Call) {
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER }
-        row.addView(round(getString(R.string.decline), "#DC2626") { OcmInCallService.decline(call) }, weight())
-        row.addView(round(getString(R.string.reply_sms), "#334155") { replyWithSms(call) }, weight())
-        row.addView(round(getString(R.string.answer), "#16A34A") { OcmInCallService.answer(call) }, weight())
+        row.addView(round(getString(R.string.decline), "#DC2626", R.drawable.ic_call_end) { OcmInCallService.decline(call) }, weight())
+        row.addView(round(getString(R.string.reply_sms), "#334155", R.drawable.ic_message) { replyWithSms(call) }, weight())
+        row.addView(round(getString(R.string.answer), "#16A34A", R.drawable.ic_call) { OcmInCallService.answer(call) }, weight())
         controls.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
     }
 
@@ -202,7 +204,7 @@ class InCallActivity : Activity() {
             else -> grid.addView(View(this), GridLayout.LayoutParams().apply { width = dp(96); height = dp(72) })
         }
         controls.addView(grid, wrap())
-        controls.addView(round(getString(R.string.end_call), "#DC2626") { call.disconnect() }, wrap(top = 24))
+        controls.addView(round(getString(R.string.end_call), "#DC2626", R.drawable.ic_call_end) { call.disconnect() }, wrap(top = 24))
     }
 
     private fun routeLabel(audio: CallAudioState?): String = when (audio?.route) {
@@ -347,10 +349,11 @@ class InCallActivity : Activity() {
         textSize = size; setTextColor(colour); gravity = Gravity.CENTER; if (bold) typeface = Typeface.DEFAULT_BOLD
     }
 
-    private fun round(label: String, colour: String, onClick: () -> Unit) = LinearLayout(this).apply {
+    /** A round action with its icon (like the phone's own call screen) and the label under it. */
+    private fun round(label: String, colour: String, icon: Int, onClick: () -> Unit) = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
-        addView(Button(context).apply {
-            contentDescription = label; text = ""
+        addView(ImageButton(context).apply {
+            contentDescription = label; setImageResource(icon); scaleType = ImageView.ScaleType.CENTER_INSIDE; setPadding(dp(18), dp(18), dp(18), dp(18))
             background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.parseColor(colour)) }
             setOnClickListener { safely("call button") { onClick() } }
         }, LinearLayout.LayoutParams(dp(68), dp(68)))

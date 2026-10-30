@@ -1,3 +1,9 @@
+import 'package:ocm_phone/config.dart';
+import 'package:ocm_phone/core/api/transport.dart';
+import 'package:ocm_phone/core/db/database.dart';
+import 'package:ocm_phone/core/services.dart';
+import 'package:ocm_phone/core/text/phone_format.dart';
+import 'package:ocm_phone/data/phone_gateway.dart';
 import 'package:ocm_phone/features/phone/dialer_gateway.dart';
 import 'package:ocm_phone/features/phone/phone_screen.dart';
 import 'package:ocm_phone/features/phone/t9.dart';
@@ -39,6 +45,9 @@ class FakeDialer implements DialerGateway {
   final messaged = <String>[];
   @override
   Future<void> message(String number) async => messaged.add(number);
+  final tones = <String>[];
+  @override
+  Future<void> dialTone(String key) async => tones.add(key);
 }
 
 final at = DateTime(2026, 10, 28, 9, 30).millisecondsSinceEpoch;
@@ -57,8 +66,13 @@ final tasks = [
   CallbackTaskData(id: 't1', number: '+255713402118', name: 'Baraka Mwakyusa', reason: 'Quote for 40 bags', requestedBy: 'Halima', priority: 'high', dueAt: at, state: 'notified'),
 ];
 
-Widget harness(Widget child, FakeDialer dialer, {String skin = 'pixel', Brightness brightness = Brightness.light}) => ProviderScope(
-      overrides: [settingsProvider.overrideWith(MemorySettings.new), dialerProvider.overrideWithValue(dialer)],
+Widget harness(Widget child, FakeDialer dialer, {String skin = 'pixel', Brightness brightness = Brightness.light, AppServices? services}) => ProviderScope(
+      overrides: [
+        settingsProvider.overrideWith(MemorySettings.new),
+        dialerProvider.overrideWithValue(dialer),
+        clockProvider.overrideWithValue(() => DateTime(2026, 10, 28, 12)),
+        if (services != null) servicesProvider.overrideWithValue(services),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: buildSkinTheme(skinById(skin), brightness),
@@ -100,6 +114,65 @@ void main() {
     await tester.pumpAndSettle();
     expect(dialer.placed.single.$1, '+255754210331');
     expect(dialer.placed.single.$3, 'manual');
+  });
+
+  testWidgets('keypad keys play the dial tone; Call on an empty keypad brings back the last number dialled', (tester) async {
+    final dialer = FakeDialer();
+    await tester.pumpWidget(harness(const KeypadTab(), dialer));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('key-5')));
+    await tester.tap(find.byKey(const Key('key-#')));
+    expect(dialer.tones, ['5', '#']);
+    await tester.pump();
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.byIcon(Icons.backspace_outlined));
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('call-button')));
+    await tester.pumpAndSettle();
+    expect(dialer.placed, isEmpty); // the first tap only fills the number
+    expect(find.text(formatNumber('+255688120554')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('call-button')));
+    await tester.pumpAndSettle();
+    expect(dialer.placed.single.$1, '+255688120554');
+  });
+
+  testWidgets('switching tabs keeps the typed number', (tester) async {
+    final host = TelephonyHostApi();
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+    final services = AppServices(
+      config: const AppConfig(allowedServerHosts: [], pinnedSpki: [], fcmEnabled: false, appVersion: 'test'),
+      host: host, db: db, phone: PlatformPhoneGateway(host), transport: NativeHttpTransport(host),
+      startup: StartupState(databasePath: '', databaseKey: '', isDefaultDialer: true, manufacturer: 'Google', brand: 'google', sdkInt: 35, removed: false),
+    )..session = Session(server: Uri.parse('https://ocm.test'), deviceId: 'd', deviceCode: 'P-1', deviceName: 'Phone');
+    await tester.pumpWidget(harness(const PhoneScreen(), FakeDialer(), services: services));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('key-7')));
+    await tester.tap(find.text('Recents'));
+    await tester.pumpAndSettle();
+    expect(find.text('Neema Mushi (2)'), findsOneWidget);
+    await tester.tap(find.text('Keypad'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Text>(find.byKey(const Key('keypad-number'))).data, '7');
+  });
+
+  testWidgets('recents have day headers; contacts have letter headers and a tap opens Call / Message', (tester) async {
+    final dialer = FakeDialer();
+    await tester.pumpWidget(harness(const RecentsTab(), dialer));
+    await tester.pumpAndSettle();
+    expect(find.text('Today'), findsOneWidget);
+    await tester.pumpWidget(harness(const ContactsTab(), dialer));
+    await tester.pumpAndSettle();
+    expect(find.text('B'), findsOneWidget);
+    expect(find.text('J'), findsOneWidget);
+    await tester.tap(find.text('Juma Hassan'));
+    await tester.pumpAndSettle();
+    expect(dialer.placed, isEmpty); // a stray tap never calls
+    await tester.tap(find.text('Message'));
+    await tester.pumpAndSettle();
+    expect(dialer.messaged.single, '+255765330912');
   });
 
   testWidgets('long-press 0 types +; long-press 1 on an empty keypad calls voicemail', (tester) async {

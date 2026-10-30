@@ -206,6 +206,10 @@ abstract class TelephonyHostApi {
   /// Revoked by the administrator: delete the key, the sync database and stored settings.
   @TaskQueue(type: TaskQueueType.serialBackgroundThread)
   void wipe();
+  /// The keypad's short tone for [key] (0–9, *, #), as the phone's own dialer plays it: only with the system "Dial pad
+  /// tones" setting on and the ringer in normal mode.
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
+  void playDialTone(String key);
 
   // --- Dispatchers.IO: provider, contacts, Keystore, network ----------------------------------------------------
   @async

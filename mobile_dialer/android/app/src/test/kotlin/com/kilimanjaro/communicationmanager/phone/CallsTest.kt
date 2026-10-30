@@ -8,6 +8,7 @@ import com.kilimanjaro.communicationmanager.phone.dialer.CallLogMapper
 import com.kilimanjaro.communicationmanager.phone.dialer.CallLogRow
 import com.kilimanjaro.communicationmanager.phone.dialer.CallPrivacy
 import com.kilimanjaro.communicationmanager.phone.dialer.CallTracker
+import com.kilimanjaro.communicationmanager.phone.dialer.CallerId
 import com.kilimanjaro.communicationmanager.phone.dialer.CallbackTasks
 import com.kilimanjaro.communicationmanager.phone.dialer.Dialer
 import com.kilimanjaro.communicationmanager.phone.dialer.Disconnect
@@ -205,5 +206,15 @@ class CallsTest {
         val tasks = CallbackTasks.parse(JSONArray("""[{"id":"a","number":"+255754210331","name":"Neema","reason":"Quote","requested_by":"Halima","priority":"high","due_at":5,"state":"open"}]"""))
         assertEquals("Neema", tasks.single().name)
         assertEquals("high", tasks.single().priority)
+    }
+
+    @Test
+    fun `directory names match by exact number, local or international form, and short numbers`() {
+        val directory = CallerId.Directory(mapOf("+255754210331" to "Neema (Arusha Hardware)", "+25522123456" to "Head office"))
+        assertEquals("Neema (Arusha Hardware)", directory.name("+255754210331"))
+        assertEquals("Neema (Arusha Hardware)", directory.name("0754 210 331"))
+        assertEquals("Head office", directory.name("2123456")) // 7 digits: the end of a directory number
+        assertNull(directory.name("0754210332"))
+        assertNull(directory.name("123"))
     }
 }

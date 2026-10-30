@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/text/phone_format.dart';
 import '../../l10n/app_localizations.dart';
@@ -17,10 +20,19 @@ import 't9.dart';
 /// Overridden in tests; the app uses the native dialer through Pigeon.
 final dialerProvider = Provider<DialerGateway>((ref) => PlatformDialerGateway(ref.watch(servicesProvider).host));
 
-final recentsProvider = FutureProvider.autoDispose<List<RecentCall>>((ref) => ref.watch(dialerProvider).recent(300, 0));
+/// Kept for the session (calls_changed and resume refresh it in place), so Recents opens with its rows at once.
+final recentsProvider = FutureProvider<List<RecentCall>>((ref) => ref.watch(dialerProvider).recent(300, 0));
 
 /// The address book, kept for the session: the keypad searches it on every key press.
 final phoneContactsProvider = FutureProvider<List<PhoneContact>>((ref) => ref.watch(dialerProvider).contacts(5000));
+
+/// The address book encoded for T9 once per load, not once per key press.
+final t9IndexProvider = Provider<T9Index<PhoneContact>>(
+  (ref) => T9Index(ref.watch(phoneContactsProvider).value ?? const [], name: (c) => c.name, number: (c) => c.number),
+);
+
+/// "Today" for the Recents day headers; fixed in tests.
+final clockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
 
 final callbackTasksProvider = FutureProvider.autoDispose<List<CallbackTaskData>>((ref) => ref.watch(dialerProvider).callbacks());
 
@@ -70,19 +82,47 @@ class PhoneScreen extends ConsumerStatefulWidget {
 }
 
 class _PhoneScreenState extends ConsumerState<PhoneScreen> {
-  late PhoneTab _tab = widget.tab;
+  late PhoneTab _tab = widget.number != null ? PhoneTab.keypad : widget.tab;
+  /// Tabs stay alive once opened, as in the phone's own dialer: switching back keeps the typed number and the scroll
+  /// position, and never shows a spinner again.
+  late final Set<PhoneTab> _opened = {_tab};
+
+  @override
+  void initState() {
+    super.initState();
+    // Load Recents and the address book with the first frame, so either tab opens with its rows.
+    ref.read(recentsProvider);
+    ref.read(phoneContactsProvider);
+  }
+
+  @override
+  void didUpdateWidget(PhoneScreen old) {
+    super.didUpdateWidget(old);
+    // A tel: link or notification while the app is open.
+    if (widget.number != old.number && widget.number != null) {
+      _tab = PhoneTab.keypad;
+    } else if (widget.tab != old.tab) {
+      _tab = widget.tab;
+    }
+    _opened.add(_tab);
+  }
+
+  Widget _tabBody(PhoneTab tab) => switch (tab) {
+    PhoneTab.keypad => KeypadTab(initial: widget.number),
+    PhoneTab.recents => const RecentsTab(),
+    PhoneTab.contacts => const ContactsTab(),
+    PhoneTab.callbacks => const CallbacksTab(),
+  };
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = SkinTokens.of(context);
     final waiting = ref.watch(callbackTasksProvider).value?.length ?? 0;
-    final body = switch (_tab) {
-      PhoneTab.keypad => KeypadTab(initial: widget.number),
-      PhoneTab.recents => const RecentsTab(),
-      PhoneTab.contacts => const ContactsTab(),
-      PhoneTab.callbacks => const CallbacksTab(),
-    };
+    final body = IndexedStack(
+      index: _tab.index,
+      children: [for (final tab in PhoneTab.values) _opened.contains(tab) ? _tabBody(tab) : const SizedBox.shrink()],
+    );
     return Scaffold(
       backgroundColor: tokens.pageBackground,
       appBar: AppBar(
@@ -92,7 +132,7 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
       body: SafeArea(top: false, child: Column(children: [const DialerBanner(), Expanded(child: body)])),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab.index,
-        onDestinationSelected: (index) => setState(() => _tab = PhoneTab.values[index]),
+        onDestinationSelected: (index) => setState(() => _opened.add(_tab = PhoneTab.values[index])),
         destinations: [
           NavigationDestination(icon: const Icon(Icons.dialpad), label: l10n.tabKeypad),
           NavigationDestination(icon: const Icon(Icons.history), label: l10n.tabRecents),
@@ -152,9 +192,24 @@ class KeypadTab extends ConsumerStatefulWidget {
 class _KeypadTabState extends ConsumerState<KeypadTab> {
   late String _number = widget.initial ?? '';
 
+  @override
+  void didUpdateWidget(KeypadTab old) {
+    super.didUpdateWidget(old);
+    if (widget.initial != old.initial && widget.initial != null) _number = widget.initial!;
+  }
+
   void _press(String key) {
     HapticFeedback.selectionClick();
+    unawaited(ref.read(dialerProvider).dialTone(key).catchError((Object _) {}));
     setState(() => _number += key);
+  }
+
+  /// As the phone's own dialer: Call on an empty keypad brings back the last number dialled; the next tap calls it.
+  Future<void> _call() async {
+    if (_number.trim().isNotEmpty) return placeCall(context, ref, _number);
+    final calls = await ref.read(recentsProvider.future).catchError((Object _) => <RecentCall>[]);
+    final last = calls.where((c) => c.direction == 'out' && c.number.isNotEmpty).firstOrNull;
+    if (last != null && mounted && _number.isEmpty) setState(() => _number = last.number);
   }
 
   void _longPress(String key) {
@@ -177,13 +232,15 @@ class _KeypadTabState extends ConsumerState<KeypadTab> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = SkinTokens.of(context);
-    final contacts = ref.watch(phoneContactsProvider).value ?? const <PhoneContact>[];
-    final matches = t9Search(contacts, _number, name: (c) => c.name, number: (c) => c.number, limit: 4);
+    final matches = ref.watch(t9IndexProvider).search(_number, limit: 4);
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Keys shrink to fit narrow windows (split screen, small phones); the skin's size is the maximum.
+        // Keys shrink to fit narrow or short windows (split screen, landscape, small phones); the skin's size is the
+        // maximum. Height: the number line and spacing take about 120 dp, then four key rows and the call button.
         final widthFactor = tokens.keypadKey == KeypadKeyStyle.flat ? 1.4 : 1.0;
-        final keySize = ((constraints.maxWidth - 16) / (3 * widthFactor)).clamp(40.0, tokens.keypadKeySize);
+        final byWidth = (constraints.maxWidth - 16) / (3 * widthFactor);
+        final byHeight = (constraints.maxHeight - 120) / 5 - 8;
+        final keySize = math.min(byWidth, byHeight).clamp(32.0, tokens.keypadKeySize);
         return Column(
           children: [
             Expanded(
@@ -258,7 +315,7 @@ class _KeypadTabState extends ConsumerState<KeypadTab> {
                 foregroundColor: Colors.white,
                 shape: const CircleBorder(),
                 tooltip: l10n.callAction,
-                onPressed: () => placeCall(context, ref, _number),
+                onPressed: _call,
                 child: const Icon(Icons.call, size: 30),
               ),
             ),
@@ -355,18 +412,51 @@ class RecentsTab extends ConsumerWidget {
       error: (_, _) => Center(child: Text(l10n.noRecents)),
       data: (calls) {
         if (calls.isEmpty) return Center(child: Text(l10n.noRecents));
-        final groups = groupRecents(calls);
+        final now = ref.watch(clockProvider)();
+        final locale = Localizations.localeOf(context).toString();
+        // Day headers (Today, Yesterday, then dates), as in the phone's own call log; groups never span two days.
+        final items = <Object>[];
+        String? lastDay;
+        for (final group in groupRecents(calls)) {
+          final day = dayLabel(l10n, locale, group.first.date, now);
+          if (day != lastDay) items.add(lastDay = day);
+          items.add(group);
+        }
         return RefreshIndicator(
-          onRefresh: () async => ref.invalidate(recentsProvider),
+          onRefresh: () async => ref.refresh(recentsProvider.future),
           child: ListView.builder(
             key: const Key('recents-list'),
-            itemCount: groups.length,
-            itemBuilder: (context, index) => RecentRow(group: groups[index]),
+            itemCount: items.length,
+            itemBuilder: (context, index) => switch (items[index]) {
+              final String day => _SectionHeader(day),
+              final group => RecentRow(group: group as List<RecentCall>),
+            },
           ),
         );
       },
     );
   }
+}
+
+/// Today / Yesterday / "Mon, 26 Oct" (this year) / "26 Oct 2025".
+String dayLabel(AppLocalizations l10n, String locale, int millis, DateTime now) {
+  final date = DateTime.fromMillisecondsSinceEpoch(millis);
+  final days = (DateTime(now.year, now.month, now.day).difference(DateTime(date.year, date.month, date.day)).inHours / 24).round();
+  if (days == 0) return l10n.today;
+  if (days == 1) return l10n.yesterday;
+  return (date.year == now.year ? DateFormat.MMMEd(locale) : DateFormat.yMMMd(locale)).format(date);
+}
+
+/// A section header in Recents (days) and Contacts (letters, favourites).
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.label);
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+    child: Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+  );
 }
 
 class RecentRow extends ConsumerWidget {
@@ -510,8 +600,19 @@ class ContactsTab extends ConsumerStatefulWidget {
   ConsumerState<ContactsTab> createState() => _ContactsTabState();
 }
 
+/// Lower-case names and number digits, worked out once per address book load for the search box.
+final _contactSearchProvider = Provider<List<({PhoneContact contact, String name, String digits})>>((ref) => [
+  for (final c in ref.watch(phoneContactsProvider).value ?? const <PhoneContact>[]) (contact: c, name: c.name.toLowerCase(), digits: digitsOnly(c.number)),
+]);
+
 class _ContactsTabState extends ConsumerState<ContactsTab> {
   String _query = '';
+
+  /// The letter a contact is filed under (A–Z, else #), as in the phone's own Contacts list.
+  static String _letter(String name) {
+    final first = name.trim().isEmpty ? '#' : name.trim()[0].toUpperCase();
+    return RegExp(r'[A-Z]').hasMatch(first) ? first : '#';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -522,10 +623,27 @@ class _ContactsTabState extends ConsumerState<ContactsTab> {
       error: (_, _) => Center(child: Text(l10n.noContacts)),
       data: (all) {
         final q = _query.trim().toLowerCase();
+        final qDigits = digitsOnly(q);
         final shown = q.isEmpty
             ? all
-            : all.where((c) => c.name.toLowerCase().contains(q) || digitsOnly(c.number).contains(digitsOnly(q).isEmpty ? '\u0000' : digitsOnly(q))).toList();
-        final favourites = q.isEmpty ? shown.where((c) => c.starred).toList() : const <PhoneContact>[];
+            : [
+                for (final e in ref.watch(_contactSearchProvider))
+                  if (e.name.contains(q) || (qDigits.isNotEmpty && e.digits.contains(qDigits))) e.contact,
+              ];
+        // Rows built lazily: a String is a section header, null the divider after the favourites.
+        final items = <Object?>[];
+        if (q.isEmpty) {
+          final favourites = shown.where((c) => c.starred).toList();
+          if (favourites.isNotEmpty) items..add(l10n.favourites)..addAll(favourites)..add(null);
+          String? letter;
+          for (final c in shown) {
+            final l = _letter(c.name);
+            if (l != letter) items.add(letter = l);
+            items.add(c);
+          }
+        } else {
+          items.addAll(shown);
+        }
         return Column(
           children: [
             Padding(
@@ -540,16 +658,15 @@ class _ContactsTabState extends ConsumerState<ContactsTab> {
             Expanded(
               child: shown.isEmpty
                   ? Center(child: Text(l10n.noContacts))
-                  : ListView(
+                  : ListView.builder(
                       key: const Key('contacts-list'),
-                      children: [
-                        if (favourites.isNotEmpty) ...[
-                          ListTile(dense: true, title: Text(l10n.favourites, style: Theme.of(context).textTheme.labelLarge)),
-                          for (final c in favourites) _ContactTile(contact: c),
-                          const Divider(),
-                        ],
-                        for (final c in shown) _ContactTile(contact: c),
-                      ],
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      itemCount: items.length,
+                      itemBuilder: (context, index) => switch (items[index]) {
+                        null => const Divider(),
+                        final String header => _SectionHeader(header),
+                        final contact => _ContactTile(contact: contact as PhoneContact),
+                      },
                     ),
             ),
           ],
@@ -576,7 +693,43 @@ class _ContactTile extends ConsumerWidget {
         icon: Icon(Icons.call_outlined, color: tokens.callButton),
         onPressed: () => placeCall(context, ref, contact.number),
       ),
-      onTap: () => placeCall(context, ref, contact.number),
+      // A tap on the row opens the contact's actions (no call from a stray tap while scrolling); the icon calls.
+      onTap: () => _actions(context, ref),
+    );
+  }
+
+  void _actions(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: ContactAvatar(title: contact.name, address: contact.number, saved: true, photoUri: contact.photoUri, size: 40),
+              title: Text(contact.name, style: Theme.of(context).textTheme.titleMedium),
+              subtitle: Text(formatNumber(contact.number)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.call),
+              title: Text(l10n.callAction),
+              onTap: () {
+                Navigator.pop(sheet);
+                placeCall(context, ref, contact.number);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.message_outlined),
+              title: Text(l10n.messageAction),
+              onTap: () {
+                Navigator.pop(sheet);
+                ref.read(dialerProvider).message(contact.number);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
