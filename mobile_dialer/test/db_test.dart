@@ -51,18 +51,20 @@ void main() {
     plain.close();
   });
 
-  test('schema 1 → 2 adds the read caches and keeps the outbox', () async {
-    final path = '${dir.path}/v1.db';
-    final v1 = sqlite3.open(path)..execute('PRAGMA key = "x\'$hex\'"');
-    // The schema 1.0.x created (drift, version 1): the outbox and kv are enough to prove nothing is lost.
-    v1.execute('CREATE TABLE "sync_events" ("seq" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "type" TEXT NOT NULL, "payload" TEXT NOT NULL, "created_at" INTEGER NOT NULL)');
-    v1.execute('CREATE TABLE "kv" ("key" TEXT NOT NULL, "value" TEXT NOT NULL, PRIMARY KEY ("key"))');
-    v1.execute("INSERT INTO sync_events (type, payload, created_at) VALUES ('message.upsert', '{}', 1)");
-    v1.execute('PRAGMA user_version = 1');
-    v1.close();
+  test('schema 2 → 3 drops the tables copied from OCM Messages and keeps the outbox', () async {
+    final path = '${dir.path}/v2.db';
+    final v2 = sqlite3.open(path)..execute('PRAGMA key = "x\'$hex\'"');
+    // The outbox and kv prove nothing is lost; outbound_states stands for the SMS tables schema 2 still had.
+    v2.execute('CREATE TABLE "sync_events" ("seq" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "type" TEXT NOT NULL, "payload" TEXT NOT NULL, "created_at" INTEGER NOT NULL)');
+    v2.execute('CREATE TABLE "kv" ("key" TEXT NOT NULL, "value" TEXT NOT NULL, PRIMARY KEY ("key"))');
+    v2.execute('CREATE TABLE "outbound_states" ("client_uuid" TEXT NOT NULL PRIMARY KEY, "state" TEXT NOT NULL)');
+    v2.execute("INSERT INTO sync_events (type, payload, created_at) VALUES ('call.upsert', '{}', 1)");
+    v2.execute('PRAGMA user_version = 2');
+    v2.close();
     final db = AppDatabase(NativeDatabase(File(path), setup: (raw) => raw.execute('PRAGMA key = "x\'$hex\'"')));
     expect(await db.pendingCount(), 1);
-    expect(await db.cachedThreads(), isEmpty); // the new table exists
+    final tables = await db.customSelect("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'outbound_states'").get();
+    expect(tables, isEmpty);
     await db.close();
   });
 

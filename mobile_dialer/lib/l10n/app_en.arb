@@ -165,7 +165,6 @@
   "deviceCode": "Device code",
   "lastSync": "Last sync",
   "pendingUploads": "Waiting to upload",
-  "queueWaiting": "Call records waiting to upload",
   "connectivity": "Connection",
   "online": "Online",
   "offline": "Offline",

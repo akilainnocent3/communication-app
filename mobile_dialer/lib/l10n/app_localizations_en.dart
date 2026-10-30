@@ -379,9 +379,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingUploads => 'Waiting to upload';
 
   @override
-  String get queueWaiting => 'Call records waiting to upload';
-
-  @override
   String get connectivity => 'Connection';
 
   @override

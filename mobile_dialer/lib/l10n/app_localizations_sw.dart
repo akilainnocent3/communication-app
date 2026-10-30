@@ -379,9 +379,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get pendingUploads => 'Zinasubiri kupakiwa';
 
   @override
-  String get queueWaiting => 'Kumbukumbu za simu zinasubiri kupakiwa';
-
-  @override
   String get connectivity => 'Muunganisho';
 
   @override

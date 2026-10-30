@@ -776,12 +776,6 @@ abstract class AppLocalizations {
   /// **'Waiting to upload'**
   String get pendingUploads;
 
-  /// No description provided for @queueWaiting.
-  ///
-  /// In en, this message translates to:
-  /// **'Call records waiting to upload'**
-  String get queueWaiting;
-
   /// No description provided for @connectivity.
   ///
   /// In en, this message translates to:

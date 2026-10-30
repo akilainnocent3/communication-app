@@ -13,7 +13,6 @@ final _syncStatusProvider = FutureProvider.autoDispose<Map<String, Object?>>((re
     'code': services.session?.deviceCode ?? '-',
     'last': int.tryParse(await services.db.getValue('last_sync_at') ?? ''),
     'pending': await services.db.pendingCount(),
-    'queue': (await services.db.unreportedOutbound()).length,
     'online': status.networkAvailable,
     'network': status.networkType,
     'running': status.running,
@@ -40,7 +39,6 @@ class SyncStatusScreen extends ConsumerWidget {
                 ListTile(title: Text(l10n.deviceCode), subtitle: SelectableText('${data['code']}')),
                 ListTile(title: Text(l10n.lastSync), subtitle: Text(last == null ? l10n.never : DateFormat.yMMMd().add_Hms().format(DateTime.fromMillisecondsSinceEpoch(last)))),
                 ListTile(title: Text(l10n.pendingUploads), trailing: Text('${data['pending']}')),
-                ListTile(title: Text(l10n.queueWaiting), trailing: Text('${data['queue']}')),
                 ListTile(title: Text(l10n.connectivity), trailing: Text(data['online'] == true ? '${l10n.online} · ${data['network']}' : l10n.offline)),
                 ListTile(title: Text(l10n.syncService), trailing: Text(data['running'] == true ? l10n.running : l10n.notRunning)),
                 Padding(
