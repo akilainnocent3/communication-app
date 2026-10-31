@@ -10,7 +10,7 @@ one tap. OCM Messages (the SMS app, `mobile/`) is unchanged; a company phone usu
 |---|---|
 | OCM Phone app ([README](../mobile_dialer/README.md)) | `mobile_dialer/` |
 | Dialer core (Kotlin: InCallService, native call screen, ringer, screening, call log) | `mobile_dialer/android/…/phone/dialer/` |
-| Phone screens (Keypad, Recents, Contacts, Call-backs), onboarding, enrollment (Flutter) | `mobile_dialer/lib/features/` |
+| Phone screens (Keypad, Recents, Contacts), onboarding, enrollment (Flutter) | `mobile_dialer/lib/features/` |
 | Phone identity, enrollment, tokens, heartbeat, push, the event pipeline | `backend/modules/devices/` (shared with SMS) |
 | Call records, events, outcomes, annotations, call-backs, settings, rollups, admin + device API | `backend/modules/calls/` |
 | Company directory (customers by number, shared by SMS and Calls) | `backend/modules/directory/` |
@@ -37,7 +37,7 @@ one tap. OCM Messages (the SMS app, `mobile/`) is unchanged; a company phone usu
 - **No call audio.** Since Android 10 no third-party app can capture the voice-call stream, and Play bans
   Accessibility-based recording. v1 records nothing; the legitimate future path is in
   [calls-recording.md](calls-recording.md).
-- **The phone holder talks.** No auto-dialing: a call-back task is a notification and a list entry; only a tap on
+- **The phone holder talks.** No auto-dialing: a call-back task is a notification; only a tap on
   *Call* places the call (`origin=callback_task`).
 
 ## Emergency calls always work
@@ -169,7 +169,7 @@ on the ongoing-call notification ("Recorded in company call records").
 
 ## Phone screens (Flutter)
 
-Keypad / Recents / Contacts / Call-backs, skinned with the same skin system as OCM Messages (`SkinTokens`: key shape and size,
+Keypad / Recents / Contacts, skinned with the same skin system as OCM Messages (`SkinTokens`: key shape and size,
 letters, call-button colour, recents row height):
 
 - **Keypad:** T9 search by name words and by number (local `07…` or `+255…`); paste (long-press the number); long-press

@@ -37,10 +37,7 @@ class EventRouter {
 
   void _flush() {
     _timer = null;
-    if (_calls) {
-      ref.invalidate(recentsProvider);
-      ref.invalidate(callbackTasksProvider);
-    }
+    if (_calls) ref.invalidate(recentsProvider);
     if (_contacts) ref.invalidate(phoneContactsProvider);
     _calls = false;
     _contacts = false;

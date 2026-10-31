@@ -38,8 +38,6 @@ final t9IndexProvider = Provider<T9Index<PhoneContact>>(
 /// "Today" for the Recents day headers; fixed in tests.
 final clockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
 
-final callbackTasksProvider = FutureProvider.autoDispose<List<CallbackTaskData>>((ref) => ref.watch(dialerProvider).callbacks());
-
 /// SIMs with the label and colour the admin gave them (calls config cached by the native engine), else the carrier.
 final callSimsProvider = FutureProvider.autoDispose<List<CallSim>>((ref) async {
   final sims = await ref.watch(dialerProvider).sims();
@@ -75,9 +73,9 @@ Color _colour(String? hex, int slot) {
 }
 
 
-enum PhoneTab { keypad, recents, contacts, callbacks }
+enum PhoneTab { keypad, recents, contacts }
 
-/// "Phone": Keypad / Recents / Contacts / Call-backs, laid out like the Phone app this phone came with (the skin:
+/// "Phone": Keypad / Recents / Contacts, laid out like the Phone app this phone came with (the skin:
 /// header, tabs, list cards and keypad all come from its tokens).
 class PhoneScreen extends ConsumerStatefulWidget {
   const PhoneScreen({super.key, this.tab = PhoneTab.keypad, this.number});
@@ -126,14 +124,12 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
     PhoneTab.keypad => KeypadTab(initial: widget.number, onSearch: _searchContacts),
     PhoneTab.recents => const RecentsTab(),
     PhoneTab.contacts => ContactsTab(searchRequest: _contactsSearch),
-    PhoneTab.callbacks => const CallbacksTab(),
   };
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = SkinTokens.of(context);
-    final waiting = ref.watch(callbackTasksProvider).value?.length ?? 0;
     final banner = DialerBanner.shown(ref);
     final body = IndexedStack(
       index: _tab.index,
@@ -153,9 +149,8 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
       ),
       bottomNavigationBar: switch (tokens.phoneTabs) {
         PhoneTabStyle.text => TextTabBar(
-          labels: [l10n.tabKeypad, l10n.tabRecents, l10n.tabContacts, l10n.tabCallbacks],
+          labels: [l10n.tabKeypad, l10n.tabRecents, l10n.tabContacts],
           selected: _tab.index,
-          badges: {PhoneTab.callbacks.index: waiting},
           onSelected: (index) => _select(PhoneTab.values[index]),
         ),
         PhoneTabStyle.navigationBar => NavigationBar(
@@ -165,10 +160,6 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
             NavigationDestination(icon: const Icon(Icons.dialpad), label: l10n.tabKeypad),
             NavigationDestination(icon: const Icon(Icons.history), label: l10n.tabRecents),
             NavigationDestination(icon: const Icon(Icons.person_outline), label: l10n.tabContacts),
-            NavigationDestination(
-              icon: Badge(isLabelVisible: waiting > 0, label: Text('$waiting'), child: const Icon(Icons.phone_callback_outlined)),
-              label: l10n.tabCallbacks,
-            ),
           ],
         ),
       },
@@ -1114,92 +1105,6 @@ class _ContactTile extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// --- Call-backs --------------------------------------------------------------------------------------------------
-
-class CallbacksTab extends ConsumerWidget {
-  const CallbacksTab({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final tokens = SkinTokens.of(context);
-    final tasks = ref.watch(callbackTasksProvider);
-    final slivers = tasks.when<List<Widget>>(
-      loading: () => [const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator()))],
-      error: (_, _) => [_EmptySliver(l10n.noCallbacks)],
-      data: (list) {
-        final open = list.where((t) => t.state != 'done').toList();
-        if (open.isEmpty) return [_EmptySliver(l10n.noCallbacks)];
-        return [
-          SliverList.list(
-            children: [
-              for (final task in open)
-                Card(
-                  elevation: 0,
-                  color: tokens.groupedList ? tokens.listSurface : null,
-                  margin: EdgeInsets.fromLTRB(tokens.groupedList ? tokens.listInset : 12, 8, tokens.groupedList ? tokens.listInset : 12, 0),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(tokens.groupedList ? 22 : 16, 12, 8, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(child: Text(task.name.isEmpty ? formatNumber(task.number) : task.name, style: Theme.of(context).textTheme.titleMedium)),
-                            if (task.priority == 'high' || task.priority == 'urgent')
-                              Chip(label: Text(task.priority == 'urgent' ? l10n.priorityUrgent : l10n.priorityHigh), visualDensity: VisualDensity.compact),
-                          ],
-                        ),
-                        if (task.name.isNotEmpty) Text(formatNumber(task.number)),
-                        if (task.reason.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 4), child: Text(task.reason)),
-                        Text(l10n.requestedBy(task.requestedBy), style: Theme.of(context).textTheme.bodySmall),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(
-                              onPressed: () async {
-                                await ref.read(dialerProvider).reportCallback(task.id, 'snoozed');
-                                ref.invalidate(callbackTasksProvider);
-                              },
-                              child: Text(l10n.snoozeAction),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                await ref.read(dialerProvider).reportCallback(task.id, 'done');
-                                ref.invalidate(callbackTasksProvider);
-                              },
-                              child: Text(l10n.doneAction),
-                            ),
-                            FilledButton.icon(
-                              style: FilledButton.styleFrom(backgroundColor: tokens.callButton),
-                              onPressed: () => placeCall(context, ref, task.number, origin: 'callback_task', callbackTask: task.id),
-                              icon: const Icon(Icons.call),
-                              label: Text(l10n.callAction),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ];
-      },
-    );
-    return SkinnedScrollView(
-      scrollKey: const Key('callbacks-list'),
-      title: l10n.tabCallbacks,
-      onRefresh: () async {
-        await ref.read(phoneProvider).syncNow();
-        ref.invalidate(callbackTasksProvider);
-      },
-      actions: const [PhoneMenuButton()],
-      slivers: slivers,
     );
   }
 }

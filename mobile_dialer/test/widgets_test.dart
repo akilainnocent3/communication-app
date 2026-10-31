@@ -18,13 +18,11 @@ void main() {
     expect(initialLocation(removed: false, isDefaultDialer: true, enrolled: true), '/phone');
   });
 
-  test('call events refresh recents and call-backs once per burst; other events go to the app shell', () async {
+  test('call events refresh recents once per burst; other events go to the app shell', () async {
     final source = StreamController<TelephonyEvent>();
     var recents = 0;
-    var callbacks = 0;
     final container = ProviderContainer(overrides: [
       recentsProvider.overrideWith((ref) async { recents++; return const []; }),
-      callbackTasksProvider.overrideWith((ref) async { callbacks++; return const []; }),
       eventRouterProvider.overrideWith((ref) {
         final router = EventRouter(ref, source: source.stream, window: const Duration(milliseconds: 10));
         ref.onDispose(router.dispose);
@@ -34,17 +32,15 @@ void main() {
     addTearDown(container.dispose);
     final shell = <String>[];
     container.read(eventRouterProvider).other.listen((e) => shell.add(e.type));
-    final keep = [container.listen(recentsProvider, (_, _) {}), container.listen(callbackTasksProvider, (_, _) {})];
+    final keep = [container.listen(recentsProvider, (_, _) {})];
     await container.read(recentsProvider.future);
-    await container.read(callbackTasksProvider.future);
     for (var i = 0; i < 3; i++) {
       source.add(TelephonyEvent(type: 'calls_changed'));
     }
     source.add(TelephonyEvent(type: 'launch'));
     await Future<void>.delayed(const Duration(milliseconds: 40));
     await container.read(recentsProvider.future);
-    await container.read(callbackTasksProvider.future);
-    expect((recents, callbacks), (2, 2));
+    expect(recents, 2);
     expect(shell, ['launch']);
     for (final sub in keep) {
       sub.close();

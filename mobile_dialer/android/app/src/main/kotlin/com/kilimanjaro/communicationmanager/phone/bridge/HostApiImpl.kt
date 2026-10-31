@@ -187,12 +187,12 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
 /**
  * Where an intent asked the app to go, consumed once by the router: dial (DIAL / VIEW tel: from other apps; only pre-fills
  * the keypad), enroll (an ocmphone://enroll link; the server allow-list and the monitoring notice still apply) and route
- * (the app's own notifications: ocmphone://phone/recents, /callbacks, /keypad).
+ * (the app's own notifications: ocmphone://phone/recents, /keypad).
  */
 object LaunchIntent {
     @Volatile private var target: LaunchTarget? = null
 
-    private val phoneRoutes = setOf("/phone", "/phone/keypad", "/phone/recents", "/phone/contacts", "/phone/callbacks")
+    private val phoneRoutes = setOf("/phone", "/phone/keypad", "/phone/recents", "/phone/contacts")
 
     fun set(intent: Intent?) {
         val data = intent?.data

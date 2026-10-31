@@ -95,7 +95,7 @@ object CallNotifications {
         val id = 1000 + (task.id.hashCode() and 0xffff)
         val who = task.name.ifBlank { task.number }
         val call = PendingIntent.getActivity(context, id, PlaceCallActivity.intent(context, task.number, "callback_task", task.id), FLAGS)
-        val open = PendingIntent.getActivity(context, id + 1, Intent(Intent.ACTION_VIEW, Uri.parse("ocmphone://phone/callbacks")).setClass(context, MainActivity::class.java), FLAGS)
+        val open = PendingIntent.getActivity(context, id + 1, Intent(Intent.ACTION_VIEW, Uri.parse("ocmphone://phone")).setClass(context, MainActivity::class.java), FLAGS)
         manager.notify(id, NotificationCompat.Builder(context, CALLBACK_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_ocm)
             .setContentTitle(context.getString(R.string.callback_title, who))

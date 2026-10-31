@@ -217,19 +217,6 @@ void main() {
     expect(dialer.placed.single, ('+255754210331', 1, 'redial', null));
   });
 
-  testWidgets('call-backs: Call places the call for the task; Done is reported', (tester) async {
-    final dialer = FakeDialer();
-    await tester.pumpWidget(harness(const CallbacksTab(), dialer));
-    await tester.pumpAndSettle();
-    expect(find.text('Quote for 40 bags'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Call'));
-    await tester.pumpAndSettle();
-    expect(dialer.placed.single, ('+255713402118', 1, 'callback_task', 't1'));
-    await tester.tap(find.text('Done'));
-    await tester.pumpAndSettle();
-    expect(dialer.reported.single, ('t1', 'done'));
-  });
-
   testWidgets('One UI: a recents row opens Call / Message in place; a long press shows the details', (tester) async {
     final dialer = FakeDialer();
     await tester.pumpWidget(harness(const RecentsTab(), dialer, skin: 'one_ui'));

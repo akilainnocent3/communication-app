@@ -37,7 +37,6 @@ GoRouter buildRouter(String initial) => GoRouter(
     GoRoute(path: '/phone/keypad', builder: (_, state) => PhoneScreen(number: state.uri.queryParameters['number'])),
     GoRoute(path: '/phone/recents', builder: (_, _) => const PhoneScreen(tab: PhoneTab.recents)),
     GoRoute(path: '/phone/contacts', builder: (_, _) => const PhoneScreen(tab: PhoneTab.contacts)),
-    GoRoute(path: '/phone/callbacks', builder: (_, _) => const PhoneScreen(tab: PhoneTab.callbacks)),
     GoRoute(path: '/enroll', builder: (_, state) => EnrollScreen(link: state.uri.queryParameters['link'])),
     GoRoute(path: '/enroll/scan', builder: (_, _) => const ScannerScreen()),
     GoRoute(path: '/enroll/done', builder: (_, state) => EnrolledScreen(deviceCode: state.uri.queryParameters['code'] ?? '')),
