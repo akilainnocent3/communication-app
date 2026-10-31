@@ -9,9 +9,16 @@ import '../../providers.dart';
 export '../../ui/widgets/avatar.dart';
 
 /// Shown above the Phone screens while calls are not copied to the company (not enrolled) or this app is not the
-/// default Phone app (the role can be changed in system settings at any time). The keypad works either way.
+/// default Phone app (the role can be changed in system settings at any time). The keypad works either way. It sits
+/// at the very top, so it takes the status bar inset when shown ([shown]: the page under it then leaves that out).
 class DialerBanner extends ConsumerWidget {
   const DialerBanner({super.key});
+
+  static bool shown(WidgetRef ref) {
+    final enrolled = ref.watch(servicesProvider.select((s) => s.session != null));
+    return !enrolled || ref.watch(callsStatusProvider).value?.isDefaultDialer == false;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -23,10 +30,13 @@ class DialerBanner extends ConsumerWidget {
       _ => (null, null, null),
     };
     if (text == null) return const SizedBox.shrink();
-    return MaterialBanner(
-      leading: const Icon(Icons.warning_amber_rounded),
-      content: Text(text),
-      actions: [TextButton(onPressed: () => context.push(route!), child: Text(action!))],
+    return SafeArea(
+      bottom: false,
+      child: MaterialBanner(
+        leading: const Icon(Icons.warning_amber_rounded),
+        content: Text(text),
+        actions: [TextButton(onPressed: () => context.push(route!), child: Text(action!))],
+      ),
     );
   }
 }

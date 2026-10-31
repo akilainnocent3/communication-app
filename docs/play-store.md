@@ -9,7 +9,7 @@ same disclosures apply on the phone. Google's policies change; re-read the linke
 |---|---|---|
 | Play title | **OCM Messages – Office Communication** | **OCM Phone – Office Communication** |
 | Package | `com.kilimanjaro.communicationmanager.sms` | `com.kilimanjaro.communicationmanager.phone` |
-| Launcher entry | *OCM Messages* | *OCM Phone* |
+| Launcher entry | *OCM Messages* | *Phone* (Swahili: *Simu*) |
 | Default handler role | SMS (`ROLE_SMS`) | Phone (`ROLE_DIALER`) |
 | Category | Business | Business |
 | Monitoring flag | `isMonitoringTool=enterprise_management`, a direct child of `<manifest>`, every build and flavor | the same |

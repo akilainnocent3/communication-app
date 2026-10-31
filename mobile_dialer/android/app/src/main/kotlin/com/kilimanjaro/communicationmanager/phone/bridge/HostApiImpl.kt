@@ -79,6 +79,11 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
         runCatching { (bridge?.activity ?: context).startActivity(intent) }
     }
 
+    override fun openProfile() {
+        val intent = Intent(Intent.ACTION_VIEW, android.provider.ContactsContract.Profile.CONTENT_URI).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { (bridge?.activity ?: context).startActivity(intent) }
+    }
+
     override fun messageNumber(number: String) {
         val intent = Intent(Intent.ACTION_SENDTO, Uri.fromParts("smsto", number, null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { (bridge?.activity ?: context).startActivity(intent) }
@@ -122,6 +127,7 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
         return StartupState(
             databasePath = DatabaseKey.path(context), databaseKey = key, isDefaultDialer = CallsFeature.isDefaultDialer(context),
             manufacturer = Build.MANUFACTURER, brand = Build.BRAND, sdkInt = Build.VERSION.SDK_INT.toLong(), removed = Revocation.consumeRemoved(context),
+            systemDialer = CallsFeature.systemDialer(context),
         )
     }
 
@@ -168,6 +174,7 @@ class HostApiImpl(private val context: Context, private val bridge: ActivityBrid
     }
     override suspend fun recentCalls(limit: Long, offset: Long) = io { DialerData.recent(context, limit.toInt(), offset.toInt()) }
     override suspend fun phoneContacts(limit: Long) = io { DialerData.contacts(context, limit.toInt()) }
+    override suspend fun myProfile() = io { DialerData.profile(context) }
     override suspend fun callbackTasks() = io { DialerData.callbacks(context) }
     override suspend fun reportCallback(id: String, state: String) = io { CallbackTasks.report(context, id, state) }
     override suspend fun deleteRecentCall(id: Long) = io { DialerData.delete(context, id) }

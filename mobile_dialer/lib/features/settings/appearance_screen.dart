@@ -26,7 +26,7 @@ class AppearanceScreen extends ConsumerWidget {
       'color_os' => l10n.skinColorOs,
       _ => l10n.skinCompany,
     };
-    final matched = skinForPhone(startup.manufacturer, startup.brand);
+    final matched = skinForPhone(startup.manufacturer, startup.brand, dialer: startup.systemDialer);
     final scale = ref.watch(textScaleProvider);
 
     Widget option(String id, String label) {

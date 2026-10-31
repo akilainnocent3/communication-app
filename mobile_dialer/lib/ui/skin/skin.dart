@@ -24,8 +24,25 @@ const skins = <SkinSpec>[oneUiSkin, pixelSkin, hiosSkin, hyperOsSkin, colorOsSki
 
 SkinSpec skinById(String id) => skins.firstWhere((s) => s.id == id, orElse: () => pixelSkin);
 
-/// "Match my phone": the look of the Messages app this phone came with.
-String skinForPhone(String manufacturer, String brand) {
+/// The look of known Phone apps, by package prefix. The AOSP names (com.android.dialer, com.android.contacts) are
+/// shared by several manufacturers' own dialers, so they fall through to the manufacturer.
+const _dialerSkins = <String, String>{
+  'com.samsung.android.': 'one_ui',
+  'com.google.android.dialer': 'pixel',
+  'com.miui.': 'hyper_os',
+  'com.xiaomi.': 'hyper_os',
+  'com.transsion.': 'hios',
+  'com.oplus.': 'color_os',
+  'com.coloros.': 'color_os',
+  'com.oneplus.': 'color_os',
+};
+
+/// "Match my phone": the look of the Phone app this phone came with ([dialer], its package), else of the
+/// manufacturer's. The package wins: a Xiaomi or OnePlus sold with Google's Phone app gets the Pixel look.
+String skinForPhone(String manufacturer, String brand, {String dialer = ''}) {
+  for (final MapEntry(key: prefix, value: skin) in _dialerSkins.entries) {
+    if (dialer.startsWith(prefix)) return skin;
+  }
   final names = '$manufacturer $brand'.toLowerCase();
   bool any(List<String> words) => words.any(names.contains);
   if (any(['samsung'])) return oneUiSkin.id;

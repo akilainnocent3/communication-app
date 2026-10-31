@@ -559,6 +559,7 @@ class StartupState {
     required this.brand,
     required this.sdkInt,
     required this.removed,
+    required this.systemDialer,
   });
 
   String databasePath;
@@ -577,6 +578,10 @@ class StartupState {
   /// The administrator revoked this phone while the app was closed (the native sync engine already wiped it).
   bool removed;
 
+  /// Package of the Phone app this phone came with (TelecomManager.getSystemDialerPackage), so "Match my phone" can
+  /// take its look; empty when unknown.
+  String systemDialer;
+
   List<Object?> _toList() {
     return <Object?>[
       databasePath,
@@ -586,6 +591,7 @@ class StartupState {
       brand,
       sdkInt,
       removed,
+      systemDialer,
     ];
   }
 
@@ -602,6 +608,7 @@ class StartupState {
       brand: result[4]! as String,
       sdkInt: result[5]! as int,
       removed: result[6]! as bool,
+      systemDialer: result[7]! as String,
     );
   }
 
@@ -614,7 +621,7 @@ class StartupState {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(databasePath, other.databasePath) && _deepEquals(databaseKey, other.databaseKey) && _deepEquals(isDefaultDialer, other.isDefaultDialer) && _deepEquals(manufacturer, other.manufacturer) && _deepEquals(brand, other.brand) && _deepEquals(sdkInt, other.sdkInt) && _deepEquals(removed, other.removed);
+    return _deepEquals(databasePath, other.databasePath) && _deepEquals(databaseKey, other.databaseKey) && _deepEquals(isDefaultDialer, other.isDefaultDialer) && _deepEquals(manufacturer, other.manufacturer) && _deepEquals(brand, other.brand) && _deepEquals(sdkInt, other.sdkInt) && _deepEquals(removed, other.removed) && _deepEquals(systemDialer, other.systemDialer);
   }
 
   @override
@@ -623,7 +630,7 @@ class StartupState {
 
   @override
   String toString() {
-    return 'StartupState(databasePath: $databasePath, databaseKey: $databaseKey, isDefaultDialer: $isDefaultDialer, manufacturer: $manufacturer, brand: $brand, sdkInt: $sdkInt, removed: $removed)';
+    return 'StartupState(databasePath: $databasePath, databaseKey: $databaseKey, isDefaultDialer: $isDefaultDialer, manufacturer: $manufacturer, brand: $brand, sdkInt: $sdkInt, removed: $removed, systemDialer: $systemDialer)';
   }
 }
 
@@ -1331,6 +1338,25 @@ class TelephonyHostApi {
     ;
   }
 
+  /// The owner's card in the system Contacts app.
+  Future<void> openProfile() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.ocm_phone.TelephonyHostApi.openProfile$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
   /// The phone's SMS app (ACTION_SENDTO smsto:), OCM Messages on company phones.
   Future<void> messageNumber(String number) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.ocm_phone.TelephonyHostApi.messageNumber$pigeonVar_messageChannelSuffix';
@@ -1788,6 +1814,27 @@ class TelephonyHostApi {
     )
     ;
     return (pigeonVar_replyValue! as List<Object?>).cast<PhoneContact>();
+  }
+
+  /// The phone owner's own card (Contacts → My profile): name and photo, the number when it has one; null when none
+  /// is set up or contacts are not allowed.
+  Future<PhoneContact?> myProfile() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.ocm_phone.TelephonyHostApi.myProfile$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as PhoneContact?;
   }
 
   Future<List<CallbackTaskData>> callbackTasks() async {

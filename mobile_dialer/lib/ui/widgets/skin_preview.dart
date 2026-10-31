@@ -23,7 +23,7 @@ class SkinPreview extends StatelessWidget {
               KeypadKeyStyle.flat => const StadiumBorder(),
             },
           ),
-          child: Text(d, style: TextStyle(fontSize: key * 0.42, color: scheme.onSurface)),
+          child: Text(d, style: TextStyle(fontSize: key * 0.42, fontWeight: tokens.keypadDigitWeight, color: scheme.onSurface)),
         );
     return Container(
       color: tokens.pageBackground,
@@ -32,7 +32,10 @@ class SkinPreview extends StatelessWidget {
         SizedBox(
           height: tokens.recentsRowHeight,
           child: Row(children: [
-            const ContactAvatar(title: 'Neema Mushi', address: '+255754210331', saved: true, size: 42),
+            if (tokens.recentsAvatar)
+              const ContactAvatar(title: 'Neema Mushi', address: '+255754210331', saved: true, size: 42)
+            else
+              Icon(Icons.call_missed, color: tokens.missedCall),
             const SizedBox(width: 14),
             Expanded(
               child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [

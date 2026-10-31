@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Kiswahili. Keep in step with values/strings.xml. -->
 <resources>
-    <string name="app_name">OCM Simu</string>
+    <string name="app_name">Simu</string>
     <string name="service_title">OCM: ufuatiliaji wa kampuni unaendelea</string>
     <string name="channel_sync">Usawazishaji na kampuni</string>
     <string name="call_recorded_notice">Imehifadhiwa kwenye kumbukumbu za simu za kampuni</string>

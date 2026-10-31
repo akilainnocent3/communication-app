@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Native strings (notifications, service). Dart strings live in lib/l10n/app_en.arb. Add values-sw/ for Swahili. -->
 <resources>
-    <!-- OCM Phone: never the name of a system app (Play impersonation policy). -->
-    <string name="app_name">OCM Phone</string>
+    <!-- The launcher name. The icon stays the OCM ring with a handset, never a copy of a system dialer's icon. -->
+    <string name="app_name">Phone</string>
     <string name="service_title">OCM: company monitoring active</string>
     <string name="channel_sync">Sync with the company</string>
     <string name="call_recorded_notice">Recorded in company call records</string>

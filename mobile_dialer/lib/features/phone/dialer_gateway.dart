@@ -6,6 +6,9 @@ abstract class DialerGateway {
   Future<String> placeCall(String number, {int? subscriptionId, String origin = 'manual', String? callbackTask});
   Future<List<RecentCall>> recent(int limit, int offset);
   Future<List<PhoneContact>> contacts(int limit);
+  /// The owner's own card (Contacts → My profile), null when none.
+  Future<PhoneContact?> myProfile();
+  Future<void> openProfile();
   Future<List<CallbackTaskData>> callbacks();
   Future<void> reportCallback(String id, String state);
   Future<void> deleteRecent(int id);
@@ -29,6 +32,10 @@ class PlatformDialerGateway implements DialerGateway {
   Future<List<RecentCall>> recent(int limit, int offset) => api.recentCalls(limit, offset);
   @override
   Future<List<PhoneContact>> contacts(int limit) => api.phoneContacts(limit);
+  @override
+  Future<PhoneContact?> myProfile() => api.myProfile();
+  @override
+  Future<void> openProfile() => api.openProfile();
   @override
   Future<List<CallbackTaskData>> callbacks() => api.callbackTasks();
   @override

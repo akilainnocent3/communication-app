@@ -101,13 +101,13 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'OCM Phone'**
+  /// **'Phone'**
   String get appTitle;
 
   /// No description provided for @companyApp.
   ///
   /// In en, this message translates to:
-  /// **'OCM Phone'**
+  /// **'Phone'**
   String get companyApp;
 
   /// No description provided for @onboardingTitle.
@@ -281,7 +281,7 @@ abstract class AppLocalizations {
   /// No description provided for @removedBody.
   ///
   /// In en, this message translates to:
-  /// **'Its connection to the company has been deleted. Calls are no longer recorded. You can keep using OCM Phone as your Phone app, or choose another one.'**
+  /// **'Its connection to the company has been deleted. Calls are no longer recorded. You can keep using this app as your Phone app, or choose another one.'**
   String get removedBody;
 
   /// No description provided for @pausedBanner.
@@ -1151,7 +1151,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'OCM Phone, your company\'s Phone app'**
+  /// **'Your company\'s Phone app'**
   String get welcomeTitle;
 
   /// No description provided for @welcomeBody.
@@ -1241,7 +1241,7 @@ abstract class AppLocalizations {
   /// No description provided for @notAnEnrollCode.
   ///
   /// In en, this message translates to:
-  /// **'That is not an OCM Phone enrollment code. Scan the code from Admin → Calls → Phones → Enroll OCM Phone.'**
+  /// **'That is not an enrollment code for this app. Scan the code from Admin → Calls → Phones → Enroll OCM Phone.'**
   String get notAnEnrollCode;
 
   /// No description provided for @noQrInPhoto.
@@ -1307,7 +1307,7 @@ abstract class AppLocalizations {
   /// No description provided for @enrolledBody.
   ///
   /// In en, this message translates to:
-  /// **'Calls are now recorded for your company. Next, make OCM Phone your Phone app.'**
+  /// **'Calls are now recorded for your company. Next, make this app your Phone app.'**
   String get enrolledBody;
 
   /// No description provided for @openMessages.
@@ -1607,7 +1607,7 @@ abstract class AppLocalizations {
   /// No description provided for @wrongAppCode.
   ///
   /// In en, this message translates to:
-  /// **'This code is for OCM Messages. Open OCM Messages and scan it there, or ask for an OCM Phone code.'**
+  /// **'This code is for OCM Messages. Open OCM Messages and scan it there, or ask for a code from Admin → Calls → Phones.'**
   String get wrongAppCode;
 
   /// No description provided for @openKeypad.
@@ -1637,8 +1637,32 @@ abstract class AppLocalizations {
   /// No description provided for @notDefaultDialerBanner.
   ///
   /// In en, this message translates to:
-  /// **'OCM Phone is not your Phone app. Incoming calls are not shown here.'**
+  /// **'This app is not your default Phone app. Incoming calls are not shown here.'**
   String get notDefaultDialerBanner;
+
+  /// No description provided for @contactsWithNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 contact with a phone number} other{{count} contacts with phone numbers}}'**
+  String contactsWithNumbers(int count);
+
+  /// No description provided for @allCalls.
+  ///
+  /// In en, this message translates to:
+  /// **'All calls'**
+  String get allCalls;
+
+  /// No description provided for @missedCalls.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed calls'**
+  String get missedCalls;
+
+  /// No description provided for @myProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'My profile'**
+  String get myProfile;
 }
 
 class _AppLocalizationsDelegate

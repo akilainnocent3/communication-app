@@ -10,10 +10,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'OCM Phone';
+  String get appTitle => 'Phone';
 
   @override
-  String get companyApp => 'OCM Phone';
+  String get companyApp => 'Phone';
 
   @override
   String get onboardingTitle => 'Make this the phone\'s SMS app';
@@ -110,7 +110,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removedBody =>
-      'Its connection to the company has been deleted. Calls are no longer recorded. You can keep using OCM Phone as your Phone app, or choose another one.';
+      'Its connection to the company has been deleted. Calls are no longer recorded. You can keep using this app as your Phone app, or choose another one.';
 
   @override
   String get pausedBanner => 'Syncing is paused by your administrator.';
@@ -583,7 +583,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notRunning => 'Not running';
 
   @override
-  String get welcomeTitle => 'OCM Phone, your company\'s Phone app';
+  String get welcomeTitle => 'Your company\'s Phone app';
 
   @override
   String get welcomeBody =>
@@ -636,7 +636,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notAnEnrollCode =>
-      'That is not an OCM Phone enrollment code. Scan the code from Admin → Calls → Phones → Enroll OCM Phone.';
+      'That is not an enrollment code for this app. Scan the code from Admin → Calls → Phones → Enroll OCM Phone.';
 
   @override
   String get noQrInPhoto => 'No QR code found in that photo.';
@@ -674,7 +674,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enrolledBody =>
-      'Calls are now recorded for your company. Next, make OCM Phone your Phone app.';
+      'Calls are now recorded for your company. Next, make this app your Phone app.';
 
   @override
   String get openMessages => 'Open messages';
@@ -843,7 +843,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wrongAppCode =>
-      'This code is for OCM Messages. Open OCM Messages and scan it there, or ask for an OCM Phone code.';
+      'This code is for OCM Messages. Open OCM Messages and scan it there, or ask for a code from Admin → Calls → Phones.';
 
   @override
   String get openKeypad => 'Open the keypad';
@@ -860,5 +860,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notDefaultDialerBanner =>
-      'OCM Phone is not your Phone app. Incoming calls are not shown here.';
+      'This app is not your default Phone app. Incoming calls are not shown here.';
+
+  @override
+  String contactsWithNumbers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count contacts with phone numbers',
+      one: '1 contact with a phone number',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get allCalls => 'All calls';
+
+  @override
+  String get missedCalls => 'Missed calls';
+
+  @override
+  String get myProfile => 'My profile';
 }

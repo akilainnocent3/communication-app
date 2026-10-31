@@ -78,7 +78,7 @@ class ServiceStatus {
 
 /// Everything the first frame needs, in one round trip (cold start).
 class StartupState {
-  StartupState({required this.databasePath, required this.databaseKey, required this.isDefaultDialer, required this.manufacturer, required this.brand, required this.sdkInt, required this.removed});
+  StartupState({required this.databasePath, required this.databaseKey, required this.isDefaultDialer, required this.manufacturer, required this.brand, required this.sdkInt, required this.removed, required this.systemDialer});
   String databasePath;
   /// 64 hex characters: the raw 256-bit SQLCipher key (no PBKDF2 on open).
   String databaseKey;
@@ -88,6 +88,9 @@ class StartupState {
   int sdkInt;
   /// The administrator revoked this phone while the app was closed (the native sync engine already wiped it).
   bool removed;
+  /// Package of the Phone app this phone came with (TelecomManager.getSystemDialerPackage), so "Match my phone" can
+  /// take its look; empty when unknown.
+  String systemDialer;
 }
 
 /// Where an intent asked the app to go: dial (tel:, DIAL), enroll (ocmphone://enroll link) or route (a notification).
@@ -177,6 +180,8 @@ abstract class TelephonyHostApi {
   void openFullScreenIntentSettings();
   /// The system "new contact" screen, pre-filled with [number] (the person saves it).
   void addContact(String number);
+  /// The owner's card in the system Contacts app.
+  void openProfile();
   /// The phone's SMS app (ACTION_SENDTO smsto:), OCM Messages on company phones.
   void messageNumber(String number);
 
@@ -241,6 +246,10 @@ abstract class TelephonyHostApi {
   /// The phone's address book (names and numbers), for the keypad's T9 search and the Contacts tab.
   @async
   List<PhoneContact> phoneContacts(int limit);
+  /// The phone owner's own card (Contacts → My profile): name and photo, the number when it has one; null when none
+  /// is set up or contacts are not allowed.
+  @async
+  PhoneContact? myProfile();
   @async
   List<CallbackTaskData> callbackTasks();
   /// done | snoozed | dialed (reported to the server as callback.state).

@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.app.role.RoleManager
 import android.content.Context
 import android.os.Build
+import android.telecom.TelecomManager
 import android.telephony.TelephonyManager
 import com.kilimanjaro.communicationmanager.phone.bridge.DeviceState
 import com.kilimanjaro.communicationmanager.phone.data.SyncStore
@@ -42,6 +43,13 @@ object CallsFeature {
     }
 
     fun isDefaultDialer(context: Context): Boolean = runCatching { context.getSystemService(RoleManager::class.java).isRoleHeld(RoleManager.ROLE_DIALER) }.getOrDefault(false)
+
+    /**
+     * The Phone app this phone came with (Samsung's, Google's, Xiaomi's…), even while this app holds the role: the UI
+     * takes its look from it. Needs no permission and no package visibility. Empty when the build names none.
+     */
+    fun systemDialer(context: Context): String =
+        runCatching { context.getSystemService(TelecomManager::class.java)?.systemDialerPackage }.getOrNull().orEmpty()
 
     /** Android 14+: the incoming-call screen over the lock screen needs this special permission (granted by default to dialers on most builds). */
     fun canUseFullScreenIntent(context: Context): Boolean =

@@ -10,10 +10,10 @@ class AppLocalizationsSw extends AppLocalizations {
   AppLocalizationsSw([String locale = 'sw']) : super(locale);
 
   @override
-  String get appTitle => 'OCM Simu';
+  String get appTitle => 'Simu';
 
   @override
-  String get companyApp => 'OCM Simu';
+  String get companyApp => 'Simu';
 
   @override
   String get onboardingTitle => 'Fanya hii iwe programu ya SMS ya simu';
@@ -109,7 +109,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get removedBody =>
-      'Muunganisho wake na kampuni umefutwa. Simu hazihifadhiwi tena. Unaweza kuendelea kutumia OCM Simu kama programu ya Simu, au uchague nyingine.';
+      'Muunganisho wake na kampuni umefutwa. Simu hazihifadhiwi tena. Unaweza kuendelea kutumia programu hii kama programu ya Simu, au uchague nyingine.';
 
   @override
   String get pausedBanner => 'Usawazishaji umesimamishwa na msimamizi wako.';
@@ -585,7 +585,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get notRunning => 'Haifanyi kazi';
 
   @override
-  String get welcomeTitle => 'OCM Simu, programu ya Simu ya kampuni yako';
+  String get welcomeTitle => 'Programu ya Simu ya kampuni yako';
 
   @override
   String get welcomeBody =>
@@ -638,7 +638,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get notAnEnrollCode =>
-      'Huo si msimbo wa kuunganisha OCM Simu. Changanua msimbo kutoka Admin → Calls → Phones → Enroll OCM Phone.';
+      'Huo si msimbo wa kuunganisha programu hii. Changanua msimbo kutoka Admin → Calls → Phones → Enroll OCM Phone.';
 
   @override
   String get noQrInPhoto => 'Hakuna msimbo wa QR kwenye picha hiyo.';
@@ -676,7 +676,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get enrolledBody =>
-      'Simu sasa zinahifadhiwa kwa ajili ya kampuni yako. Sasa, fanya OCM Simu kuwa programu yako ya Simu.';
+      'Simu sasa zinahifadhiwa kwa ajili ya kampuni yako. Sasa, fanya programu hii kuwa programu yako ya Simu.';
 
   @override
   String get openMessages => 'Fungua ujumbe';
@@ -845,7 +845,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get wrongAppCode =>
-      'Msimbo huu ni wa OCM Ujumbe. Fungua OCM Ujumbe uchanganue hapo, au omba msimbo wa OCM Simu.';
+      'Msimbo huu ni wa OCM Ujumbe. Fungua OCM Ujumbe uchanganue hapo, au omba msimbo kutoka Admin → Calls → Phones.';
 
   @override
   String get openKeypad => 'Fungua vitufe';
@@ -862,5 +862,25 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get notDefaultDialerBanner =>
-      'OCM Simu si programu yako ya Simu. Simu zinazoingia hazionyeshwi hapa.';
+      'Programu hii si programu yako kuu ya Simu. Simu zinazoingia hazionyeshwi hapa.';
+
+  @override
+  String contactsWithNumbers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Waasiliani $count wenye namba za simu',
+      one: 'Mwasiliani 1 mwenye namba ya simu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get allCalls => 'Simu zote';
+
+  @override
+  String get missedCalls => 'Simu ambazo hazikupokelewa';
+
+  @override
+  String get myProfile => 'Wasifu wangu';
 }

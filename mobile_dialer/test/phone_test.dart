@@ -32,6 +32,11 @@ class FakeDialer implements DialerGateway {
   Future<List<RecentCall>> recent(int limit, int offset) async => recents;
   @override
   Future<List<PhoneContact>> contacts(int limit) async => contactList;
+  PhoneContact? profile;
+  @override
+  Future<PhoneContact?> myProfile() async => profile;
+  @override
+  Future<void> openProfile() async {}
   @override
   Future<List<CallbackTaskData>> callbacks() async => tasks;
   @override
@@ -145,7 +150,7 @@ void main() {
     final services = AppServices(
       config: const AppConfig(allowedServerHosts: [], pinnedSpki: [], fcmEnabled: false, appVersion: 'test'),
       host: host, db: db, phone: PlatformPhoneGateway(host), transport: NativeHttpTransport(host),
-      startup: StartupState(databasePath: '', databaseKey: '', isDefaultDialer: true, manufacturer: 'Google', brand: 'google', sdkInt: 35, removed: false),
+      startup: StartupState(databasePath: '', databaseKey: '', isDefaultDialer: true, manufacturer: 'Google', brand: 'google', sdkInt: 35, removed: false, systemDialer: 'com.google.android.dialer'),
     )..session = Session(server: Uri.parse('https://ocm.test'), deviceId: 'd', deviceCode: 'P-1', deviceName: 'Phone');
     await tester.pumpWidget(harness(const PhoneScreen(), FakeDialer(), services: services));
     await tester.pumpAndSettle();
@@ -223,6 +228,63 @@ void main() {
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(dialer.reported.single, ('t1', 'done'));
+  });
+
+  testWidgets('One UI: a recents row opens Call / Message in place; a long press shows the details', (tester) async {
+    final dialer = FakeDialer();
+    await tester.pumpWidget(harness(const RecentsTab(), dialer, skin: 'one_ui'));
+    await tester.pumpAndSettle();
+    expect(find.text('Today'), findsOneWidget);
+    expect(find.byTooltip('Call'), findsNothing); // no call icon on every row
+    await tester.tap(find.text('Neema Mushi (2)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Call'));
+    await tester.pumpAndSettle();
+    expect(dialer.placed.single, ('+255754210331', 1, 'redial', null));
+    await tester.longPress(find.text('Juma Hassan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete from recents'), findsOneWidget);
+  });
+
+  testWidgets('One UI: one call button per SIM, no question after the tap', (tester) async {
+    final dialer = FakeDialer()..simList = [
+      SimInfo(subscriptionId: 1, slot: 0, carrier: 'Vodacom', countryIso: 'tz', isDefault: true),
+      SimInfo(subscriptionId: 2, slot: 1, carrier: 'Airtel', countryIso: 'tz', isDefault: false),
+    ];
+    await tester.pumpWidget(harness(const KeypadTab(initial: '0754210331'), dialer, skin: 'one_ui'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('call-button')), findsNothing);
+    await tester.tap(find.byKey(const Key('call-button-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('Airtel'), findsNothing);
+    expect(dialer.placed.single.$2, 2);
+  });
+
+  testWidgets('One UI: text tabs; contacts in cards under a large title with the count and My profile', (tester) async {
+    final host = TelephonyHostApi();
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+    final services = AppServices(
+      config: const AppConfig(allowedServerHosts: [], pinnedSpki: [], fcmEnabled: false, appVersion: 'test'),
+      host: host, db: db, phone: PlatformPhoneGateway(host), transport: NativeHttpTransport(host),
+      startup: StartupState(databasePath: '', databaseKey: '', isDefaultDialer: true, manufacturer: 'samsung', brand: 'samsung', sdkInt: 35, removed: false, systemDialer: 'com.samsung.android.dialer'),
+    )..session = Session(server: Uri.parse('https://ocm.test'), deviceId: 'd', deviceCode: 'P-1', deviceName: 'Phone');
+    final dialer = FakeDialer()..profile = PhoneContact(name: 'Amani Kweka', number: '', starred: false);
+    await tester.pumpWidget(harness(const PhoneScreen(), dialer, skin: 'one_ui', services: services));
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationBar), findsNothing);
+    await tester.tap(find.text('Contacts'));
+    await tester.pumpAndSettle();
+    expect(find.text('3 contacts with phone numbers'), findsOneWidget);
+    expect(find.text('My profile'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('my-profile')), matching: find.text('Amani Kweka')), findsOneWidget);
+    expect(find.text('Favourites'), findsOneWidget);
+    await tester.tap(find.byTooltip('Search contacts'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'juma');
+    await tester.pumpAndSettle();
+    expect(find.text('Juma Hassan'), findsOneWidget);
+    expect(find.text('Baraka Mwakyusa'), findsNothing);
   });
 
   group('goldens: keypad and recents', () {

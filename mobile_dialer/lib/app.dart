@@ -54,12 +54,13 @@ final routerProvider = Provider<GoRouter>((ref) => throw UnimplementedError('rou
 /// Re-checked on every resume (the Phone app role and permissions can be changed in system settings).
 final callsStatusProvider = FutureProvider<CallsStatus>((ref) => ref.watch(dialerProvider).status());
 
-/// The active look: "Match my phone" (default) picks the skin of the Phone app this phone came with.
+/// The active look: "Match my phone" (default) picks the skin of the Phone app this phone came with (asked from the
+/// system at startup), so the app looks at home on each phone it is installed on.
 final skinProvider = Provider<SkinSpec>((ref) {
   final chosen = ref.watch(settingsProvider.select((s) => s['skin'] ?? 'auto'));
   if (chosen != 'auto') return skinById(chosen);
   final startup = ref.watch(servicesProvider).startup;
-  return skinById(skinForPhone(startup.manufacturer, startup.brand));
+  return skinById(skinForPhone(startup.manufacturer, startup.brand, dialer: startup.systemDialer));
 });
 
 class PhoneApp extends ConsumerStatefulWidget {

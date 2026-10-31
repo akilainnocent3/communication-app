@@ -24,6 +24,18 @@ void main() {
     expect(skinForPhone('HMD Global', 'Nokia'), 'pixel'); // everyone else: Material You
   });
 
+  test('the Phone app the phone came with decides before the manufacturer', () {
+    expect(skinForPhone('samsung', 'samsung', dialer: 'com.samsung.android.dialer'), 'one_ui');
+    expect(skinForPhone('Xiaomi', 'Redmi', dialer: 'com.google.android.dialer'), 'pixel'); // global Xiaomi with Google's Phone
+    expect(skinForPhone('OnePlus', 'OnePlus', dialer: 'com.google.android.dialer'), 'pixel');
+    expect(skinForPhone('realme', 'realme', dialer: 'com.oplus.dialer'), 'color_os');
+    expect(skinForPhone('INFINIX MOBILITY LIMITED', 'Infinix', dialer: 'com.transsion.dialer'), 'hios');
+    // AOSP package names are shared by several manufacturers' dialers: the manufacturer decides.
+    expect(skinForPhone('Xiaomi', 'Redmi', dialer: 'com.android.contacts'), 'hyper_os');
+    expect(skinForPhone('TECNO MOBILE LIMITED', 'TECNO', dialer: 'com.android.dialer'), 'hios');
+    expect(skinForPhone('samsung', 'samsung', dialer: ''), 'one_ui');
+  });
+
   test('every skin defines the dialer tokens in light and dark, readable on its page', () {
     double contrast(Color a, Color b) {
       final (l1, l2) = (a.computeLuminance(), b.computeLuminance());

@@ -581,7 +581,12 @@ data class StartupState (
   val brand: String,
   val sdkInt: Long,
   /** The administrator revoked this phone while the app was closed (the native sync engine already wiped it). */
-  val removed: Boolean
+  val removed: Boolean,
+  /**
+   * Package of the Phone app this phone came with (TelecomManager.getSystemDialerPackage), so "Match my phone" can
+   * take its look; empty when unknown.
+   */
+  val systemDialer: String
 )
  {
   companion object {
@@ -593,7 +598,8 @@ data class StartupState (
       val brand = pigeonVar_list[4] as String
       val sdkInt = pigeonVar_list[5] as Long
       val removed = pigeonVar_list[6] as Boolean
-      return StartupState(databasePath, databaseKey, isDefaultDialer, manufacturer, brand, sdkInt, removed)
+      val systemDialer = pigeonVar_list[7] as String
+      return StartupState(databasePath, databaseKey, isDefaultDialer, manufacturer, brand, sdkInt, removed, systemDialer)
     }
   }
   fun toList(): List<Any?> {
@@ -605,6 +611,7 @@ data class StartupState (
       brand,
       sdkInt,
       removed,
+      systemDialer,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -615,7 +622,7 @@ data class StartupState (
       return true
     }
     val other = other as StartupState
-    return TelephonyApiPigeonUtils.deepEquals(this.databasePath, other.databasePath) && TelephonyApiPigeonUtils.deepEquals(this.databaseKey, other.databaseKey) && TelephonyApiPigeonUtils.deepEquals(this.isDefaultDialer, other.isDefaultDialer) && TelephonyApiPigeonUtils.deepEquals(this.manufacturer, other.manufacturer) && TelephonyApiPigeonUtils.deepEquals(this.brand, other.brand) && TelephonyApiPigeonUtils.deepEquals(this.sdkInt, other.sdkInt) && TelephonyApiPigeonUtils.deepEquals(this.removed, other.removed)
+    return TelephonyApiPigeonUtils.deepEquals(this.databasePath, other.databasePath) && TelephonyApiPigeonUtils.deepEquals(this.databaseKey, other.databaseKey) && TelephonyApiPigeonUtils.deepEquals(this.isDefaultDialer, other.isDefaultDialer) && TelephonyApiPigeonUtils.deepEquals(this.manufacturer, other.manufacturer) && TelephonyApiPigeonUtils.deepEquals(this.brand, other.brand) && TelephonyApiPigeonUtils.deepEquals(this.sdkInt, other.sdkInt) && TelephonyApiPigeonUtils.deepEquals(this.removed, other.removed) && TelephonyApiPigeonUtils.deepEquals(this.systemDialer, other.systemDialer)
   }
 
   override fun hashCode(): Int {
@@ -627,10 +634,11 @@ data class StartupState (
     result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.brand)
     result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.sdkInt)
     result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.removed)
+    result = 31 * result + TelephonyApiPigeonUtils.deepHash(this.systemDialer)
     return result
   }
   override fun toString(): String {
-    return "StartupState(databasePath=$databasePath, databaseKey=$databaseKey, isDefaultDialer=$isDefaultDialer, manufacturer=$manufacturer, brand=$brand, sdkInt=$sdkInt, removed=$removed)"
+    return "StartupState(databasePath=$databasePath, databaseKey=$databaseKey, isDefaultDialer=$isDefaultDialer, manufacturer=$manufacturer, brand=$brand, sdkInt=$sdkInt, removed=$removed, systemDialer=$systemDialer)"
   }
 }
 
@@ -1134,6 +1142,8 @@ interface TelephonyHostApi {
   fun openFullScreenIntentSettings()
   /** The system "new contact" screen, pre-filled with [number] (the person saves it). */
   fun addContact(number: String)
+  /** The owner's card in the system Contacts app. */
+  fun openProfile()
   /** The phone's SMS app (ACTION_SENDTO smsto:), OCM Messages on company phones. */
   fun messageNumber(number: String)
   fun startup(): StartupState
@@ -1172,6 +1182,11 @@ interface TelephonyHostApi {
   suspend fun recentCalls(limit: Long, offset: Long): List<RecentCall>
   /** The phone's address book (names and numbers), for the keypad's T9 search and the Contacts tab. */
   suspend fun phoneContacts(limit: Long): List<PhoneContact>
+  /**
+   * The phone owner's own card (Contacts → My profile): name and photo, the number when it has one; null when none
+   * is set up or contacts are not allowed.
+   */
+  suspend fun myProfile(): PhoneContact?
   suspend fun callbackTasks(): List<CallbackTaskData>
   /** done | snoozed | dialed (reported to the server as callback.state). */
   suspend fun reportCallback(id: String, state: String)
@@ -1351,6 +1366,22 @@ interface TelephonyHostApi {
             val numberArg = args[0] as String
             val wrapped: List<Any?> = try {
               api.addContact(numberArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              TelephonyApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.ocm_phone.TelephonyHostApi.openProfile$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.openProfile()
               listOf(null)
             } catch (exception: Throwable) {
               TelephonyApiPigeonUtils.wrapError(exception)
@@ -1765,6 +1796,23 @@ interface TelephonyHostApi {
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
                 listOf(api.phoneContacts(limitArg))
+              } catch (exception: Throwable) {
+                TelephonyApiPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.ocm_phone.TelephonyHostApi.myProfile$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.myProfile())
               } catch (exception: Throwable) {
                 TelephonyApiPigeonUtils.wrapError(exception)
               }

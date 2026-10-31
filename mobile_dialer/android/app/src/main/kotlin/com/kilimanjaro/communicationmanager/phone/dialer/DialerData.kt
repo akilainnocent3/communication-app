@@ -59,6 +59,22 @@ object DialerData {
         } ?: emptyList()
     }
 
+    /** The owner's card (ContactsContract.Profile, covered by READ_CONTACTS); its first number when it has one. */
+    fun profile(context: Context): PhoneContact? {
+        if (!DeviceState.granted(context, "READ_CONTACTS")) return null
+        val name = context.contentResolver.query(ContactsContract.Profile.CONTENT_URI,
+            arrayOf(ContactsContract.Profile.DISPLAY_NAME, ContactsContract.Profile.PHOTO_THUMBNAIL_URI), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0).orEmpty() to c.getString(1) else null
+        } ?: return null
+        if (name.first.isBlank()) return null
+        val number = context.contentResolver.query(
+            android.net.Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI, ContactsContract.Contacts.Data.CONTENT_DIRECTORY),
+            arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER), "${ContactsContract.Data.MIMETYPE} = ?",
+            arrayOf(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE), null,
+        )?.use { c -> if (c.moveToFirst()) c.getString(0)?.trim() else null }.orEmpty()
+        return PhoneContact(name = name.first, number = number, starred = false, photoUri = name.second)
+    }
+
     fun callbacks(context: Context): List<CallbackTaskData> = CallbackTasks.cached(context).map {
         CallbackTaskData(id = it.id, number = it.number, name = it.name, reason = it.reason, requestedBy = it.requestedBy, priority = it.priority, dueAt = it.dueAt, state = it.state)
     }

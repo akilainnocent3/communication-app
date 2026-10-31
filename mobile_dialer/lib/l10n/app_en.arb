@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
-  "appTitle": "OCM Phone",
-  "companyApp": "OCM Phone",
+  "appTitle": "Phone",
+  "companyApp": "Phone",
   "onboardingTitle": "Make this the phone's SMS app",
   "onboardingBody": "This company phone's text messages are managed by your company. To receive and send SMS, this app must be the default SMS app.",
   "setDefault": "Set as default SMS app",
@@ -37,7 +37,7 @@
     }
   },
   "removedTitle": "This phone was removed by your administrator",
-  "removedBody": "Its connection to the company has been deleted. Calls are no longer recorded. You can keep using OCM Phone as your Phone app, or choose another one.",
+  "removedBody": "Its connection to the company has been deleted. Calls are no longer recorded. You can keep using this app as your Phone app, or choose another one.",
   "pausedBanner": "Syncing is paused by your administrator.",
   "notDefaultBanner": "This app is not the default SMS app. Messages can't be received or sent.",
   "fixNow": "Fix",
@@ -244,7 +244,7 @@
   "syncService": "Sync service",
   "running": "Running",
   "notRunning": "Not running",
-  "welcomeTitle": "OCM Phone, your company's Phone app",
+  "welcomeTitle": "Your company's Phone app",
   "welcomeBody": "Call and answer as usual. Your company sees the call records of this company phone and can ask you to call customers back.",
   "getStarted": "Get started",
   "whyDefault": "Android lets only the default SMS app receive messages, save them and send them. Your old Messages app keeps working as a normal app.",
@@ -259,7 +259,7 @@
   "openSettings": "Open settings",
   "why": "Why?",
   "torch": "Torch",
-  "notAnEnrollCode": "That is not an OCM Phone enrollment code. Scan the code from Admin → Calls → Phones → Enroll OCM Phone.",
+  "notAnEnrollCode": "That is not an enrollment code for this app. Scan the code from Admin → Calls → Phones → Enroll OCM Phone.",
   "noQrInPhoto": "No QR code found in that photo.",
   "pointAtQr": "Point the camera at the administrator's QR code",
   "scanFromPhoto": "Scan from photo",
@@ -270,7 +270,7 @@
   "noConnection": "No connection to the server. Check the internet and try again.",
   "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
   "enrolledTitle": "Connected",
-  "enrolledBody": "Calls are now recorded for your company. Next, make OCM Phone your Phone app.",
+  "enrolledBody": "Calls are now recorded for your company. Next, make this app your Phone app.",
   "openMessages": "Open messages",
   "backfillDone": "Message history copied",
   "backfillCopied": "{count} messages copied…",
@@ -341,10 +341,21 @@
       }
     }
   },
-  "wrongAppCode": "This code is for OCM Messages. Open OCM Messages and scan it there, or ask for an OCM Phone code.",
+  "wrongAppCode": "This code is for OCM Messages. Open OCM Messages and scan it there, or ask for a code from Admin → Calls → Phones.",
   "openKeypad": "Open the keypad",
   "choosePhoneApp": "Choose another Phone app",
   "enrollBanner": "Calls on this phone are not recorded for your company yet.",
   "enrollNow": "Connect",
-  "notDefaultDialerBanner": "OCM Phone is not your Phone app. Incoming calls are not shown here."
+  "notDefaultDialerBanner": "This app is not your default Phone app. Incoming calls are not shown here.",
+  "contactsWithNumbers": "{count, plural, =1{1 contact with a phone number} other{{count} contacts with phone numbers}}",
+  "@contactsWithNumbers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allCalls": "All calls",
+  "missedCalls": "Missed calls",
+  "myProfile": "My profile"
 }

@@ -6,7 +6,8 @@ import '../../providers.dart';
 import '../skin/tokens.dart';
 
 /// Coloured initials (or "#" for an unsaved number), stable per address; the contact photo instead when there is
-/// one and photos are on. The photo is a small JPEG decoded at display size; initials show until it arrives.
+/// one and photos are on. The photo is a small JPEG decoded at display size; initials show until it arrives. Skins
+/// with an avatar palette (One UI) show one letter on a palette colour picked from the name.
 class ContactAvatar extends ConsumerWidget {
   const ContactAvatar({super.key, required this.title, required this.address, this.saved = false, this.photoUri, this.size});
   final String title;
@@ -29,16 +30,23 @@ class ContactAvatar extends ConsumerWidget {
     final side = size ?? tokens.avatarSize;
     final showPhotos = ref.watch(settingsProvider.select((s) => s['show_photos'] != '0'));
     final shape = tokens.avatarShape == AvatarShape.circle ? const CircleBorder() : RoundedRectangleBorder(borderRadius: BorderRadius.circular(side * 0.3));
+    final palette = tokens.avatarColors;
+    final text = label(title, address, saved);
     final initials = Center(
-      child: Text(label(title, address, saved), style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: side * 0.38), textScaler: TextScaler.noScaling),
+      child: palette == null
+          ? Text(text, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: side * 0.38), textScaler: TextScaler.noScaling)
+          : Text(text.substring(0, 1), style: TextStyle(color: Colors.white, fontSize: side * 0.5), textScaler: TextScaler.noScaling),
     );
+    final colour = palette == null
+        ? HSLColor.fromAHSL(1, hue(address).toDouble(), 0.5, 0.42).toColor()
+        : palette[hue(saved && title.isNotEmpty ? title : address) % palette.length];
     final px = (side * MediaQuery.devicePixelRatioOf(context)).round();
     return SizedBox.square(
       dimension: side,
       child: Material(
         shape: shape,
         clipBehavior: Clip.antiAlias,
-        color: HSLColor.fromAHSL(1, hue(address).toDouble(), 0.5, 0.42).toColor(),
+        color: colour,
         child: photoUri != null && showPhotos ? ThumbnailImage(uri: photoUri!, px: px, placeholder: initials) : initials,
       ),
     );

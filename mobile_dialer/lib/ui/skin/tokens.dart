@@ -28,6 +28,9 @@ enum SwipeAction { archive, delete, read, none }
 /// HyperOS, ColorOS).
 enum KeypadKeyStyle { circle, rounded, flat }
 
+/// The Phone screen's bottom tabs: Material navigation bar with icons, or text labels with a sliding underline (One UI).
+enum PhoneTabStyle { navigationBar, text }
+
 /// Everything a skin decides, resolved for one brightness. Widgets read these and nothing else: no screen asks which
 /// skin is active. Values live in `lib/ui/skin/skins/<skin>.dart`, one file per skin, so they can be tuned without
 /// touching widgets.
@@ -47,6 +50,8 @@ class SkinTokens extends ThemeExtension<SkinTokens> {
     this.titleSize = 22, this.largeTitleSize = 34, this.rowTitleSize = 16, this.snippetSize = 14, this.rowTitleWeight = FontWeight.w500,
     this.keypadKey = KeypadKeyStyle.circle, this.keypadLetters = true, this.keypadKeySize = 72, this.callButton = const Color(0xFF16A34A),
     this.missedCall = const Color(0xFFDC2626), this.recentsRowHeight = 68,
+    this.phoneTabs = PhoneTabStyle.navigationBar, this.recentsAvatar = true, this.listInset = 12, this.secondaryText, this.divider,
+    this.avatarColors, this.dualSimCallButtons = false, this.keypadDigitWeight = FontWeight.w400, this.centeredLargeTitle = false,
   });
 
   final String id;
@@ -96,6 +101,20 @@ class SkinTokens extends ThemeExtension<SkinTokens> {
   final double keypadKeySize;
   final Color callButton, missedCall;
   final double recentsRowHeight;
+  final PhoneTabStyle phoneTabs;
+  /// Recents rows lead with the contact's avatar (Pixel); without it, the call-type icon leads (One UI).
+  final bool recentsAvatar;
+  /// Grouped lists: the gap between a card and the screen edge.
+  final double listInset;
+  /// Section labels, times, keypad letters, dividers; null takes the colour scheme's.
+  final Color? secondaryText, divider;
+  /// Avatars without a photo: one letter on a colour from this list (picked from the name); null for hue initials.
+  final List<Color>? avatarColors;
+  /// Dual-SIM phones: one call button per SIM under the keypad instead of asking after the tap.
+  final bool dualSimCallButtons;
+  final FontWeight keypadDigitWeight;
+  /// Large headers: the expanded title sits centred in the top of the screen (One UI), else bottom-left (ColorOS, HyperOS).
+  final bool centeredLargeTitle;
 
   double rowExtent({required bool compact, required double textScale}) => (rowHeight - (compact ? 12 : 0)) + (textScale - 1) * 30;
 
@@ -111,6 +130,8 @@ class SkinTokens extends ThemeExtension<SkinTokens> {
         composeField: composeField, sendFilled: sendFilled, swipeLeft: swipeLeft ?? this.swipeLeft, swipeRight: swipeRight ?? this.swipeRight,
         titleSize: titleSize, largeTitleSize: largeTitleSize, rowTitleSize: rowTitleSize, snippetSize: snippetSize, rowTitleWeight: rowTitleWeight,
         keypadKey: keypadKey, keypadLetters: keypadLetters, keypadKeySize: keypadKeySize, callButton: callButton, missedCall: missedCall, recentsRowHeight: recentsRowHeight,
+        phoneTabs: phoneTabs, recentsAvatar: recentsAvatar, listInset: listInset, secondaryText: secondaryText, divider: divider, avatarColors: avatarColors,
+        dualSimCallButtons: dualSimCallButtons, keypadDigitWeight: keypadDigitWeight, centeredLargeTitle: centeredLargeTitle,
       );
 
   /// Skins switch instantly; only colours and sizes are blended during the theme animation.
@@ -131,6 +152,9 @@ class SkinTokens extends ThemeExtension<SkinTokens> {
       largeTitleSize: largeTitleSize, rowTitleSize: rowTitleSize, snippetSize: snippetSize, rowTitleWeight: rowTitleWeight,
       keypadKey: keypadKey, keypadLetters: keypadLetters, keypadKeySize: keypadKeySize, callButton: c(callButton, other.callButton),
       missedCall: c(missedCall, other.missedCall), recentsRowHeight: recentsRowHeight,
+      phoneTabs: phoneTabs, recentsAvatar: recentsAvatar, listInset: listInset, secondaryText: Color.lerp(secondaryText, other.secondaryText, t),
+      divider: Color.lerp(divider, other.divider, t), avatarColors: avatarColors, dualSimCallButtons: dualSimCallButtons, keypadDigitWeight: keypadDigitWeight,
+      centeredLargeTitle: centeredLargeTitle,
     );
   }
 }
